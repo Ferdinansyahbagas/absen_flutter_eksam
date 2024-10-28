@@ -1,59 +1,73 @@
 import 'package:flutter/material.dart';
+import 'loginscreen.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
-
+class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF5B2284), // Warna latar belakang ungu
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.orange,
+              Colors.pink,
+              const Color.fromARGB(255, 101, 19, 116),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ), //, // Warna latar belakang ungu
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Hi,',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 40,
+                fontSize: 64,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 10),
-            const Text(
+            SizedBox(height: 2),
+            Text(
               'Welcome',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 30,
+                fontSize: 36,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               'Log in first before you join us ✨',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
-                fontSize: 16,
+                fontSize: 15,
               ),
             ),
-            const SizedBox(height: 50),
+            SizedBox(height: 200),
             Center(
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Aksi saat tombol login ditekan
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                LoginScreen())); // Aksi saat tombol login ditekan
                   },
+                  //http://127.0.0.1:8000/API/V1/auth/login
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFBD73), // Warna tombol
-                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    backgroundColor: Color(0xFFFFBD73), // Warna tombol
+                    padding: EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Log In',
                     style: TextStyle(
                       fontSize: 18,

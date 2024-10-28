@@ -1,8 +1,9 @@
+import 'package:absen/screen/loadingwelcome.dart'; // Mengimpor SplashScreen
 import 'package:flutter/material.dart';
-import 'screen/splash_screen.dart'; // Mengimpor SplashScreen
+import 'package:absen/homepage/home.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp()); 
 }
 
 class MyApp extends StatelessWidget {
@@ -11,6 +12,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
       debugShowCheckedModeBanner: false,
       home: SplashScreen(), // Halaman pertama adalah SplashScreen
     );
