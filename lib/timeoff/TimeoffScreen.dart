@@ -13,8 +13,9 @@ class TimeOffScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Time Off'),
-        leading: Icon(Icons.arrow_back), // Back button icon
-        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        foregroundColor: Colors.black,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -22,6 +23,7 @@ class TimeOffScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Remaining Leave
+            SizedBox(height: 20),
             Container(
               padding: EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -83,26 +85,88 @@ class TimeOffScreen extends StatelessWidget {
                   child: Text('Apply For Sick Rest',
                       style: TextStyle(color: Colors.white))),
             ),
-
             SizedBox(height: 20),
-
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'History Time Off',
+                style: TextStyle(
+                  color: Colors.pink,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
             // Time Off Request Card
             Expanded(
-              child: ListView(
-                children: [
-                  TimeOffCard(
-                    title: 'Annual Vacation',
-                    description: 'I have a family event',
-                    date: '12-13 Oktober 2024',
-                    status: 'application approved',
-                  ),
-                  TimeOffCard(
-                    title: 'Annual Vacation',
-                    description: 'I have a family event',
-                    date: '12-13 Oktober 2024',
-                    status: 'application approved',
-                  ),
-                ],
+              child: DraggableScrollableSheet(
+                initialChildSize: 0.4,
+                minChildSize: 0.2,
+                maxChildSize: 0.8,
+                builder: (context, scrollController) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: 2,
+                      itemBuilder: (context, index) {
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 16),
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Annual Vacation',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'I have a family event',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'application approved',
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '12-13 Oktober 2024',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ),
           ],

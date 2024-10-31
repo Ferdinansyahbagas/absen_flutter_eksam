@@ -12,19 +12,26 @@ class TimeOffSick extends StatefulWidget {
 class _TimeOffSickState extends State<TimeOffSick> {
   final _reasonController = TextEditingController();
   DateTime? _selectedDate;
+  DateTime? selectedDate;
+  String formattedDate = '';
+  final _dateController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   File? _image; // To store the image file
+  String Reason = '';
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _pickDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != _selectedDate) {
+
+    if (pickedDate != null) {
       setState(() {
-        _selectedDate = picked;
+        selectedDate = pickedDate;
+        formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate!);
+        _dateController.text = formattedDate;
       });
     }
   }
@@ -103,16 +110,42 @@ class _TimeOffSickState extends State<TimeOffSick> {
               ),
             ),
             SizedBox(height: 24),
-            Text(
-              'Reason',
-              style: TextStyle(color: Colors.black54),
-            ),
-            SizedBox(height: 8),
-            TextField(
-              controller: _reasonController,
+            TextFormField(
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
+                labelText: 'Reason',
+                labelStyle: TextStyle(color: Colors.purple),
+                floatingLabelBehavior:
+                    FloatingLabelBehavior.always, // Always show label on top
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.purple),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.purple, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderSide:
+                      BorderSide(color: Colors.red), // Border saat error
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.red), // Border saat error dan fokus
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              onChanged: (value) {
+                setState(() {
+                  Reason = value;
+                });
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your name';
+                }
+                return null;
+              },
             ),
             SizedBox(height: 16),
             Text(
@@ -120,24 +153,25 @@ class _TimeOffSickState extends State<TimeOffSick> {
               style: TextStyle(color: Colors.black54),
             ),
             SizedBox(height: 8),
-            InkWell(
-              onTap: () => _selectDate(context),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
+            TextFormField(
+              controller: _dateController,
+              decoration: InputDecoration(
+                labelText: 'Date',
+                labelStyle: TextStyle(color: Colors.purple),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.purple),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _selectedDate == null
-                          ? 'Select Date'
-                          : DateFormat('yyyy-MM-dd').format(_selectedDate!),
-                    ),
-                    Icon(Icons.calendar_today, color: Colors.orange),
-                  ],
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.purple, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.calendar_today, color: Colors.orange),
+                  onPressed: () => _pickDate(context),
                 ),
               ),
+              readOnly: true,
             ),
             SizedBox(height: 16),
             // Upload Photo Button

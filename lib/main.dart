@@ -1,9 +1,11 @@
 import 'package:absen/screen/loadingwelcome.dart'; // Mengimpor SplashScreen
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
+import 'package:absen/screen/resetpassScreen.dart';
+import 'package:absen/screen/codecekscreen.dart';
 
 void main() {
-  runApp(const MyApp()); 
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -16,7 +18,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(), // Halaman pertama adalah SplashScreen
+      home: HomePage(), // Halaman pertama adalah SplashScreen
     );
   }
 }

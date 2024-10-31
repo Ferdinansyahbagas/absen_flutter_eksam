@@ -1,34 +1,27 @@
-import 'package:absen/screen/loginscreen.dart';
-import 'package:absen/screen/codecekscreen.dart';
+import 'package:absen/screen/resetpassScreen.dart';
+import 'package:absen/screen/forpasscreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ForgotPasswordPage extends StatefulWidget {
+class Codecekscreen extends StatefulWidget {
   @override
-  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
+  _CodecekscreenState createState() => _CodecekscreenState();
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+class _CodecekscreenState extends State<Codecekscreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   String? errorMessage;
-  bool _isEmailValid = true;
   String? _errorMessage; // Tambahkan variabel untuk pesan error
 
   Future<void> _submit() async {
-    if (!_isEmailValid) {
-      setState(() {
-        _errorMessage = 'Email tidak sesuai format yang diharapkan';
-      });
-      return;
-    }
-
     try {
       Response response = await post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/auth/password/email'),
+        Uri.parse('http://127.0.0.1:8000/api/v1/auth/password/code-check'),
         body: {
-          'email': _emailController.text.toString(),
+          'code': _emailController.text.toString(),
         },
       );
 
@@ -40,11 +33,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         setState(() {
           _errorMessage = null;
         });
+        SharedPreferences localStorage = await SharedPreferences.getInstance();
+        localStorage.setString('code', _emailController.text);
 
         // Fungsi pindah halaman
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => Codecekscreen()),
+          MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
         );
       } else {
         var data = jsonDecode(response.body.toString());
@@ -70,12 +65,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => LoginScreen()),
+              MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
             );
           },
         ),
         title: const Text(
-          'Forgot Password',
+          'verification',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
@@ -87,7 +82,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Forgot Password',
+              'verification',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -95,7 +90,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
             SizedBox(height: 10),
             Text(
-              'Enter your registered email',
+              'Enter verification code',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -109,33 +104,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
-                      labelText: 'Email',
+                      labelText: 'Verification Code',
                       border: OutlineInputBorder(),
-                      errorText: !_isEmailValid
-                          ? 'Email tidak sesuai format yang diharapkan'
-                          : _errorMessage,
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red, width: 2.0),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red, width: 2.0),
-                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
-                        return 'Please enter a valid email';
+                        return 'Please enter your verification';
                       }
                       return null;
                     },
-                    onChanged: (value) {
-                      setState(() {
-                        // Memeriksa apakah email sesuai format
-                        _isEmailValid = RegExp(r'\S+@\S+\.\S+').hasMatch(value);
-                      });
-                    },
                   ),
+                  SizedBox(height: 10),
+                  if (errorMessage != null)
+                    Text(
+                      errorMessage!,
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    ),
                   SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(

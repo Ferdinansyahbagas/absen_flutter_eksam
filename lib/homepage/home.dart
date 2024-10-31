@@ -361,7 +361,8 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
+                  _buildStatusCard('✨ Your Absence Was Successful ✨',
+                      Colors.orange, 'Good work and keep up the spirit'),
                   const SizedBox(height: 20),
 // Announcement Section
                   const Text(
@@ -591,6 +592,32 @@ class _HomePageState extends State<HomePage> {
               color: Colors.white,
             ),
             label: 'Profil',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusCard(String title, Color color, String subtitle) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+                fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: TextStyle(color: Colors.white70),
           ),
         ],
       ),

@@ -86,6 +86,16 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                     borderSide: BorderSide(color: Colors.purple, width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
+                  errorBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Colors.red), // Border saat error
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.red), // Border saat error dan fokus
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -115,6 +125,16 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.purple, width: 2),
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Colors.red), // Border saat error
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.red), // Border saat error dan fokus
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 onChanged: (value) {
@@ -146,6 +166,16 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                   focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.purple, width: 2),
                     borderRadius: BorderRadius.circular(8),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Colors.red), // Border saat error
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.red), // Border saat error dan fokus
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 onChanged: (value) {

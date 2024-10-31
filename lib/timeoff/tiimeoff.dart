@@ -10,6 +10,7 @@ class _TimeOffState extends State<TimeOff> {
   final _reasonController = TextEditingController();
   DateTime? _selectedDate;
   String _selectedType = 'Permission';
+  String Reason = '';
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -113,16 +114,42 @@ class _TimeOffState extends State<TimeOff> {
               },
             ),
             SizedBox(height: 16),
-            Text(
-              'Reason',
-              style: TextStyle(color: Colors.black54),
-            ),
-            SizedBox(height: 8),
-            TextField(
-              controller: _reasonController,
+            TextFormField(
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
+                labelText: 'Reason',
+                labelStyle: TextStyle(color: Colors.purple),
+                floatingLabelBehavior:
+                    FloatingLabelBehavior.always, // Always show label on top
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.purple),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.purple, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderSide:
+                      BorderSide(color: Colors.red), // Border saat error
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.red), // Border saat error dan fokus
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              onChanged: (value) {
+                setState(() {
+                  Reason = value;
+                });
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your name';
+                }
+                return null;
+              },
             ),
             SizedBox(height: 16),
             Text(
