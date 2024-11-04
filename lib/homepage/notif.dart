@@ -37,7 +37,7 @@ class NotificationPage extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/home.png'), // Custom icon
+              AssetImage('assets/icon/home.png'),
               size: 18,
               color: Colors.white,
             ),
@@ -45,7 +45,7 @@ class NotificationPage extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/timeoff.png'), // Custom icon
+              AssetImage('assets/icon/timeoff.png'),
               size: 20,
               color: Colors.white,
             ),
@@ -57,7 +57,7 @@ class NotificationPage extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/notifikasi.png'), // Custom icon
+              AssetImage('assets/icon/notifikasi.png'),
               size: 22,
               color: Colors.orange,
             ),
@@ -65,7 +65,7 @@ class NotificationPage extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/profil.png'), // Custom icon
+              AssetImage('assets/icon/profil.png'),
               size: 20,
               color: Colors.white,
             ),
@@ -79,8 +79,6 @@ class NotificationPage extends StatelessWidget {
         unselectedLabelStyle: const TextStyle(fontSize: 9),
         currentIndex: 3,
         onTap: (index) {
-          // Handle bottom navigation bar tap
-          // Navigate to the appropriate screen
           switch (index) {
             case 0:
               Navigator.pushReplacement(
@@ -131,8 +129,57 @@ class NotificationItem extends StatelessWidget {
           style: TextStyle(color: Colors.blue),
         ),
         onTap: () {
-          // Handle notification tap
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PayslipDetailPage()),
+          );
         },
+      ),
+    );
+  }
+}
+
+// Halaman detail sesuai gambar yang diberikan
+class PayslipDetailPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Notification"),
+        backgroundColor: Colors.orange,
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.circle, color: Colors.red, size: 12),
+                SizedBox(width: 8),
+                Text("This month's payslip has just been sent ✨"),
+              ],
+            ),
+            SizedBox(height: 16),
+            Text(
+              "Ornare cursus magna mauris sit elementum morbi. Magna massa dolor suspendisse nunc...",
+              style: TextStyle(color: Colors.black54),
+            ),
+            SizedBox(height: 16),
+            Container(
+              height: 100,
+              width: double.infinity,
+              color: Colors.grey[300],
+              alignment: Alignment.center,
+              child: Text("Payslip Placeholder"),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Download File",
+              style: TextStyle(color: Colors.orange),
+            ),
+          ],
+        ),
       ),
     );
   }

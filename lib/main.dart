@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/screen/resetpassScreen.dart';
 import 'package:absen/screen/codecekscreen.dart';
+import 'package:absen/image_picker_channel.dart';
+import 'package:absen/profil/ChagePassPage.dart';
 
 void main() {
   runApp(const MyApp());

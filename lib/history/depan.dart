@@ -4,7 +4,7 @@ class HistoryScreen extends StatelessWidget {
   void _onCheckHistoryPressed(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Agar modal bisa memenuhi layar
+      isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
@@ -20,32 +20,76 @@ class HistoryScreen extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Search',
-                            prefixIcon:
-                                Icon(Icons.search, color: Colors.orange),
-                            filled: true,
-                            fillColor: Colors.grey[200],
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                              borderSide: BorderSide.none,
-                            ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.purple),
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: TextField(
+                                    decoration: InputDecoration(
+                                      hintText: 'Search',
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.search, color: Colors.orange),
+                                onPressed: () {
+                                  // Tambahkan fungsi pencarian di sini
+                                },
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      SizedBox(width: 8),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          // Tambahkan fungsi filter di sini
-                        },
-                        icon: Icon(Icons.filter_list, color: Colors.orange),
-                        label: Text('Filter'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey[200],
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
+                      SizedBox(width: 10),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.purple),
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                        child: PopupMenuButton<int>(
+                          onSelected: (value) {
+                            // Tambahkan fungsi filter di sini
+                          },
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<int>>[
+                            PopupMenuItem<int>(
+                              value: 10,
+                              child: Text('in the last 10 days'),
+                            ),
+                            PopupMenuItem<int>(
+                              value: 25,
+                              child: Text('in the last 25 days'),
+                            ),
+                            PopupMenuItem<int>(
+                              value: 50,
+                              child: Text('in the last 50 days'),
+                            ),
+                            PopupMenuItem<int>(
+                              value: 100,
+                              child: Text('in the last 100 days'),
+                            ),
+                          ],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 12.0),
+                            child: Row(
+                              children: [
+                                Text('Filter',
+                                    style: TextStyle(color: Colors.purple)),
+                                Icon(Icons.arrow_drop_down,
+                                    color: Colors.purple),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -55,7 +99,7 @@ class HistoryScreen extends StatelessWidget {
                   ListView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: 5, // Sesuaikan jumlah item
+                    itemCount: 5,
                     itemBuilder: (context, index) {
                       return Card(
                         shape: RoundedRectangleBorder(
@@ -64,23 +108,34 @@ class HistoryScreen extends StatelessWidget {
                         ),
                         child: ListTile(
                           title: Text(
-                            '12/10/1024',
+                            '12/10/2024',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text('10:20:32 AM - 15:23:10 PM'),
                           trailing: ElevatedButton(
                             onPressed: () {
-                              // Tambahkan aksi ketika tombol Open ditekan
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AttendanceDetailScreen(),
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: Colors.orange,
-                              side: BorderSide(color: Colors.orange),
+                              side: BorderSide(color: Colors.purple),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                               ),
                             ),
-                            child: Text('Open'),
+                            child: Text(
+                              'Open',
+                              style: TextStyle(
+                                color: Colors.pink,
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -136,7 +191,7 @@ class HistoryScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 32.0, vertical: 12.0),
+                      horizontal: 110.0, vertical: 12.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
@@ -217,6 +272,40 @@ class HistoryScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class AttendanceDetailScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Attendance Details"),
+        backgroundColor: Colors.orange,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Date: 12/10/2024",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Text("Clock In: 10:20:32 AM"),
+            Text("Clock Out: 15:23:10 PM"),
+            Text("Work Duration: 8 Hours 15 Minutes"),
+            Text("Late Duration: -15 Minutes"),
+            Text("Location: Office"),
+            Text("Status: Lembur"),
+            SizedBox(height: 16),
+            Text("Note:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text("Good work, I complete tasks well"),
+          ],
+        ),
       ),
     );
   }
