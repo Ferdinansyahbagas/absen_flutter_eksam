@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       debugShowCheckedModeBanner: false,
-      home: HomePage(), // Halaman pertama adalah SplashScreen
+      home: SplashScreen(), // Halaman pertama adalah SplashScreen
     );
   }
 }
