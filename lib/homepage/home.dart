@@ -11,6 +11,9 @@ import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'dart:async'; // Untuk timer
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:http/http.dart' as http; // menyambungakan ke API
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,11 +23,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String? currentCity; // Menyimpan nama kota
-  bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
+  String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
+  String? name = "";
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
+  Timer? resetNoteTimer;
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   int currentIndex = 0; // Default to the home page
   int _currentPage = 0; // Variable to keep track of the current page
+  bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
+  bool hasClockedIn = false; // Variabel baru untuk status clock-in
+  bool hasClockedOut = false; // Variabel baru untuk status clock-out
+  bool showNote = true; // Status untuk menampilkan note
+  bool isSuccess = false; // Status untuk menampilkan card
+  bool isLate = false; // Status untuk card terlambat
   PageController _pageController =
       PageController(); // PageController for PageView
 
@@ -32,7 +43,9 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    getData();
     _startClock(); // Memulai timer untuk jam
+    _resetNoteAtFiveAM();
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page!.round();
@@ -50,16 +63,10 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel(); // Menghentikan timer saat widget dihapus
-    _pageController.dispose(); // Dispose of the PageController
-    super.dispose();
-  }
-
   // Fungsi untuk membuat menu shortcut dengan warna ikon dan latar belakang yang bisa disesuaikan
   Column _buildMenuShortcut({
     required String label,
+    TextStyle? labelStyle,
     required Widget targetPage,
     Color bgColor =
         const Color.fromARGB(255, 101, 19, 116), // Warna background default
@@ -110,7 +117,7 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 10),
         Text(
           label,
-          style: const TextStyle(color: Colors.purple),
+          style: const TextStyle(color: Colors.pink, fontSize: 14),
         ),
       ],
     );
@@ -179,6 +186,116 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _updateClockInStatus(bool status) {
+    setState(() {
+      hasClockedIn = status;
+    });
+  }
+
+  // Fungsi untuk mengambil data dari API
+  Future<void> getData() async {
+    // Ambil profil pengguna
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      setState(() {
+        name = data['data']['name'];
+      });
+      print("Profil pengguna: ${data['data']}");
+    } catch (e) {
+      print("Error mengambil profil pengguna: $e");
+    }
+
+    // Cek status clock-in
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-in');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      setState(() {
+        // Status clock-in diambil dari respons API
+        hasClockedIn = data['message'] != 'belum clock-in';
+
+        if (hasClockedIn) {
+          showNote = false;
+
+          // Periksa waktu clock-in
+          final now = DateTime.now();
+          if (now.hour < 8) {
+            isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+          } else {
+            isLate = true; // Clock-in terlambat setelah jam 8 pagi
+          }
+        }
+      });
+    } catch (e) {
+      print("Error mengecek status clock-in: $e");
+    }
+
+    // Cek status clock-out
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-out');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      setState(() {
+        hasClockedOut = data['message'] == 'sudah clock-out';
+      });
+    } catch (e) {
+      print("Error mengecek status clock-out: $e");
+    }
+  }
+
+  // Fungsi untuk mereset note pada pukul 5 pagi
+  void _resetNoteAtFiveAM() {
+    final now = DateTime.now();
+    final fiveAM = DateTime(now.year, now.month, now.day, 5);
+    final timeUntilReset = fiveAM.isBefore(now)
+        ? fiveAM.add(const Duration(days: 1)).difference(now)
+        : fiveAM.difference(now);
+
+    resetNoteTimer = Timer(timeUntilReset, () {
+      setState(() {
+        hasClockedIn = false;
+        showNote = true;
+        isSuccess = false;
+        isLate = false;
+        clockInMessage = null;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    resetNoteTimer?.cancel(); // Membatalkan timer saat widget dibuang
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -206,10 +323,20 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const CircleAvatar(
-                        radius: 25,
-                        backgroundImage: AssetImage(
-                            'assets/image/agas.png'), // Ganti dengan path image profile
+                      GestureDetector(
+                        onTap: () {
+                          // Navigasi ke halaman profil dan kirim gambar yang dipilih
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProfileScreen(),
+                            ),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 25,
+                          backgroundColor: Colors.grey[200],
+                        ),
                       ),
                       Text(
                         _currentTime, // Menampilkan waktu yang di-update setiap detik
@@ -233,11 +360,11 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Welcome Back,\nMaegareta wokahholic',
+                  Text(
+                    'Welcome Back,\n $name',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -245,7 +372,7 @@ class _HomePageState extends State<HomePage> {
                     'Don\'t Forget To Clock In Today ✨',
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -276,31 +403,50 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ClockInPage())); // Aksi Clock In
-                              },
+                              onPressed: hasClockedIn
+                                  ? null
+                                  : () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ClockInPage(),
+                                        ),
+                                      );
+                                      // Perbarui status jika clock-in berhasil
+                                      if (result == true) {
+                                        _updateClockInStatus(true);
+                                      }
+                                    },
                               icon: const Icon(Icons.login),
                               label: const Text('Clock In'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
+                                backgroundColor:
+                                    hasClockedIn ? Colors.grey : Colors.white,
                               ),
                             ),
                             ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ClockOutScreen())); // Aksi Clock Out
-                              },
+                              onPressed: hasClockedOut
+                                  ? null
+                                  : () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ClockOutScreen(),
+                                        ),
+                                      );
+                                      // Update status clock-out jika berhasil
+                                      if (result == true) {
+                                        setState(() {
+                                          hasClockedOut = true;
+                                        });
+                                      }
+                                    },
                               icon: const Icon(Icons.logout),
                               label: const Text('Clock Out'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
+                                backgroundColor:
+                                    hasClockedOut ? Colors.grey : Colors.white,
                               ),
                             ),
                           ],
@@ -335,6 +481,10 @@ class _HomePageState extends State<HomePage> {
                         iconColor:
                             Colors.white, // Warna yang diterapkan ke gambar
                         iconSize: 32, // Ukuran gambar
+                        labelStyle: const TextStyle(
+                          color: Colors.pink, // Warna label menjadi pink
+                          fontSize: 14,
+                        ),
                       ),
                       // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
                       _buildMenuShortcut(
@@ -345,6 +495,10 @@ class _HomePageState extends State<HomePage> {
                         iconData: Icons.receipt, // Ikon bawaan Flutter
                         iconColor: Colors.white, // Warna ikon
                         iconSize: 30, // Ukuran ikon
+                        labelStyle: const TextStyle(
+                          color: Colors.pink, // Warna label menjadi pink
+                          fontSize: 14,
+                        ),
                       ),
                       // Menggunakan gambar dari aset dan mengatur ukuran gambar
                       _buildMenuShortcut(
@@ -357,14 +511,94 @@ class _HomePageState extends State<HomePage> {
                         iconColor:
                             Colors.white, // Warna yang diterapkan ke gambar
                         iconSize: 26, // Ukuran gambar
+                        labelStyle: const TextStyle(
+                          color: Colors.pink, // Warna label menjadi pink
+                          fontSize: 14,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _buildStatusCard('✨ Your Absence Was Successful ✨',
-                      Colors.orange, 'Good work and keep up the spirit'),
+                  if (isSuccess)
+                    Card(
+                      color: Colors.orange,
+                      elevation: 5,
+                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20.0, horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Teks Kiri
+                            Flexible(
+                              child: Text(
+                                '✨ Your Absence \n Was Successful ✨',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            // Teks Kanan
+                            Flexible(
+                              child: Text(
+                                'Good work and \n keep up the spirit',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                    color: Colors.white70, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (isLate)
+                    Card(
+                      color: Colors.redAccent,
+                      elevation: 5,
+                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20.0, horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Teks Kiri
+                            Flexible(
+                              child: Text(
+                                '💥 You’re Late!, \n Let’s In Now 💥',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            // Teks Kanan
+                            Flexible(
+                              child: Text(
+                                'How can you be \n absent late?',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                    color: Colors.white70, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 20),
-// Announcement Section
+                  // Announcement Section
                   const Text(
                     'Announcement',
                     style: TextStyle(
@@ -374,7 +608,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-// PageView for slideshow of announcements with indicators
+                  // PageView for slideshow of announcements with indicators
                   Container(
                     height: 150,
                     decoration: BoxDecoration(
@@ -432,73 +666,75 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  SizedBox(height: 2),
                   // Note Section
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Note',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.purple,
+                        if (showNote) ...[
+                          const Text(
+                            'Note',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple,
+                            ),
                           ),
-                        ),
-                        const SizedBox(
-                            height: 10), // Jarak antara "Note" dan konten
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: const Offset(0, 3), // posisi bayangan
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Today was Good, good work 👏',
-                                style: TextStyle(fontSize: 11),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ClockInPage()),
-                                  ); // Aksi ketika tombol ditekan
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      Colors.orange, // Warna tombol
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        4), // Melengkungkan pinggiran tombol
+                          const SizedBox(
+                              height: 10), // Jarak antara "Note" dan konten
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.2),
+                                  spreadRadius: 2,
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3), // posisi bayangan
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Today was Good, good work 👏',
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ClockInPage()),
+                                    ); // Aksi ketika tombol ditekan
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Colors.orange, // Warna tombol
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          4), // Melengkungkan pinggiran tombol
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 5),
+                                  child: const Text(
+                                    'Submit',
+                                    style: TextStyle(
+                                        fontSize: 10, color: Colors.white),
+                                  ),
                                 ),
-                                child: const Text(
-                                  'Submit',
-                                  style: TextStyle(
-                                      fontSize: 10, color: Colors.white),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -592,32 +828,6 @@ class _HomePageState extends State<HomePage> {
               color: Colors.white,
             ),
             label: 'Profil',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusCard(String title, Color color, String subtitle) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-                fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: TextStyle(color: Colors.white70),
           ),
         ],
       ),
