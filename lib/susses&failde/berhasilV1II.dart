@@ -2,17 +2,46 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Package to format the date and time
 import 'package:absen/homepage/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
-class SuccessPageII extends StatelessWidget {
+class SuccessPageII extends StatefulWidget {
+  @override
+  _SuccessPageIIState createState() => _SuccessPageIIState();
+}
 
+class _SuccessPageIIState extends State<SuccessPageII> {
+  String? datetime;
+
+  Future<void> getData() async {
+    final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/get-time');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          datetime.toString;
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     // Get current date and time
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('d MMMM yyyy').format(now);
-    String formattedTime = DateFormat('hh:mm:ss a')
-        .format(now); // Updated to 12-hour format with AM/PM
 
     return Scaffold(
       body: Container(
@@ -68,7 +97,7 @@ class SuccessPageII extends StatelessWidget {
                 ),
               ),
               Text(
-                formattedTime,
+                datetime.toString(),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

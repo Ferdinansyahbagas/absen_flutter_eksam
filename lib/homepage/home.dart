@@ -22,11 +22,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  PageController _pageController =
+      PageController(); // PageController for PageView
   String? currentCity; // Menyimpan nama kota
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
-  String? name = "";
+  String? name = ""; // Variabel untuk name pengguna
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
-  Timer? resetNoteTimer;
+  Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   int currentIndex = 0; // Default to the home page
   int _currentPage = 0; // Variable to keep track of the current page
@@ -36,8 +38,8 @@ class _HomePageState extends State<HomePage> {
   bool showNote = true; // Status untuk menampilkan note
   bool isSuccess = false; // Status untuk menampilkan card
   bool isLate = false; // Status untuk card terlambat
-  PageController _pageController =
-      PageController(); // PageController for PageView
+  bool isholiday = false; //status untuk card libur
+  bool isovertime = false; //status untuk card lembur
 
   @override
   void initState() {
@@ -285,6 +287,7 @@ class _HomePageState extends State<HomePage> {
         showNote = true;
         isSuccess = false;
         isLate = false;
+        isholiday = false;
         clockInMessage = null;
       });
     });
@@ -425,9 +428,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             ElevatedButton.icon(
-                              onPressed: hasClockedOut
-                                  ? null
-                                  : () async {
+                              onPressed: hasClockedIn && !hasClockedOut
+                                  ? () async {
                                       final result = await Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -435,18 +437,23 @@ class _HomePageState extends State<HomePage> {
                                               const ClockOutScreen(),
                                         ),
                                       );
-                                      // Update status clock-out jika berhasil
+                                      // Perbarui status jika clock-out berhasil
                                       if (result == true) {
                                         setState(() {
-                                          hasClockedOut = true;
+                                          hasClockedOut =
+                                              true; // Set status clock-out
                                         });
                                       }
-                                    },
+                                    }
+                                  : null, // Disable tombol jika belum clock-in atau sudah clock-out
                               icon: const Icon(Icons.logout),
                               label: const Text('Clock Out'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    hasClockedOut ? Colors.grey : Colors.white,
+                                backgroundColor: hasClockedIn && !hasClockedOut
+                                    ? Colors
+                                        .white // Aktif jika clock-in sudah dilakukan
+                                    : Colors
+                                        .grey, // Nonaktif jika belum clock-in atau sudah clock-out
                               ),
                             ),
                           ],
@@ -588,6 +595,41 @@ class _HomePageState extends State<HomePage> {
                             Flexible(
                               child: Text(
                                 'How can you be \n absent late?',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                    color: Colors.white70, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (isholiday)
+                    Card(
+                      color: Colors.green,
+                      elevation: 5,
+                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20.0, horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              '🌴 You’re on Leave 🌴',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                'Enjoy your time off!',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                     color: Colors.white70, fontSize: 14),

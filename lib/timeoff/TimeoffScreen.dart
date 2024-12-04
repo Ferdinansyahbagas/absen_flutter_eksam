@@ -6,16 +6,115 @@ import 'package:absen/homepage/home.dart';
 import 'package:absen/profil/profilscreen.dart';
 import 'package:absen/timeoff/tiimeoff.dart';
 import 'package:absen/timeoff/timeoffsick.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class TimeOffScreen extends StatelessWidget {
+class TimeOffScreen extends StatefulWidget {
+  @override
+  _TimeOffScreenState createState() => _TimeOffScreenState();
+}
+
+class _TimeOffScreenState extends State<TimeOffScreen> {
+  String? limit;
+  List<dynamic> historyData = []; // Tambahkan list untuk menyimpan data history
+
+  @override
+  void initState() {
+    super.initState();
+    getProfile();
+    getHistoryData(); // Panggil fungsi untuk mengambil data history
+  }
+
+  Future<void> getProfile() async {
+    {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+
+      if (rp.statusCode == 200) {
+        try {
+          var data = jsonDecode(rp.body); // Decode JSON
+          print('Parsed Data: $data');
+          setState(() {
+            limit =
+                data['data']?['batas_cuti']?.toString() ?? '0'; // Validasi key
+          });
+          SharedPreferences localStorage =
+              await SharedPreferences.getInstance();
+          localStorage.setString('id', data['data']?['id'] ?? '');
+        } catch (e) {
+          print('Error parsing JSON: $e');
+        }
+      } else {
+        print('Error retrieving profile: ${rp.statusCode}');
+        print(rp.body);
+      }
+    }
+  }
+
+  Future<void> getHistoryData() async {
+    {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/request-history/show-history');
+      var request = http.MultipartRequest('POST', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+
+      if (rp.statusCode == 200) {
+        try {
+          var data = jsonDecode(rp.body); // Decode JSON
+          print('Parsed Data: $data');
+          setState(() {
+            historyData = data['data'] ?? []; // Validasi key
+          });
+        } catch (e) {
+          print('Error parsing JSON: $e');
+        }
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Time Off'),
+        title: Text(
+          'Time Off',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+        ),
         elevation: 0,
-        centerTitle: true,
         foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -25,37 +124,80 @@ class TimeOffScreen extends StatelessWidget {
             // Remaining Leave
             SizedBox(height: 20),
             Container(
-              padding: EdgeInsets.all(16.0),
+              width: double.infinity,
+              height: 140,
+              padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
               decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(12),
+                color: const Color.fromARGB(255, 243, 147, 4),
+                borderRadius: BorderRadius.circular(9),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Your Remaining Leave Is',
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
-                  Row(
+                  // Teks di sebelah kiri
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment:
+                        MainAxisAlignment.center, // Tengah vertikal
                     children: [
-                      Text('3',
-                          style: TextStyle(
-                              fontSize: 48,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                      Text('/12',
-                          style: TextStyle(fontSize: 24, color: Colors.white)),
+                      Text(
+                        'Your Remaining\nLeave Is',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
-                  )
+                  ),
+                  // Angka di sebelah kanan
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline
+                          .alphabetic, // Menambahkan baseline agar teks sejajar
+                      children: [
+                        Text(
+                          limit.toString(),
+                          style: TextStyle(
+                            fontSize: 50,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Text(
+                            '/',
+                            style: TextStyle(
+                              fontSize: 44,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '12',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            SizedBox(height: 20),
-
+            SizedBox(height: 30),
             // Apply for Time Off Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: EdgeInsets.symmetric(vertical: 16.0)),
+                  backgroundColor:  const Color.fromARGB(255, 101, 19, 116),
+                  padding: EdgeInsets.symmetric(vertical: 16.0)
+                  ),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
@@ -72,8 +214,9 @@ class TimeOffScreen extends StatelessWidget {
             // Apply for Sick Rest Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: EdgeInsets.symmetric(vertical: 16.0)),
+                  backgroundColor:  const Color.fromARGB(255, 101, 19, 116),
+                  padding: EdgeInsets.symmetric(vertical: 16.0)
+                  ),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
@@ -99,71 +242,72 @@ class TimeOffScreen extends StatelessWidget {
             ),
             // Time Off Request Card
             Expanded(
-              child: DraggableScrollableSheet(
-                initialChildSize: 0.4,
-                minChildSize: 0.2,
-                maxChildSize: 0.8,
-                builder: (context, scrollController) {
+              child: ListView.builder(
+                itemCount: historyData.length,
+                itemBuilder: (context, index) {
+                  final item = historyData[index] as Map<String, dynamic>;
                   return Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
+                      color: Color.fromARGB(255, 236, 81, 109),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: 2,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 16),
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent,
-                            borderRadius: BorderRadius.circular(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header dengan judul tipe dan tanggal
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              item['type']['name']?.toString() ??
+                                  'Unknown Type', // Hanya menampilkan nama tipe
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Catatan atau deskripsi
+                        Text(
+                          item['notes']?.toString() ?? 'No reason provided',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Annual Vacation',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 20),
+                        // Status pengajuan
+                        Align(
+                          alignment: Alignment.center,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 120),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            child: Text(
+                              item['status']['name']?.toString() ??
+                                  'Unknown Status',
+                              style: TextStyle(
+                                color: Colors.pink,
+                                fontWeight: FontWeight.bold,
                               ),
-                              SizedBox(height: 8),
-                              Text(
-                                'I have a family event',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              SizedBox(height: 8),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 4, horizontal: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'application approved',
-                                    style: TextStyle(color: Colors.black),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                '12-13 Oktober 2024',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 12),
-                              ),
-                            ],
+                            ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   );
                 },

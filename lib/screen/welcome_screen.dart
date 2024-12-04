@@ -22,6 +22,7 @@ class WelcomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(height: 25),
             Text(
               'Hi,',
               style: TextStyle(
@@ -64,7 +65,7 @@ class WelcomeScreen extends StatelessWidget {
                     backgroundColor: Color(0xFFFFBD73), // Warna tombol
                     padding: EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   child: Text(

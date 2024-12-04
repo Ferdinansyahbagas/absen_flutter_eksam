@@ -26,7 +26,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     try {
       Response response = await post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/auth/password/email'),
+        Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/password/email'),
         body: {
           'email': _emailController.text.toString(),
         },

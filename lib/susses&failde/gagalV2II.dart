@@ -1,6 +1,6 @@
 //Time Off (Sakit) SuccessPage2II
 import 'package:flutter/material.dart';
-import 'package:absen/homepage/home.dart';
+import 'package:absen/timeoff/TimeoffScreen.dart';
 
 class FailurePage2II extends StatelessWidget {
   @override
@@ -62,7 +62,7 @@ class FailurePage2II extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    MaterialPageRoute(builder: (context) => TimeOffScreen()),
                   ); // Action when back to menu button is pressed
                 },
                 child: Text('Back To Menu'),

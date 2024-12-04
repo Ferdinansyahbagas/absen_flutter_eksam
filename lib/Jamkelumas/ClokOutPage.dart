@@ -7,7 +7,7 @@ import 'package:absen/susses&failde/berhasilV1.dart';
 import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:animated_custom_dropdown/custom_dropdown.dart';
+import 'package:http_parser/http_parser.dart';
 
 class ClockOutScreen extends StatefulWidget {
   const ClockOutScreen({super.key});
@@ -17,77 +17,130 @@ class ClockOutScreen extends StatefulWidget {
 }
 
 class _ClockOutScreenState extends State<ClockOutScreen> {
-  String? _selectedWorkType = 'Reguler';
-  String? _selectedWorkplaceType = 'WFO';
-  File? _image; // To store the image file
+  String? _selectedWorkType;
+  String? _selectedWorkplaceType;
+  String note = '';
+  File? _image;
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _noteController = TextEditingController();
+  bool _isImageRequired = false;
+  List<String> WorkTypes = [];
+  List<String> WorkplaceTypes = [];
 
-  final List<String> workTypes = ['Reguler', 'Lembur'];
-  final List<String> workplaceTypes = ['WFO', 'WFH'];
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedValues();
+    getData();
+  }
 
-  // Function to pick image from gallery or camera
-  Future<void> _pickImage(ImageSource source) async {
-    final XFile? pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
+  Future<void> _loadSelectedValues() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    bool isClockInDone = localStorage.getBool('clockInDone') ?? false;
+    if (isClockInDone) {
       setState(() {
-        _image = File(pickedFile.path);
+        _selectedWorkType = localStorage.getString('workType');
+        _selectedWorkplaceType = localStorage.getString('workplaceType');
       });
     }
   }
 
-  // Function to submit data to API
-  Future<void> _submitData() async {
+  Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _isImageRequired = false;
+      });
+    }
+  }
+
+  Future<void> getData() async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/attendance/get-self-detail-today');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
     try {
-      // Example API endpoint
-      final url =
-          Uri.parse('http://127.0.0.1:8000/api/v1/attendance/clock-out');
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
 
-      // Prepare multipart request to send image and data
+      if (rp.statusCode == 200) {
+        var data = jsonDecode(rp.body.toString());
+        print(data);
+        setState(() {
+          _selectedWorkType = data['data']['type']['name'];
+          _selectedWorkplaceType = data['data']['location']['name'];
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> _submitData() async {
+    if (_image == null) {
+      setState(() {
+        _isImageRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a photo before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/attendance/clock-out');
       var request = http.MultipartRequest('PUT', url);
-
-      // Add form fields
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
-      request.fields['workType'] = _selectedWorkType!;
-      request.fields['workplaceType'] = _selectedWorkplaceType!;
 
-      // Add image file if selected
+      request.fields['notes'] = _noteController.text;
+
       if (_image != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'image', // Field name in the API
+          'image',
           _image!.path,
+          contentType: MediaType('image', 'jpeg'),
         ));
       }
 
-      // Send the request and get the response
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
-      print(data);
-      var status = data['status'];
+
       if (response.statusCode == 200) {
-        // Successfully submitted
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SuccessPage()),
-        );
+            context, MaterialPageRoute(builder: (context) => SuccessPage()));
       } else {
-        // Submission failed
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => FailurePage()),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit: ${data['message']}'),
+            backgroundColor: Colors.red,
+          ),
         );
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => FailurePage()));
       }
     } catch (e) {
-      // Handle error and navigate to failure page
-      print("Error: $e");
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => FailurePage()),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => FailurePage()));
     }
   }
 
@@ -112,126 +165,90 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Work Type Dropdown
-            const Text(
-              'Work Type',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.purple,
-              ),
-            ),
+            const Text('Work Type',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.purple)),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _selectedWorkType,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Colors.purple, // Customize border color
-                    width: 2, // Customize border width
-                  ),
-                ),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.purple, width: 2)),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Colors.purple, // Keep the border color when focused
-                    width: 2, // Keep the border width when focused
-                  ),
-                ),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.purple, width: 2)),
               ),
-              items: workTypes.map((String workType) {
+              items: [_selectedWorkType ?? 'No Work Type Selected']
+                  .map((String workType) {
                 return DropdownMenuItem<String>(
-                  value: workType,
-                  child: Text(workType),
-                );
+                    value: workType, child: Text(workType));
               }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedWorkType = newValue;
-                });
-              },
+              onChanged: null, // Disabled
             ),
             const SizedBox(height: 20),
-
             // Workplace Type Dropdown
-            const Text(
-              'Workplace Type',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.purple,
-              ),
-            ),
+            const Text('Workplace Type',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.purple)),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _selectedWorkplaceType,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Colors.purple, // Customize border color
-                    width: 2, // Customize border width
-                  ),
-                ),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.purple, width: 2)),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Colors.purple, // Keep the border color when focused
-                    width: 2, // Keep the border width when focused
-                  ),
-                ),
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                        const BorderSide(color: Colors.purple, width: 2)),
               ),
-              items: workplaceTypes.map((String workplaceType) {
+              items: [_selectedWorkplaceType ?? 'No Workplace Type Selected']
+                  .map((String workplaceType) {
                 return DropdownMenuItem<String>(
-                  value: workplaceType,
-                  child: Text(workplaceType),
-                );
+                    value: workplaceType, child: Text(workplaceType));
               }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedWorkplaceType = newValue;
-                });
-              },
+              onChanged: null, // Disabled
             ),
             const SizedBox(height: 20),
-
             // Upload Photo Button
             GestureDetector(
-              onTap: () {
-                _showImageSourceSelectionDialog(context);
-              },
+              onTap: _pickImage, // Langsung panggil kamera
               child: Container(
                 height: 130,
                 width: 150,
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: _image == null
-                          ? Colors.purple
-                          : Colors.yellow), // Change to yellow if photo exists
+                    color: _isImageRequired
+                        ? Colors.red
+                        : (_image == null
+                            ? Colors.purple
+                            : Colors.orange), // Red if image is required
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _image == null
-                        ? IconButton(
-                            icon: const Icon(
-                              Icons.camera_alt,
-                              size: 35,
-                              color: Colors.purple,
-                            ),
-                            onPressed: () {
-                              _showImageSourceSelectionDialog(context);
-                            },
-                          )
-                        : Image.file(
-                            _image!,
-                            height: 100,
-                            width: 100,
-                            fit: BoxFit.cover,
-                          ),
+                    Icon(
+                      Icons.camera_alt,
+                      size: 35,
+                      color: _isImageRequired
+                          ? Colors.red
+                          : (_image == null
+                              ? Colors.purple
+                              : Colors.orange), // Red icon if image is required
+                    ),
                     const SizedBox(height: 3),
-                    if (_image == null)
+                    if (_image == null && !_isImageRequired)
                       const Text(
                         'Upload Your Photo',
                         style: TextStyle(
@@ -281,32 +298,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Show dialog to choose between Camera or Gallery
-  void _showImageSourceSelectionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Image Source'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _pickImage(ImageSource.camera);
-            },
-            child: const Text('Camera'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _pickImage(ImageSource.gallery);
-            },
-            child: const Text('Gallery'),
-          ),
-        ],
       ),
     );
   }

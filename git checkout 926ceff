@@ -1,0 +1,9 @@
+[33m063bcb5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{0}: commit: Restore lost changes
+[33ma755f9f[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{1}: reset: moving to HEAD
+[33ma755f9f[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{2}: commit: wertyuiop
+[33me5954e6[m HEAD@{3}: commit: poiuytr
+[33m730bba1[m HEAD@{4}: commit: apa aja
+[33me2f8286[m HEAD@{5}: reset: moving to HEAD
+[33me2f8286[m HEAD@{6}: commit: commit pertama
+[33m926ceff[m[33m ([m[1;32mlist[m[33m)[m HEAD@{7}: Branch: renamed refs/heads/main to refs/heads/main
+[33m926ceff[m[33m ([m[1;32mlist[m[33m)[m HEAD@{9}: commit (initial): first commit

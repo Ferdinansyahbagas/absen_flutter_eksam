@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/timeoff/TimeoffScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -41,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void login2() async {
     try {
       Response response = await post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/auth/login'),
+        Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/login'),
         body: {
           'email': _emailController.text.toString(),
           'password': _passwordController.text.toString(),
@@ -62,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Fungsi pindah halaman
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => TimeOffScreen()),
         );
       } else {
         var data = jsonDecode(response.body.toString());

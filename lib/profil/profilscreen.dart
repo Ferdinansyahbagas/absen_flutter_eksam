@@ -22,19 +22,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
   String profileImageUrl = 'https://via.placeholder.com/150';
   String idCardImageUrl = 'https://via.placeholder.com/100';
-  String cvImageUrl = 'https://via.placeholder.com/100';
-  String name = 'Maegareta wokahholic';
-  String email = 'maegaretawokahholic@gmail.com';
-  String password = '12345678';
-  String phoneNumber = '0812-3456-7890';
-  String address = 'Jl. Ampera Selatan No.1, Blora, Central Jakarta';
-  String idCardAddress = 'Jl. Semangka Timur No.5, Sleman, Yogyakarta';
-  String employmentStart = '1 October 2024';
-  String employmentEnd = '12 December 2024';
-  String education = 'smk';
-  String bankAccount = '123456789';
-  String bank = 'mandiri';
-  String leaveLimit = '12 Days';
+  String cvImageUrl = '';
+  String name = '';
+  String email = '';
+  String password = '';
+  String phoneNumber = '';
+  String address = '';
+  String idCardAddress = '';
+  String employmentStart = '';
+  String employmentEnd = '';
+  String education = '';
+  String bankAccount = '';
+  String bank = '';
+  String leaveLimit = '';
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
   bool _isPasswordHidden =
@@ -53,6 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {bool isPasswordField = false}) {
     TextEditingController controller =
         TextEditingController(text: currentValue);
+        
 
     showDialog(
       context: context,

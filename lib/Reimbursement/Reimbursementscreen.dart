@@ -1,11 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:absen/homepage/notif.dart';
-import 'package:absen/profil/profilscreen.dart';
-import 'package:absen/homepage/home.dart';
-import 'package:absen/timeoff/TimeoffScreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:absen/Reimbursement/requestReimbursement.dart';
 
-class ReimbursementPage extends StatelessWidget {
+class ReimbursementPage extends StatefulWidget {
+  @override
+  _ReimbursementPageState createState() => _ReimbursementPageState();
+}
+
+class _ReimbursementPageState extends State<ReimbursementPage> {
+  List<dynamic> historyData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getHistoryData();
+  }
+
+  Future<void> getHistoryData() async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/request-history/show-history');
+    var request = http.MultipartRequest('POST', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+
+      if (rp.statusCode == 200) {
+        var data = jsonDecode(rp.body);
+        setState(() {
+          historyData = data['data'] ?? [];
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +64,7 @@ class ReimbursementPage extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => ReimbursementForm()),
-                ); // Add request reimbursement action here
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
@@ -53,115 +91,36 @@ class ReimbursementPage extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: ListView(
-              children: [
-                ReimbursementHistoryCard(
-                  title: 'Food',
-                  amount: 'IDR. 35,000.00',
-                  statusText: 'Submission',
-                  statusColor: Colors.pink,
-                ),
-                ReimbursementHistoryCard(
-                  title: 'Food',
-                  amount: 'IDR. 36,000.00',
-                  statusText: 'Submission accepted',
-                  statusColor: Colors.purple,
-                ),
-                ReimbursementHistoryCard(
-                  title: 'Food',
-                  amount: 'IDR. 35,000.00',
-                  statusText: 'Submission Rejected',
-                  statusColor: Colors.purple,
-                ),
-              ],
+            child: ListView.builder(
+              itemCount: historyData.length,
+              itemBuilder: (context, index) {
+                final item = historyData[index];
+                return ReimbursementHistoryCard(
+                  title: item['category']?.toString() ?? 'Unknown',
+                  amount: item['amount']?.toString() ?? 'Unknown',
+                  statusText: item['status']?.toString() ?? 'Unknown',
+                  statusColor:
+                      _getStatusColor(item['status']?.toString() ?? 'Unknown'),
+                );
+              },
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-       items: const [
-          BottomNavigationBarItem(
-          icon :ImageIcon(
-             AssetImage('assets/icon/home.png'), // Custom icon
-              size: 18,
-              color: Colors.white,
-          ),
-            label: 'Home',  
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/timeoff.png'), // Custom icon
-              size: 20,
-              color: Colors.white,
-            ),
-            label: 'Time Off',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt, size: 27),
-            label: 'Reimbursement',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/notifikasi.png'), // Custom icon
-              size: 20,
-              color: Colors.white,
-            ),
-            label: 'Notification',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/profil.png'), // Custom icon
-              size: 20,
-              color: Colors.white,
-            ),
-            label: 'Profil',
-          ),
-        ],
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.white,
-        backgroundColor: const Color.fromARGB(255, 101, 19, 116),
-        selectedLabelStyle: const TextStyle(fontSize: 11),
-        unselectedLabelStyle: const TextStyle(fontSize: 9),
-        currentIndex: 2,
-        onTap: (index) {
-          // Handle bottom navigation bar tap
-          // Navigate to the appropriate screen
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => TimeOffScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ReimbursementPage()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
-              );
-              break;
-            case 4:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'submission':
+        return Colors.pink;
+      case 'submission accepted':
+        return Colors.green;
+      case 'submission rejected':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }
 

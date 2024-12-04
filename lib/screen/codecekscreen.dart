@@ -19,7 +19,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
   Future<void> _submit() async {
     try {
       Response response = await post(
-        Uri.parse('http://127.0.0.1:8000/api/v1/auth/password/code-check'),
+        Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/password/code-check'),
         body: {
           'code': _emailController.text.toString(),
         },

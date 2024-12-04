@@ -26,7 +26,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         SharedPreferences localStorage = await SharedPreferences.getInstance();
         var code = localStorage.getString('code');
         Response response = await post(
-          Uri.parse('http://127.0.0.1:8000/api/v1/auth/password/reset'),
+          Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/password/reset'),
           body: {
             'code' : code,
                 'password': _confirmPasswordController.text.toString(),
