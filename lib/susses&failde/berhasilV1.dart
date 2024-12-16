@@ -4,6 +4,7 @@ import 'package:intl/intl.dart'; // Package to format the date and time
 import 'package:absen/homepage/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SuccessPage extends StatefulWidget {
   @override
@@ -11,7 +12,13 @@ class SuccessPage extends StatefulWidget {
 }
 
 class _SuccessPageState extends State<SuccessPage> {
-  String? datetime;
+  String datetime = '';
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
   Future<void> getData() async {
     final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/get-time');
@@ -23,10 +30,11 @@ class _SuccessPageState extends State<SuccessPage> {
     try {
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
       if (rp.statusCode == 200) {
         setState(() {
-          datetime.toString;
+          datetime = data['data']['time'];
         });
       } else {
         print('Error fetching history data: ${rp.statusCode}');
@@ -91,13 +99,13 @@ class _SuccessPageState extends State<SuccessPage> {
               Text(
                 formattedDate,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
               Text(
-                datetime.toString(),
+                datetime,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

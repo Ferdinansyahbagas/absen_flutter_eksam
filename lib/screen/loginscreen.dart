@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
+import 'package:absen/profil/profilscreen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -63,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Fungsi pindah halaman
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => TimeOffScreen()),
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       } else {
         var data = jsonDecode(response.body.toString());

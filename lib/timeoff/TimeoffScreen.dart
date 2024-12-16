@@ -65,7 +65,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
   Future<void> getHistoryData() async {
     {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/request-history/show-history');
+          'https://dev-portal.eksam.cloud/api/v1/request-history/get-user-history');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
@@ -195,9 +195,12 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             // Apply for Time Off Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor:  const Color.fromARGB(255, 101, 19, 116),
-                  padding: EdgeInsets.symmetric(vertical: 16.0)
-                  ),
+                backgroundColor: const Color.fromARGB(255, 101, 19, 116),
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12), // Set Border Radius
+                ),
+              ),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
@@ -214,9 +217,12 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             // Apply for Sick Rest Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor:  const Color.fromARGB(255, 101, 19, 116),
-                  padding: EdgeInsets.symmetric(vertical: 16.0)
-                  ),
+                backgroundColor: const Color.fromARGB(255, 101, 19, 116),
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12), // Set Border Radius
+                ),
+              ),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,

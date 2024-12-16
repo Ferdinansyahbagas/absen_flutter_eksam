@@ -1,11 +1,15 @@
 import 'package:absen/homepage/notif.dart';
 import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:absen/homepage/home.dart';
+import 'package:absen/screen/loginscreen.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:absen/profil/ChagePassPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,16 +29,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String cvImageUrl = '';
   String name = '';
   String email = '';
-  String password = '';
   String phoneNumber = '';
   String address = '';
   String idCardAddress = '';
+  File? _idCardImage;
+  File? _cvImage;
   String employmentStart = '';
   String employmentEnd = '';
   String education = '';
   String bankAccount = '';
   String bank = '';
-  String leaveLimit = '';
+  String Limit = '';
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
   bool _isPasswordHidden =
@@ -47,13 +52,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final ImagePicker _picker = ImagePicker();
 
+  @override
+  void initState() {
+    super.initState();
+    getProfile();
+  }
+
+  Future<void> setProfile() async {
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/set-profile');
+
+      var request = http.MultipartRequest('POST', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          phoneNumber = data['data']['no_hp'].toString();
+          address = data['data']['alamat_domisili'].toString();
+          idCardAddress = data['data']['alamat_ktp'].toString();
+        });
+        localStorage.setString('id', data['data']['id']);
+      } else {
+        print("Error retrieving profile");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<void> getProfile() async {
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          name = data['data']['name'].toString();
+          email = data['data']['email'].toString();
+          phoneNumber = data['data']['no_hp'].toString();
+          address = data['data']['alamat_domisili'].toString();
+          idCardAddress = data['data']['alamat_ktp'].toString();
+          employmentStart = data['data']['kontrak_mulai'].toString();
+          employmentEnd = data['data']['kontrak_selesai'].toString();
+          education = data['data']['pendidikan']['pendidikan'].toString();
+          bank = data['data']['bank']['name'].toString();
+          bankAccount = data['data']['no_rekening'].toString();
+          Limit = data['data']['batas_cuti'].toString();
+        });
+        localStorage.setString('id', data['data']['id']);
+      } else {
+        print("Error retrieving profile");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
   // Fungsi untuk menampilkan dialog edit
   void _showEditDialog(
       String title, String currentValue, Function(String) onSave,
       {bool isPasswordField = false}) {
     TextEditingController controller =
         TextEditingController(text: currentValue);
-        
 
     showDialog(
       context: context,
@@ -87,10 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () {
-                    onSave(controller.text);
-                    Navigator.pop(context);
-                  },
+                  onPressed: setProfile,
                   child: Text('Save'),
                 ),
               ],
@@ -102,21 +177,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Fungsi untuk mengambil gambar dari galeri
-  Future<void> _pickImage(String imageType) async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
+  Future<void> _pickImage(ImageSource source, String imageType) async {
+    final pickedFile = await ImagePicker().pickImage(source: source);
     if (pickedFile != null) {
       setState(() {
         switch (imageType) {
           case 'profile':
             profileImage = File(pickedFile.path);
-            break;
-          case 'idCard':
-            idCardImage = File(pickedFile.path);
-            break;
-          case 'cv':
-            cvImage = File(pickedFile.path);
-            break;
+        }
+        if (imageType == 'ID Card') {
+          _idCardImage = File(pickedFile.path);
+        } else if (imageType == 'CV') {
+          _cvImage = File(pickedFile.path);
         }
       });
     }
@@ -129,7 +201,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (pickedFile != null) {
       setState(() {
         profileImage = File(pickedFile.path);
-        selectedAvatarUrl = null; // Hapus avatar URL jika ada foto baru
       });
     }
   }
@@ -138,7 +209,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _selectDefaultAvatar(String imageUrl) {
     setState(() {
       profileImage = null; // Reset file image
-      selectedAvatarUrl = imageUrl;
     });
   }
 
@@ -157,47 +227,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _pickImageFromGallery();
               },
             ),
-            ListTile(
-              leading: Icon(Icons.image),
-              title: Text('Select Default Avatar'),
-              onTap: () {
-                Navigator.pop(context);
-                _showDefaultAvatarsDialog();
-              },
-            ),
           ],
         );
       },
     );
   }
 
-  void _showDefaultAvatarsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Select Default Avatar'),
-          content: SingleChildScrollView(
-            child: Wrap(
-              spacing: 10,
-              children: defaultAvatars.map((imageUrl) {
-                return GestureDetector(
-                  onTap: () {
-                    _selectDefaultAvatar(imageUrl);
-                    Navigator.pop(context);
-                  },
-                  child: CircleAvatar(
-                    backgroundImage: NetworkImage(imageUrl),
-                    radius: 30,
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  final TextStyle titleStyle = TextStyle(fontSize: 14, color: Colors.black54);
+  final TextStyle valueStyle =
+      TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
 
   @override
   Widget build(BuildContext context) {
@@ -271,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -279,7 +317,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _buildProfileItem(
                         title: 'Email',
                         value: email,
-                        onEdit: (newValue) => setState(() => email = newValue),
+                        isEditable: false, // Tidak bisa diedit
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 10.0),
@@ -300,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    '*********',
+                                    'Edit Password',
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 ),
@@ -325,79 +363,191 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                      _buildDivider(),
                       _buildProfileItem(
                         title: 'Phone Number',
                         value: phoneNumber,
                         onEdit: (newValue) =>
                             setState(() => phoneNumber = newValue),
                       ),
-                      _buildDivider(),
                       _buildProfileItem(
                         title: 'Address',
                         value: address,
                         onEdit: (newValue) =>
                             setState(() => address = newValue),
                       ),
-                      _buildDivider(),
+                      const Divider(
+                        height: 30,
+                        thickness: 1,
+                        color: const Color.fromRGBO(101, 19, 116, 1),
+                      ),
                       _buildProfileItem(
                         title: 'ID Card Address',
                         value: idCardAddress,
                         onEdit: (newValue) =>
                             setState(() => idCardAddress = newValue),
                       ),
-                      _buildDivider(),
-                      _buildImageUploadSection(
-                        label: 'ID Card Picture',
-                        imageFile: idCardImage,
-                        onTap: () => _pickImage('idCard'),
+                      SizedBox(height: 14),
+
+                      _buildImageCard(
+                          "ID Card Picture", _idCardImage, 'ID Card'),
+                      const Divider(
+                        height: 30,
+                        thickness: 1,
+                        color: const Color.fromRGBO(101, 19, 116, 1),
                       ),
-                      SizedBox(height: 20),
-                      _buildImageUploadSection(
-                        label: 'CV',
-                        imageFile: cvImage,
-                        onTap: () => _pickImage('cv'),
-                      ),
-                      _buildDivider(),
+                      _buildImageCard("CV", _cvImage, 'CV'),
+                      SizedBox(height: 14),
+
                       _buildProfileItem(
                         title: 'Employment Contract Start',
                         value: employmentStart,
-                        onEdit: (newValue) =>
-                            setState(() => employmentStart = newValue),
+                        isEditable: false, // Tidak bisa diedit
                       ),
-                      _buildDivider(),
                       _buildProfileItem(
                         title: 'Employment Contract End',
                         value: employmentEnd,
-                        onEdit: (newValue) =>
-                            setState(() => employmentEnd = newValue),
+                        isEditable: false, // Tidak bisa diedit
                       ),
-                      _buildDivider(),
-                      _buildProfileItem(
-                        title: 'Education',
-                        value: education,
-                        onEdit: (newValue) =>
-                            setState(() => education = newValue),
+                      SizedBox(height: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Education',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(
+                              height: 8), // Spasi antara title dan dropdown
+                          DropdownButtonFormField<String>(
+                            value: education,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  width: 2,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            items:
+                                [education ?? '......'].map((String education) {
+                              return DropdownMenuItem<String>(
+                                value: education,
+                                child: Text(education),
+                              );
+                            }).toList(),
+                            onChanged: null, // Disabled
+                          ),
+                        ],
                       ),
-                      _buildDivider(),
-                      _buildProfileItem(
-                        title: 'Bank Account Number',
-                        value: bankAccount,
-                        onEdit: (newValue) =>
-                            setState(() => bankAccount = newValue),
+                      SizedBox(height: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Bank',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(
+                              height: 8), // Spasi antara title dan dropdown
+                          DropdownButtonFormField<String>(
+                            value: bank,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  width: 2,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            items: [bank ?? '......'].map((String education) {
+                              return DropdownMenuItem<String>(
+                                value: bank,
+                                child: Text(bank),
+                              );
+                            }).toList(),
+                            onChanged: null, // Disabled
+                          ),
+                        ],
                       ),
-                      _buildDivider(),
-                      _buildProfileItem(
-                        title: 'Bank',
-                        value: bank,
-                        onEdit: (newValue) => setState(() => bank = newValue),
+                      SizedBox(height: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Bank Account Number',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(
+                              height: 8), // Jarak antara judul dan TextField
+                          TextField(
+                            controller: TextEditingController(
+                                text: bankAccount ?? '......'), // Isi TextField
+                            readOnly: true, // Disabled agar tidak bisa di-edit
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(
+                                    color:
+                                        const Color.fromRGBO(101, 19, 116, 1)),
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
-                      _buildDivider(),
-                      _buildProfileItem(
-                        title: 'Leave Limit',
-                        value: leaveLimit,
-                        onEdit: (newValue) =>
-                            setState(() => leaveLimit = newValue),
+                      SizedBox(height: 14),
+
+                      // _buildProfileItem(
+                      //   title: 'Leave Limit',
+                      //   value: Limit,
+                      //   isEditable: false, // Tidak bisa diedit
+                      // ),
+                      SizedBox(height: 18),
+
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      LoginScreen())); // Aksi saat tombol login ditekan
+                        },
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Log Out'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white),
                       ),
                     ],
                   ),
@@ -405,10 +555,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          // Halaman lainnya
-          TimeOffScreen(),
-          ReimbursementPage(),
-          NotificationPage(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -497,136 +643,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget buildProfileItem(String title, String value) {
+  Widget _buildProfileItem({
+    required String title,
+    required String value,
+    Function(String)?
+        onEdit, // Fungsi hanya diperlukan untuk item yang bisa diedit
+    bool isEditable = true, // Default: bisa diedit
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
                 ),
-                SizedBox(height: 5),
-                Text(value),
-              ],
-            ),
-          ),
-          Icon(Icons.edit, color: Colors.orange),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileItem(
-      {required String title,
-      required String value,
-      required Function(String) onEdit,
-      bool isPasswordField = false,
-      bool isPasswordHidden = false}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          if (isPasswordField) ...[
-            IconButton(
-              icon: Icon(
-                isPasswordHidden ? Icons.visibility : Icons.visibility_off,
-                color: Colors.orange,
               ),
+              SizedBox(height: 5),
+              Text(
+                value,
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+          if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
+            IconButton(
+              icon: Icon(Icons.edit, color: Colors.orange),
               onPressed: () {
-                setState(() {
-                  _isPasswordHidden = !_isPasswordHidden;
-                });
+                if (onEdit != null) {
+                  _showEditDialog(title, value, onEdit);
+                }
               },
             ),
-          ],
-          IconButton(
-            icon: Icon(Icons.edit, color: Colors.orange),
-            onPressed: () => _showEditDialog(title, value, onEdit,
-                isPasswordField: isPasswordField),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildDivider() {
-    return Divider(
-      color: Colors.grey[300],
-      thickness: 1,
-      height: 30,
-    );
-  }
-
-  Widget _buildImageUploadSection(
-      {required String label,
-      required File? imageFile,
-      required Function onTap}) {
+  Widget _buildImageCard(String title, File? imageFile, String imageType) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
+        Text(title, style: titleStyle),
         SizedBox(height: 8),
         GestureDetector(
-          onTap: () => onTap(),
+          onTap: () => _pickImage(ImageSource.gallery, imageType),
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.5, // Lebar dipersempit
             height: 150,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.purple),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.camera_alt,
-                  color: Colors.purple,
-                  size: 40,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Upload Your Photo',
-                  style: TextStyle(color: Colors.purple, fontSize: 16),
-                ),
-                if (imageFile != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Image.file(
-                      imageFile,
-                      fit: BoxFit.cover,
-                      height: 100,
-                      width: 100,
-                    ),
+            width: 150,
+            color: Colors.grey[300],
+            child: imageFile != null
+                ? Image.file(imageFile, fit: BoxFit.cover)
+                : Center(
+                    child:
+                        Icon(Icons.add_a_photo, size: 20, color: Colors.grey),
                   ),
-              ],
-            ),
           ),
         ),
       ],

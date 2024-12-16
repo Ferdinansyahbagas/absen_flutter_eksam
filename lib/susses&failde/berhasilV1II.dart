@@ -13,6 +13,12 @@ class SuccessPageII extends StatefulWidget {
 class _SuccessPageIIState extends State<SuccessPageII> {
   String? datetime;
 
+ @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+ 
   Future<void> getData() async {
     final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/get-time');
     var request = http.MultipartRequest('GET', url);
@@ -91,7 +97,7 @@ class _SuccessPageIIState extends State<SuccessPageII> {
               Text(
                 formattedDate,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),

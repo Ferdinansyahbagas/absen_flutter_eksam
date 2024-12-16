@@ -7,6 +7,9 @@ import 'package:absen/screen/codecekscreen.dart';
 import 'package:absen/image_picker_channel.dart';
 import 'package:absen/profil/ChagePassPage.dart';
 import 'package:absen/screen/loginscreen.dart';
+import 'package:absen/profil/profilscreen.dart';
+import 'package:absen/history/depan.dart';
+import 'package:absen/Jamkelumas/ClockInPage.dart';
 
 void main() {
   runApp(const MyApp());

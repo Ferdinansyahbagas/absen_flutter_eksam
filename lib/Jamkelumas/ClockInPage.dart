@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class ClockInPage extends StatefulWidget {
   const ClockInPage({super.key});
@@ -95,29 +97,14 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-  // Function to pick image only from camera
-  Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile =
-          await _picker.pickImage(source: ImageSource.camera);
-
-      if (pickedFile != null) {
-        setState(() {
-          _image = File(pickedFile.path);
-          _isImageRequired = false; // Reset flag once image is picked
-        });
-        print("Image selected successfully: ${pickedFile.path}");
-      } else {
-        print("No image selected.");
-      }
-    } catch (e) {
-      print("Error picking image: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error accessing camera. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+   Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _isImageRequired = false;
+      });
     }
   }
 
@@ -136,6 +123,18 @@ class _ClockInPageState extends State<ClockInPage> {
       );
       return; // Stop submission if no image
     }
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: const Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
 
     try {
       // Example API endpoint
@@ -171,9 +170,9 @@ class _ClockInPageState extends State<ClockInPage> {
       // Add image file
       if (_image != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'image', // Field name for image in the API
+          'foto', // Field name for image in the API
           _image!.path,
-          contentType: MediaType('image', 'jpeg'), // Set content type
+          contentType: MediaType('image', 'jpg'), // Set content type
         ));
       }
 
@@ -232,7 +231,7 @@ class _ClockInPageState extends State<ClockInPage> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Colors.purple,
+                color: const Color.fromRGBO(101, 19, 116, 1),
               ),
             ),
             const SizedBox(height: 10),
@@ -242,7 +241,7 @@ class _ClockInPageState extends State<ClockInPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(
-                    color: Colors.purple,
+                    color: const Color.fromRGBO(101, 19, 116, 1),
                     width: 2,
                   ),
                 ),
@@ -269,7 +268,7 @@ class _ClockInPageState extends State<ClockInPage> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Colors.purple,
+                color: const Color.fromRGBO(101, 19, 116, 1),
               ),
             ),
             const SizedBox(height: 10),
@@ -279,7 +278,8 @@ class _ClockInPageState extends State<ClockInPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(
-                    color: Colors.purple, // Customize border color
+                    color: const Color.fromRGBO(
+                        101, 19, 116, 1), // Customize border color
                     width: 2, // Customize border width
                   ),
                 ),
@@ -308,7 +308,7 @@ class _ClockInPageState extends State<ClockInPage> {
                     color: _isImageRequired
                         ? Colors.red
                         : (_image == null
-                            ? Colors.purple
+                            ? const Color.fromRGBO(101, 19, 116, 1)
                             : Colors.orange), // Red if image is required
                     width: 2,
                   ),
@@ -323,7 +323,7 @@ class _ClockInPageState extends State<ClockInPage> {
                       color: _isImageRequired
                           ? Colors.red
                           : (_image == null
-                              ? Colors.purple
+                              ? const Color.fromRGBO(101, 19, 116, 1)
                               : Colors.orange), // Red icon if image is required
                     ),
                     const SizedBox(height: 3),
@@ -332,14 +332,62 @@ class _ClockInPageState extends State<ClockInPage> {
                         'Upload Your Photo',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.purple,
+                          color: const Color.fromRGBO(101, 19, 116, 1),
                         ),
                       ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 180),
+            const SizedBox(height: 10),
+
+// Preview Photo Button
+            if (_image != null)
+              Align(
+                alignment: Alignment.centerLeft, // Atur posisi teks di kiri
+                child: InkWell(
+                  onTap: () {
+                    // Show dialog to preview the photo
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (kIsWeb)
+                                // Jika platform adalah Web
+                                Image.network(
+                                  _image!.path,
+                                  fit: BoxFit.cover,
+                                )
+                              else
+                                // Jika platform bukan Web (mobile)
+                                Image.file(
+                                  _image!,
+                                  fit: BoxFit.cover,
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: const Text(
+                    'Preview Photo',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.orange, // Warna teks seperti hyperlink
+                      decoration: TextDecoration
+                          .underline, // Garis bawah untuk efek hyperlink
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 160),
 
             // Submit Button
             Center(

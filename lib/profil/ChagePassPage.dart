@@ -6,6 +6,9 @@ import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
 import 'package:absen/profil/profilscreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class Chagepasspage extends StatefulWidget {
   @override
@@ -14,13 +17,12 @@ class Chagepasspage extends StatefulWidget {
 
 class _ChagepasspageState extends State<Chagepasspage> {
   File? profileImage;
-  String name = 'Maegareta wokahholic';
-  String email = 'maegaretawokahholic@gmail.com';
-  String password = '12345678';
+  String name = '';
+  String email = '';
+  String password = '';
+  String uid = '';
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
-  bool _isPasswordHidden =
-      true; // Kontrol visibilitas password di tampilan profil
   List<String> defaultAvatars = [
     'https://via.placeholder.com/150/FF0000/FFFFFF?text=Avatar+1',
     'https://via.placeholder.com/150/00FF00/FFFFFF?text=Avatar+2',
@@ -28,6 +30,69 @@ class _ChagepasspageState extends State<Chagepasspage> {
   ];
 
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    getProfile();
+  }
+
+  Future<void> getProfile() async {
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          name = data['data']['name'].toString();
+          email = data['data']['email'].toString();
+          uid = data['data']['id'].toString();
+        });
+        localStorage.setString('id', data['data']['id']);
+      } else {
+        print("Error retrieving profile");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<void> _setPass() async {
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-manual');
+
+      var request = http.MultipartRequest('PUT', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+      request.fields['user_id'] = uid;
+      request.fields['password'] = password;
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+
+      if (response.statusCode == 200) {
+        setState(() {});
+        localStorage.setString('id', data['data']['id']);
+      } else {
+        print("Error retrieving profile");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
 
   // Fungsi untuk menampilkan dialog edit
   void _showEditDialog(
@@ -228,7 +293,7 @@ class _ChagepasspageState extends State<Chagepasspage> {
                       style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.purple),
+                          color: Colors.white),
                     ),
                   ],
                 ),
@@ -240,7 +305,7 @@ class _ChagepasspageState extends State<Chagepasspage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Password',
+                    name,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -256,11 +321,10 @@ class _ChagepasspageState extends State<Chagepasspage> {
                         'Email',
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
-                      Icon(Icons.edit, color: Colors.orange),
                     ],
                   ),
                   Text(
-                    'maegaretawokaholic@gmail.com',
+                    email,
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 10),
@@ -271,13 +335,13 @@ class _ChagepasspageState extends State<Chagepasspage> {
                         'Password',
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
-                      Icon(Icons.visibility_off, color: Colors.orange),
                     ],
                   ),
                   Text(
                     '*********',
                     style: TextStyle(fontSize: 16),
                   ),
+                  Icon(Icons.visibility_off, color: Colors.orange),
                   SizedBox(height: 10),
                   GestureDetector(
                     onTap: () {
@@ -395,8 +459,89 @@ class ChangePasswordDialog extends StatefulWidget {
 }
 
 class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
+  String password = '';
+  String uid = '';
   bool _isOldPasswordVisible = false;
   bool _isNewPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getProfile();
+  }
+
+  Future<void> getProfile() async {
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          uid = data['data']['id'].toString();
+        });
+        print("ID: $uid");
+        localStorage.setString('id', data['data']['id']);
+        var idd = localStorage.getString('id');
+        print("ID Lagi: $idd");
+      } else {
+        print("Error retrieving profile");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<void> _setPass() async {
+    await getProfile();
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-manual');
+
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      String token = localStorage.getString('token').toString();
+      var request = http
+          .put(url,
+              headers: {
+                // 'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+              body: jsonEncode({
+                "user_id": "$uid",
+                "password": password,
+              }))
+          .then((response) {
+        if (response.statusCode == 200) {
+          print(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Berhasil'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          print(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -450,10 +595,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                // Logika untuk submit password baru
-                Navigator.of(context).pop();
-              },
+              onPressed: _setPass,
               child: Text('Submit'),
             ),
           ],

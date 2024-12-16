@@ -3,6 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:absen/Reimbursement/requestReimbursement.dart';
+import 'package:absen/homepage/notif.dart';
+import 'package:absen/homepage/home.dart';
+import 'package:absen/timeoff/TimeoffScreen.dart';
+import 'package:absen/profil/profilscreen.dart';
 
 class ReimbursementPage extends StatefulWidget {
   @override
@@ -20,7 +24,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
 
   Future<void> getHistoryData() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/request-history/show-history');
+        'https://dev-portal.eksam.cloud/api/v1/other/get-reimbursement');
     var request = http.MultipartRequest('POST', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -35,6 +39,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
         setState(() {
           historyData = data['data'] ?? [];
         });
+        print(historyData);
       } else {
         print('Error fetching history data: ${rp.statusCode}');
         print(rp.body);
@@ -67,7 +72,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
+                backgroundColor: const Color.fromRGBO(101, 19, 116, 1),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -96,8 +101,8 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
               itemBuilder: (context, index) {
                 final item = historyData[index];
                 return ReimbursementHistoryCard(
-                  title: item['category']?.toString() ?? 'Unknown',
-                  amount: item['amount']?.toString() ?? 'Unknown',
+                  title: item['name']?.toString() ?? 'Unknown',
+                  amount: item['harga']?.toString() ?? 'Unknown',
                   statusText: item['status']?.toString() ?? 'Unknown',
                   statusColor:
                       _getStatusColor(item['status']?.toString() ?? 'Unknown'),
@@ -107,20 +112,103 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
           ),
         ],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: ImageIcon(
+              AssetImage('assets/icon/home.png'), // Custom icon
+              size: 18,
+              color: Colors.white,
+            ),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(
+              AssetImage('assets/icon/timeoff.png'), // Custom icon
+              size: 20,
+              color: Colors.white,
+            ),
+            label: 'Time Off',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt, size: 27),
+            label: 'Reimbursement',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(
+              AssetImage('assets/icon/notifikasi.png'), // Custom icon
+              size: 20,
+              color: Colors.white,
+            ),
+            label: 'Notification',
+          ),
+          BottomNavigationBarItem(
+            icon: ImageIcon(
+              AssetImage('assets/icon/profil.png'), // Custom icon
+              size: 20,
+              color: Colors.white,
+            ),
+            label: 'Profil',
+          ),
+        ],
+        selectedItemColor: Colors.orange,
+        unselectedItemColor: Colors.white,
+        backgroundColor: const Color.fromARGB(255, 101, 19, 116),
+        selectedLabelStyle: const TextStyle(fontSize: 11),
+        unselectedLabelStyle: const TextStyle(fontSize: 9),
+        currentIndex: 2,
+        onTap: (index) {
+          // Handle bottom navigation bar tap
+          // Navigate to the appropriate screen
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+              break;
+            case 1:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => TimeOffScreen()),
+              );
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ReimbursementPage()),
+              );
+              break;
+            case 3:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationPage()),
+              );
+              break;
+            case 4:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
+              break;
+          }
+        },
+      ),
     );
   }
+}
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'submission':
-        return Colors.pink;
-      case 'submission accepted':
-        return Colors.green;
-      case 'submission rejected':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+Color _getStatusColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'submission':
+      return Colors.pink;
+    case 'submission accepted':
+      return Colors.green;
+    case 'submission rejected':
+      return Colors.red;
+    default:
+      return Colors.grey;
   }
 }
 

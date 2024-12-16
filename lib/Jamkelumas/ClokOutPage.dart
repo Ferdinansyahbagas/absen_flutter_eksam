@@ -8,6 +8,7 @@ import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter/foundation.dart'; // Tambahkan ini untuk kIsWeb
 
 class ClockOutScreen extends StatefulWidget {
   const ClockOutScreen({super.key});
@@ -47,7 +48,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
   Future<void> _pickImage() async {
     final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera);
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
@@ -97,6 +98,20 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       );
       return;
     }
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color:  const Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
     try {
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/attendance/clock-out');
@@ -109,9 +124,9 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
       if (_image != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'image',
+          'foto',
           _image!.path,
-          contentType: MediaType('image', 'jpeg'),
+          contentType: MediaType('image', 'jpg'),
         ));
       }
 
@@ -169,19 +184,21 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Colors.purple)),
+                    color: const Color.fromRGBO(101, 19, 116, 1))),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _selectedWorkType,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: Colors.purple, width: 2)),
+                    borderSide: const BorderSide(
+                        color: const Color.fromRGBO(101, 19, 116, 1),
+                        width: 2)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: Colors.purple, width: 2)),
+                    borderSide: const BorderSide(
+                        color: const Color.fromRGBO(101, 19, 116, 1),
+                        width: 2)),
               ),
               items: [_selectedWorkType ?? 'No Work Type Selected']
                   .map((String workType) {
@@ -196,19 +213,21 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                 style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Colors.purple)),
+                    color: const Color.fromRGBO(101, 19, 116, 1))),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _selectedWorkplaceType,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: Colors.purple, width: 2)),
+                    borderSide: const BorderSide(
+                        color: const Color.fromRGBO(101, 19, 116, 1),
+                        width: 2)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: Colors.purple, width: 2)),
+                    borderSide: const BorderSide(
+                        color: const Color.fromRGBO(101, 19, 116, 1),
+                        width: 2)),
               ),
               items: [_selectedWorkplaceType ?? 'No Workplace Type Selected']
                   .map((String workplaceType) {
@@ -229,7 +248,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                     color: _isImageRequired
                         ? Colors.red
                         : (_image == null
-                            ? Colors.purple
+                            ? const Color.fromRGBO(101, 19, 116, 1)
                             : Colors.orange), // Red if image is required
                     width: 2,
                   ),
@@ -244,7 +263,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                       color: _isImageRequired
                           ? Colors.red
                           : (_image == null
-                              ? Colors.purple
+                              ? const Color.fromRGBO(101, 19, 116, 1)
                               : Colors.orange), // Red icon if image is required
                     ),
                     const SizedBox(height: 3),
@@ -253,13 +272,59 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                         'Upload Your Photo',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.purple,
+                          color: const Color.fromRGBO(101, 19, 116, 1),
                         ),
                       ),
                   ],
                 ),
               ),
             ),
+            // Preview Photo Button
+            if (_image != null)
+              Align(
+                alignment: Alignment.centerLeft, // Atur posisi teks di kiri
+                child: InkWell(
+                  onTap: () {
+                    // Show dialog to preview the photo
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (kIsWeb)
+                                // Jika platform adalah Web
+                                Image.network(
+                                  _image!.path,
+                                  fit: BoxFit.cover,
+                                )
+                              else
+                                // Jika platform bukan Web (mobile)
+                                Image.file(
+                                  _image!,
+                                  fit: BoxFit.cover,
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: const Text(
+                    'Preview Photo',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.orange, // Warna teks seperti hyperlink
+                      decoration: TextDecoration
+                          .underline, // Garis bawah untuk efek hyperlink
+                    ),
+                  ),
+                ),
+              ),
             const SizedBox(height: 20),
 
             // TextField for Note
@@ -268,11 +333,13 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
               decoration: InputDecoration(
                 labelText: 'Note',
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.purple),
+                  borderSide:
+                      BorderSide(color: const Color.fromRGBO(101, 19, 116, 1)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.purple),
+                  borderSide:
+                      BorderSide(color: const Color.fromRGBO(101, 19, 116, 1)),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -282,11 +349,12 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
             // Submit Button
             Center(
               child: ElevatedButton(
-                onPressed: _submitData,
+                onPressed: _submitData, // Call the function to submit data
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
+                  iconColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 145,
+                    horizontal: 120,
                     vertical: 15,
                   ),
                 ),

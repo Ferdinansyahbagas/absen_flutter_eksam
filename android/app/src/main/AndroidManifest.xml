@@ -8,7 +8,7 @@
 
      
     <application
-        android:label="absen"
+        android:label="Absensi EKSAM.ID"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

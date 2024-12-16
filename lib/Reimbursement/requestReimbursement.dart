@@ -3,6 +3,12 @@ import 'package:intl/intl.dart'; // for formatting date
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:absen/Reimbursement/Reimbursementscreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:absen/susses&failde/berhasilV3.dart';
+import 'package:absen/susses&failde/gagalV3.dart';
 
 class ReimbursementForm extends StatefulWidget {
   @override
@@ -19,14 +25,75 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
   final _dateController = TextEditingController();
   File? _image; // To store the image file
   final ImagePicker _picker = ImagePicker();
+  bool _isImageRequired = false;
 
   // Function to pick image from gallery or camera
-  Future<void> _pickImage(ImageSource source) async {
-    final XFile? pickedFile = await _picker.pickImage(source: source);
+  Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
+        _isImageRequired = false;
       });
+    }
+  }
+
+  Future<void> _submitData() async {
+    if (_image == null) {
+      setState(() {
+        _isImageRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a photo before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/attendance/clock-out');
+      var request = http.MultipartRequest('PUT', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      if (_image != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'foto',
+          _image!.path,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (response.statusCode == 200) {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => SuccessPage3()));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit: ${data['message']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => FailurePage3()));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => FailurePage3()));
     }
   }
 
@@ -217,51 +284,43 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
 
               // Upload Photo Button
               GestureDetector(
-                onTap: () {
-                  _showImageSourceSelectionDialog(context);
-                },
+                onTap: _pickImage, // Langsung panggil kamera
                 child: Container(
                   height: 130,
                   width: 150,
                   decoration: BoxDecoration(
                     border: Border.all(
-                        color: _image == null
-                            ? Colors.purple
-                            : Colors
-                                .yellow), // Ubah border warna menjadi kuning jika ada foto
+                      color: _isImageRequired
+                          ? Colors.red
+                          : (_image == null
+                              ? Colors.purple
+                              : Colors.orange), // Red if image is required
+                      width: 2,
+                    ),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _image == null
-                          ? IconButton(
-                              icon: const Icon(
-                                Icons.camera_alt,
-                                size: 35,
-                                color: Colors.purple,
-                              ),
-                              onPressed: () {
-                                _showImageSourceSelectionDialog(context);
-                              },
-                            )
-                          : Image.file(
-                              _image!,
-                              height: 100,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            ),
-                      const SizedBox(
-                          height: 3), // Adding space between icon and text
-                      _image == null
-                          ? const Text(
-                              'Upload Your Photo',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.purple,
-                              ),
-                            )
-                          : Container(),
+                      Icon(
+                        Icons.camera_alt,
+                        size: 35,
+                        color: _isImageRequired
+                            ? Colors.red
+                            : (_image == null
+                                ? Colors.purple
+                                : Colors
+                                    .orange), // Red icon if image is required
+                      ),
+                      const SizedBox(height: 3),
+                      if (_image == null && !_isImageRequired)
+                        const Text(
+                          'Upload Your Photo',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.purple,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -291,32 +350,6 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-// Show dialog to choose between Camera or Gallery
-  void _showImageSourceSelectionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Image Source'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _pickImage(ImageSource.camera);
-            },
-            child: const Text('Camera'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _pickImage(ImageSource.gallery);
-            },
-            child: const Text('Gallery'),
-          ),
-        ],
       ),
     );
   }

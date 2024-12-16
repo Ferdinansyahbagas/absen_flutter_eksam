@@ -288,6 +288,8 @@ class _HomePageState extends State<HomePage> {
         isSuccess = false;
         isLate = false;
         isholiday = false;
+        isovertime = false; //status untuk card lembur
+
         clockInMessage = null;
       });
     });
@@ -409,7 +411,7 @@ class _HomePageState extends State<HomePage> {
                               onPressed: hasClockedIn
                                   ? null
                                   : () async {
-                                      final result = await Navigator.push(
+                                      final result = await Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => ClockInPage(),
@@ -430,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                             ElevatedButton.icon(
                               onPressed: hasClockedIn && !hasClockedOut
                                   ? () async {
-                                      final result = await Navigator.push(
+                                      final result = await Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
@@ -481,8 +483,8 @@ class _HomePageState extends State<HomePage> {
                       _buildMenuShortcut(
                         label: 'Time Off',
                         targetPage: TimeOffScreen(),
-                        bgColor: const Color.fromARGB(
-                            255, 101, 19, 116), // Warna background
+                        bgColor: const Color.fromRGBO(
+                            101, 19, 116, 1), // Warna background
                         imagePath:
                             'assets/icon/timeoff.png', // Path gambar aset
                         iconColor:
