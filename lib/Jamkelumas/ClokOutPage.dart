@@ -8,7 +8,7 @@ import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
-import 'package:flutter/foundation.dart'; // Tambahkan ini untuk kIsWeb
+import 'package:flutter/foundation.dart';
 
 class ClockOutScreen extends StatefulWidget {
   const ClockOutScreen({super.key});
@@ -25,6 +25,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _noteController = TextEditingController();
   bool _isImageRequired = false;
+  bool _isNoteRequired = false;
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
 
@@ -86,6 +87,19 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   }
 
   Future<void> _submitData() async {
+    if (_noteController.text.isEmpty) {
+      setState(() {
+        _isNoteRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in the note before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (_image == null) {
       setState(() {
         _isImageRequired = true;
@@ -99,14 +113,13 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       return;
     }
 
-    // Show loading dialog
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Center(
           child: CircularProgressIndicator(
-            color:  const Color.fromARGB(255, 101, 19, 116),
+            color: const Color.fromARGB(255, 101, 19, 116),
           ),
         );
       },
@@ -115,7 +128,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     try {
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/attendance/clock-out');
-      var request = http.MultipartRequest('PUT', url);
+      var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
@@ -162,6 +175,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Clock Out'),
         leading: IconButton(
@@ -170,201 +184,217 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const HomePage()),
-            ); // Handle back button press
+            );
           },
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Work Type Dropdown
-            const Text('Work Type',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: const Color.fromRGBO(101, 19, 116, 1))),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              value: _selectedWorkType,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                        color: const Color.fromRGBO(101, 19, 116, 1),
-                        width: 2)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                        color: const Color.fromRGBO(101, 19, 116, 1),
-                        width: 2)),
-              ),
-              items: [_selectedWorkType ?? 'No Work Type Selected']
-                  .map((String workType) {
-                return DropdownMenuItem<String>(
-                    value: workType, child: Text(workType));
-              }).toList(),
-              onChanged: null, // Disabled
-            ),
-            const SizedBox(height: 20),
-            // Workplace Type Dropdown
-            const Text('Workplace Type',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: const Color.fromRGBO(101, 19, 116, 1))),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              value: _selectedWorkplaceType,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                        color: const Color.fromRGBO(101, 19, 116, 1),
-                        width: 2)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                        color: const Color.fromRGBO(101, 19, 116, 1),
-                        width: 2)),
-              ),
-              items: [_selectedWorkplaceType ?? 'No Workplace Type Selected']
-                  .map((String workplaceType) {
-                return DropdownMenuItem<String>(
-                    value: workplaceType, child: Text(workplaceType));
-              }).toList(),
-              onChanged: null, // Disabled
-            ),
-            const SizedBox(height: 20),
-            // Upload Photo Button
-            GestureDetector(
-              onTap: _pickImage, // Langsung panggil kamera
-              child: Container(
-                height: 130,
-                width: 150,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: _isImageRequired
-                        ? Colors.red
-                        : (_image == null
-                            ? const Color.fromRGBO(101, 19, 116, 1)
-                            : Colors.orange), // Red if image is required
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(15),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Work Type Dropdown
+              const Text('Work Type',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: const Color.fromRGBO(101, 19, 116, 1))),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: _selectedWorkType,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: const Color.fromRGBO(101, 19, 116, 1),
+                          width: 2)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: const Color.fromRGBO(101, 19, 116, 1),
+                          width: 2)),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.camera_alt,
-                      size: 35,
+                items: [_selectedWorkType ?? 'No Work Type Selected']
+                    .map((String workType) {
+                  return DropdownMenuItem<String>(
+                      value: workType, child: Text(workType));
+                }).toList(),
+                onChanged: null, // Disabled
+              ),
+              const SizedBox(height: 20),
+              // Workplace Type Dropdown
+              const Text('Workplace Type',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: const Color.fromRGBO(101, 19, 116, 1))),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: _selectedWorkplaceType,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: const Color.fromRGBO(101, 19, 116, 1),
+                          width: 2)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: const Color.fromRGBO(101, 19, 116, 1),
+                          width: 2)),
+                ),
+                items: [_selectedWorkplaceType ?? 'No Workplace Type Selected']
+                    .map((String workplaceType) {
+                  return DropdownMenuItem<String>(
+                      value: workplaceType, child: Text(workplaceType));
+                }).toList(),
+                onChanged: null, // Disabled
+              ),
+              const SizedBox(height: 20),
+              // Upload Photo Button
+              GestureDetector(
+                onTap: _pickImage, // Langsung panggil kamera
+                child: Container(
+                  height: 130,
+                  width: 150,
+                  decoration: BoxDecoration(
+                    border: Border.all(
                       color: _isImageRequired
                           ? Colors.red
                           : (_image == null
                               ? const Color.fromRGBO(101, 19, 116, 1)
-                              : Colors.orange), // Red icon if image is required
+                              : Colors.orange), // Red if image is required
+                      width: 2,
                     ),
-                    const SizedBox(height: 3),
-                    if (_image == null && !_isImageRequired)
-                      const Text(
-                        'Upload Your Photo',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: const Color.fromRGBO(101, 19, 116, 1),
-                        ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.camera_alt,
+                        size: 35,
+                        color: _isImageRequired
+                            ? Colors.red
+                            : (_image == null
+                                ? const Color.fromRGBO(101, 19, 116, 1)
+                                : Colors
+                                    .orange), // Red icon if image is required
                       ),
-                  ],
+                      const SizedBox(height: 3),
+                      if (_image == null && !_isImageRequired)
+                        const Text(
+                          'Upload Your Photo',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: const Color.fromRGBO(101, 19, 116, 1),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            // Preview Photo Button
-            if (_image != null)
-              Align(
-                alignment: Alignment.centerLeft, // Atur posisi teks di kiri
-                child: InkWell(
-                  onTap: () {
-                    // Show dialog to preview the photo
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return Dialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (kIsWeb)
-                                // Jika platform adalah Web
-                                Image.network(
-                                  _image!.path,
-                                  fit: BoxFit.cover,
-                                )
-                              else
-                                // Jika platform bukan Web (mobile)
-                                Image.file(
-                                  _image!,
-                                  fit: BoxFit.cover,
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: const Text(
-                    'Preview Photo',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.orange, // Warna teks seperti hyperlink
-                      decoration: TextDecoration
-                          .underline, // Garis bawah untuk efek hyperlink
+              // Preview Photo Button
+              if (_image != null)
+                Align(
+                  alignment: Alignment.centerLeft, // Atur posisi teks di kiri
+                  child: InkWell(
+                    onTap: () {
+                      // Show dialog to preview the photo
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (kIsWeb)
+                                  // Jika platform adalah Web
+                                  Image.network(
+                                    _image!.path,
+                                    fit: BoxFit.cover,
+                                  )
+                                else
+                                  // Jika platform bukan Web (mobile)
+                                  Image.file(
+                                    _image!,
+                                    fit: BoxFit.cover,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: const Text(
+                      'Preview Photo',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.orange, // Warna teks seperti hyperlink
+                        decoration: TextDecoration
+                            .underline, // Garis bawah untuk efek hyperlink
+                      ),
                     ),
                   ),
                 ),
-              ),
-            const SizedBox(height: 20),
-
-            // TextField for Note
-            TextField(
-              controller: _noteController,
-              decoration: InputDecoration(
-                labelText: 'Note',
-                enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: const Color.fromRGBO(101, 19, 116, 1)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: const Color.fromRGBO(101, 19, 116, 1)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 120),
-
-            // Submit Button
-            Center(
-              child: ElevatedButton(
-                onPressed: _submitData, // Call the function to submit data
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  iconColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 120,
-                    vertical: 15,
+              const SizedBox(height: 120),
+              // TextField for Note
+              TextField(
+                controller: _noteController,
+                decoration: InputDecoration(
+                  labelText: 'Note',
+                  labelStyle: TextStyle(
+                    color: _isNoteRequired ? Colors.red : Colors.grey,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _isNoteRequired
+                          ? Colors.red
+                          : const Color.fromRGBO(101, 19, 116, 1),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _isNoteRequired
+                          ? Colors.red
+                          : const Color.fromRGBO(101, 19, 116, 1),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Submit',
-                  style: TextStyle(fontSize: 15, color: Colors.white),
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    setState(() {
+                      _isNoteRequired = false;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _submitData, // Call the function to submit data
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    iconColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 120,
+                      vertical: 15,
+                    ),
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

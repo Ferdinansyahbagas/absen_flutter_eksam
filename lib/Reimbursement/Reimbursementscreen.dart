@@ -22,9 +22,36 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
     getHistoryData();
   }
 
+  // Future<void> getHistoryData() async {
+  //   final url = Uri.parse(
+  //       'https://dev-portal.eksam.cloud/api/v1/other/get-reimbursement');
+  //   var request = http.MultipartRequest('POST', url);
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   request.headers['Authorization'] =
+  //       'Bearer ${localStorage.getString('token')}';
+
+  //   try {
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+
+  //     if (rp.statusCode == 200) {
+  //       var data = jsonDecode(rp.body);
+  //       setState(() {
+  //         historyData = data['data'] ?? [];
+  //       });
+  //       print(historyData);
+  //     } else {
+  //       print('Error fetching history data: ${rp.statusCode}');
+  //       print(rp.body);
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //   }
+  // }
+
   Future<void> getHistoryData() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/get-reimbursement');
+        'https://dev-portal.eksam.cloud/api/v1/other/get-self-reimbursement');
     var request = http.MultipartRequest('POST', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -37,9 +64,23 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
       if (rp.statusCode == 200) {
         var data = jsonDecode(rp.body);
         setState(() {
-          historyData = data['data'] ?? [];
+          historyData = data['data']?.map((item) {
+            // Ambil hanya status
+            String status = item['status']['name']?.toString() ?? 'submission';
+            // if (status == '1') {
+            //   status = 'Approved';
+            // } else if (status == '0') {
+            //   status = 'Rejected';
+            // } else {
+            //   status = 'Submission';
+            // }
+            return {
+              'name': item['name'],
+              'harga': item['harga'],
+              'status': status,
+            };
+          }).toList();
         });
-        print(historyData);
       } else {
         print('Error fetching history data: ${rp.statusCode}');
         print(rp.body);
@@ -83,7 +124,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
-          ),
+          ), //f;utter local notifikasi 
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
@@ -169,25 +210,25 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
               );
               break;
             case 1:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => TimeOffScreen()),
               );
               break;
             case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ReimbursementPage()),
-              );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => ReimbursementPage()),
+              // );
               break;
             case 3:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationPage()),
               );
               break;
             case 4:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
               );

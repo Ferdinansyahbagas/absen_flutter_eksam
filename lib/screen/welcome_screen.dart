@@ -1,7 +1,34 @@
 import 'package:flutter/material.dart';
 import 'loginscreen.dart';
+import 'package:absen/homepage/home.dart';
+import 'package:absen/utils/preferences.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  bool _hasToken = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkToken();
+  }
+
+  void _checkToken() async {
+    String? token = await Preferences.getToken();
+    if (token != null) {
+      // Jika token tersedia, set state
+      setState(() {
+        _hasToken = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,13 +81,20 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
+                    if (_hasToken) {
+                      // Jika token ada, langsung ke HomePage
+                      Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                LoginScreen())); // Aksi saat tombol login ditekan
+                        MaterialPageRoute(builder: (context) => HomePage()),
+                      );
+                    } else {
+                      // Jika tidak ada token, ke LoginScreen
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    }
                   },
-                  //http://127.0.0.1:8000/API/V1/auth/login
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFFFBD73), // Warna tombol
                     padding: EdgeInsets.symmetric(vertical: 15),

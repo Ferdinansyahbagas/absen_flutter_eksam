@@ -41,10 +41,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             _errorMessage = null;
           });
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => LoginScreen()),
-          );
+          Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    (route) => false,
+                  ); 
         } else {
           var data = jsonDecode(response.body.toString());
           setState(() {

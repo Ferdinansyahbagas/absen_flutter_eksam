@@ -17,7 +17,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    getMenit(context);
+    getMenit();
     getHistoryData;
   }
 
@@ -67,7 +67,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  void getMenit(BuildContext context) async {
+  Future<void> getMenit() async {
     try {
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/attendance/get-work-hour');
@@ -84,10 +84,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
       if (response.statusCode == 200) {
         print("Successfully retrieved data");
         print(data);
-        setState() {
-          menit = data['data']['menit'];
-          day = data['data']['hari'];
-        }
+        print(data['data']['menit'].toString());
+        print(data['data']['hari'].toString());
+
+        setState(() {
+          menit = data['data']['menit'].toString();
+          day = data['data']['hari'].toString();
+        });
+
+        print("test");
+        print(menit);
 
         // Navigate to bottom sheet with the fetched data
       } else {
@@ -338,10 +344,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      10), // Jarak horizontal
+                                                      50), // Jarak horizontal
 
                                               Text(
-                                                historyItem['starttime'],
+                                                '${historyItem['starttime']} AM',
                                                 style: TextStyle(
                                                   fontSize: 16,
                                                   color: Colors.black,
@@ -359,10 +365,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      10), // Jarak horizontal
-
+                                                      40), // Jarak horizontal
                                               Text(
-                                                historyItem['endtime'],
+                                                '${historyItem['endtime']} PM',
                                                 style: TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
@@ -379,10 +384,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      10), // Jarak horizontal
+                                                      15), // Jarak horizontal
 
                                               Text(
-                                                historyItem['duration'],
+                                                '${historyItem['duration']} Menit',
                                                 style: TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
@@ -399,7 +404,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      10), // Jarak horizontal
+                                                      48), // Jarak horizontal
 
                                               Text(
                                                 historyItem['location']['name'],
@@ -419,7 +424,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      10), // Jarak horizontal
+                                                      66), // Jarak horizontal
 
                                               Text(
                                                 historyItem['status']['name'],
@@ -513,7 +518,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               subtitle: "Your Total Hours Work",
               subtitleValue: '$menit Minutes',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _buildCard(
               title: "You're Late For Work In Total",
               value: "34 Days",
@@ -523,13 +528,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
               subtitle: "Total Hours You're Late For Work",
               subtitleValue: "2316 Minutes",
             ),
-            const Spacer(),
+            const SizedBox(height: 160),
             Center(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 101, 19, 116),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 110.0, vertical: 12.0),
+                      horizontal: 100.0, vertical: 18.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),

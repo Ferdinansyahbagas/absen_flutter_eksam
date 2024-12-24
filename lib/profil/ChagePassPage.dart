@@ -21,6 +21,7 @@ class _ChagepasspageState extends State<Chagepasspage> {
   String email = '';
   String password = '';
   String uid = '';
+  final TextEditingController _passController = TextEditingController();
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
   List<String> defaultAvatars = [
@@ -70,14 +71,13 @@ class _ChagepasspageState extends State<Chagepasspage> {
   Future<void> _setPass() async {
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-manual');
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-self');
 
       var request = http.MultipartRequest('PUT', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
-      request.fields['user_id'] = uid;
-      request.fields['password'] = password;
+      request.fields['password'] = _passController.text;
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
@@ -423,28 +423,28 @@ class _ChagepasspageState extends State<Chagepasspage> {
               );
               break;
             case 1:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => TimeOffScreen()),
               );
               break;
             case 2:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ReimbursementPage()),
               );
               break;
             case 3:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationPage()),
               );
               break;
             case 4:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
+              // Navigator.pop(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => ProfileScreen()),
+              // );
               break;
           }
         },
@@ -463,6 +463,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   String uid = '';
   bool _isOldPasswordVisible = false;
   bool _isNewPasswordVisible = false;
+  final TextEditingController _passController = TextEditingController();
 
   @override
   void initState() {
@@ -502,42 +503,34 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   }
 
   Future<void> _setPass() async {
-    await getProfile();
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-manual');
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-self');
 
+      var request = http.MultipartRequest('PUT', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      String token = localStorage.getString('token').toString();
-      var request = http
-          .put(url,
-              headers: {
-                // 'Content-Type': 'application/json',
-                'Authorization': 'Bearer $token',
-              },
-              body: jsonEncode({
-                "user_id": "$uid",
-                "password": password,
-              }))
-          .then((response) {
-        if (response.statusCode == 200) {
-          print(response.body);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Berhasil'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          print(response.body);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      });
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+      request.fields['password'] = _passController.text;
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Berhasil'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      ;
     } catch (e) {
       print("Error: $e");
     }
@@ -575,6 +568,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: _passController,
               decoration: InputDecoration(
                 labelText: 'New Password',
                 border: OutlineInputBorder(),

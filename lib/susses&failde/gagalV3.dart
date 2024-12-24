@@ -63,11 +63,11 @@ class FailurePage3 extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                 ),
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => ReimbursementPage()),
-                  ); // Action when back to menu button is pressed
+                    MaterialPageRoute(builder: (context) => ReimbursementPage()),
+                    (route) => false,
+                  );   // Action when back to menu button is pressed
                 },
                 child: Text('Back To Menu'),
               ),

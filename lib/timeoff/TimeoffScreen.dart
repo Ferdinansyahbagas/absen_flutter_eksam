@@ -202,7 +202,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                 ),
               ),
               onPressed: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => TimeOff()),
                 ); // Handle Apply for Time Off
@@ -224,7 +224,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                 ),
               ),
               onPressed: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => TimeOffSick()),
                 );
@@ -379,25 +379,25 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
               );
               break;
             case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => TimeOffScreen()),
-              );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => TimeOffScreen()),
+              // );
               break;
             case 2:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ReimbursementPage()),
               );
               break;
             case 3:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationPage()),
               );
               break;
             case 4:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
               );

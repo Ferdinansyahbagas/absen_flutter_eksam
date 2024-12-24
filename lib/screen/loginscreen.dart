@@ -4,9 +4,9 @@ import 'package:absen/screen/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:absen/timeoff/TimeoffScreen.dart';
-import 'package:absen/profil/profilscreen.dart';
+import 'package:absen/utils/preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -37,10 +37,23 @@ class _LoginScreenState extends State<LoginScreen> {
         // Jika login berhasil, Anda bisa menambahkan logika di sini
         login2();
       }
-    });
+    }); 
   }
 
   void login2() async {
+
+        showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: const Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
     try {
       Response response = await post(
         Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/login'),
@@ -52,20 +65,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body.toString());
-        print(data['data']['token']);
+        // print(data['data']['token']);
+       String token = data['data']['token'];
+        // SharedPreferences localStorage = await SharedPreferences.getInstance();
+        // localStorage.setString('token', data['data']['token']);
+        // // Reset pesan error jika login berhasil
+        // setState(() {
+        //   _errorMessage = null;
+        // });
 
-        SharedPreferences localStorage = await SharedPreferences.getInstance();
-        localStorage.setString('token', data['data']['token']);
-        // Reset pesan error jika login berhasil
-        setState(() {
-          _errorMessage = null;
-        });
+         // Simpan token ke SharedPreferences
+        await Preferences.setToken(token);
 
         // Fungsi pindah halaman
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
+       Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
+                  ); 
       } else {
         var data = jsonDecode(response.body.toString());
         setState(() {

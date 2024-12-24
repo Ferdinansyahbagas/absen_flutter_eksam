@@ -37,7 +37,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
         localStorage.setString('code', _emailController.text);
 
         // Fungsi pindah halaman
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
         );

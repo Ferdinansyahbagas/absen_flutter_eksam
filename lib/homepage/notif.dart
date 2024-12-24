@@ -52,7 +52,7 @@ class NotificationPage extends StatelessWidget {
             label: 'Time Off',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt, size: 25),
+            icon: Icon(Icons.receipt, size: 27),
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
@@ -87,25 +87,25 @@ class NotificationPage extends StatelessWidget {
               );
               break;
             case 1:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => TimeOffScreen()),
               );
               break;
             case 2:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ReimbursementPage()),
               );
               break;
             case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
-              );
+              // Navigator.pushReplacement(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => NotificationPage()),
+              // );
               break;
             case 4:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
               );

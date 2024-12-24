@@ -62,9 +62,10 @@ class SuccessPage2I extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                 ),
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => TimeOffScreen()),
+                    (route) => false,
                   ); // Action when back to menu button is pressed
                 },
                 child: Text('Back To Menu'),

@@ -97,7 +97,7 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-   Future<void> _pickImage() async {
+  Future<void> _pickImage() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
     if (pickedFile != null) {

@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String? name = ""; // Variabel untuk name pengguna
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
+  String? avatarUrl;
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   int currentIndex = 0; // Default to the home page
@@ -49,10 +50,26 @@ class _HomePageState extends State<HomePage> {
     _startClock(); // Memulai timer untuk jam
     _resetNoteAtFiveAM();
     _pageController.addListener(() {
+      _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
       setState(() {
         _currentPage = _pageController.page!.round();
       });
     });
+  }
+
+  Future<void> _fetchUserProfile() async {
+    try {
+      // Panggil API untuk mendapatkan URL avatar
+      final response = await http.get(Uri.parse('URL_API_PROFIL'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          avatarUrl = data['avatarUrl']; // Pastikan key sesuai dengan API
+        });
+      }
+    } catch (e) {
+      print('Gagal memuat profil: $e');
+    }
   }
 
   // Fungsi untuk memulai jam dan memperbaruinya setiap detik
@@ -329,18 +346,32 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          // Navigasi ke halaman profil dan kirim gambar yang dipilih
-                          Navigator.push(
+                        onTap: () async {
+                          // Navigasi ke halaman profil dan tunggu hasilnya
+                          final updatedAvatarUrl = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ProfileScreen(),
                             ),
                           );
+
+                          // Perbarui avatar jika ada perubahan
+                          if (updatedAvatarUrl != null) {
+                            setState(() {
+                              avatarUrl = updatedAvatarUrl;
+                            });
+                          }
                         },
                         child: CircleAvatar(
                           radius: 25,
                           backgroundColor: Colors.grey[200],
+                          backgroundImage: avatarUrl != null
+                              ? NetworkImage('avatarUrl')
+                              : AssetImage('assets/image/logo_circle.png')
+                                  as ImageProvider,
+                          // child: avatarUrl == null
+                          //     ? Icon(Icons.person, color: Colors.grey)
+                          //     : null,
                         ),
                       ),
                       Text(
@@ -411,7 +442,7 @@ class _HomePageState extends State<HomePage> {
                               onPressed: hasClockedIn
                                   ? null
                                   : () async {
-                                      final result = await Navigator.pushReplacement(
+                                      final result = await Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => ClockInPage(),
@@ -432,7 +463,7 @@ class _HomePageState extends State<HomePage> {
                             ElevatedButton.icon(
                               onPressed: hasClockedIn && !hasClockedOut
                                   ? () async {
-                                      final result = await Navigator.pushReplacement(
+                                      final result = await Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
@@ -532,13 +563,14 @@ class _HomePageState extends State<HomePage> {
                     Card(
                       color: Colors.orange,
                       elevation: 5,
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 1, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 20.0, horizontal: 16.0),
+                            vertical: 30.0, horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -550,7 +582,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 20,
                                 ),
                               ),
                             ),
@@ -571,13 +603,14 @@ class _HomePageState extends State<HomePage> {
                     Card(
                       color: Colors.redAccent,
                       elevation: 5,
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 1, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 20.0, horizontal: 16.0),
+                            vertical: 30.0, horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -589,7 +622,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 20,
                                 ),
                               ),
                             ),
@@ -610,13 +643,14 @@ class _HomePageState extends State<HomePage> {
                     Card(
                       color: Colors.green,
                       elevation: 5,
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 1, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: 20.0, horizontal: 16.0),
+                            vertical: 30.0, horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -626,7 +660,7 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontSize: 20,
                               ),
                             ),
                             Flexible(
@@ -710,10 +744,11 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 2),
+                  SizedBox(height: 20),
                   // Note Section
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 1, vertical: 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -726,11 +761,10 @@ class _HomePageState extends State<HomePage> {
                               color: Colors.purple,
                             ),
                           ),
-                          const SizedBox(
-                              height: 10), // Jarak antara "Note" dan konten
+                          const SizedBox(height: 5),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 10),
+                                horizontal: 30, vertical: 18),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(10),
@@ -752,7 +786,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    Navigator.pushReplacement(
+                                    Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>
@@ -764,10 +798,10 @@ class _HomePageState extends State<HomePage> {
                                         Colors.orange, // Warna tombol
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(
-                                          4), // Melengkungkan pinggiran tombol
+                                          8), // Melengkungkan pinggiran tombol
                                     ),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 5),
+                                        horizontal: 10, vertical: 8),
                                   ),
                                   child: const Text(
                                     'Submit',
@@ -796,40 +830,35 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: const Color.fromARGB(255, 101, 19, 116),
         selectedLabelStyle: const TextStyle(fontSize: 11),
         unselectedLabelStyle: const TextStyle(fontSize: 9),
-        currentIndex: currentIndex, // Update the currentIndex here
-        onTap: (int index) {
-          setState(() {
-            currentIndex = index; // Update the selected index
-          });
-
-          // Navigate to the appropriate screen
+        currentIndex: 0,
+        onTap: (index) {
           switch (index) {
             case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
+              // Navigator.pushReplacement(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => const HomePage()),
+              // );
               break;
             case 1:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => TimeOffScreen()),
               );
               break;
             case 2:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ReimbursementPage()),
               );
               break;
             case 3:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationPage()),
               );
               break;
             case 4:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
               );

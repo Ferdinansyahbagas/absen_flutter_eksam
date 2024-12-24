@@ -106,6 +106,19 @@ class _TimeOffSickState extends State<TimeOffSick> {
       );
       return;
     }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: const Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
     try {
       await getProfile();
       final url = Uri.parse(
@@ -139,9 +152,9 @@ class _TimeOffSickState extends State<TimeOffSick> {
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
       request.fields['user_id'] = iduser.toString();
-      request.fields['startdate'] =
-          formattedStartDate; 
-      request.fields['enddate'] = formattedEndDate; 
+      request.fields['notes'] = Reason.toString();
+      request.fields['startdate'] = formattedStartDate;
+      request.fields['enddate'] = formattedEndDate;
       request.fields['type'] = type.toString();
 
       var response = await request.send();
@@ -193,15 +206,17 @@ class _TimeOffSickState extends State<TimeOffSick> {
           ),
         ),
       ),
-      body: Padding(
+   body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Remaining Leave
+            SizedBox(height: 20),
             Container(
               width: double.infinity,
               height: 140,
-              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 25.0),
+              padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 243, 147, 4),
                 borderRadius: BorderRadius.circular(9),
@@ -219,7 +234,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                         'Your Remaining\nLeave Is',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -299,7 +314,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your reosen';
+                  return 'Please enter your reason';
                 }
                 return null;
               },

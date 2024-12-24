@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // for formatting date
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -30,7 +31,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
   // Function to pick image from gallery or camera
   Future<void> _pickImage() async {
     final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera);
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
@@ -54,15 +55,18 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
     }
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/clock-out');
-      var request = http.MultipartRequest('PUT', url);
+          'https://dev-portal.eksam.cloud/api/v1/other/add-self-reimbursement');
+      var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
+      request.fields['harga'] = totalReimbursement;
+      request.fields['date'] = 'selectedDate';
+      request.fields['name'] = description;
 
       if (_image != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'foto',
+          'invoice',
           _image!.path,
           contentType: MediaType('image', 'jpeg'),
         ));
@@ -325,18 +329,59 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                   ),
                 ),
               ),
-              SizedBox(height: 80),
+              const SizedBox(height: 10),
 
+// Preview Photo Button
+              if (_image != null)
+                Align(
+                  alignment: Alignment.centerLeft, // Atur posisi teks di kiri
+                  child: InkWell(
+                    onTap: () {
+                      // Show dialog to preview the photo
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (kIsWeb)
+                                  // Jika platform adalah Web
+                                  Image.network(
+                                    _image!.path,
+                                    fit: BoxFit.cover,
+                                  )
+                                else
+                                  // Jika platform bukan Web (mobile)
+                                  Image.file(
+                                    _image!,
+                                    fit: BoxFit.cover,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: const Text(
+                      'Preview Photo',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.orange, // Warna teks seperti hyperlink
+                        decoration: TextDecoration
+                            .underline, // Garis bawah untuk efek hyperlink
+                      ),
+                    ),
+                  ),
+                ),
+
+              SizedBox(height: 70),
               // Submit button
               ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Process reimbursement request
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Reimbursement Requested')),
-                    );
-                  }
-                },
+                onPressed: _submitData, // Call the function to submit data
                 child: Text('Request Reimbursement'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink,

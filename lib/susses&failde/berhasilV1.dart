@@ -125,9 +125,10 @@ class _SuccessPageState extends State<SuccessPage> {
                   padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                 ),
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
                   ); // Action when back to menu button is pressed
                 },
                 child: Text('Back To Menu'),

@@ -13,12 +13,12 @@ class SuccessPageII extends StatefulWidget {
 class _SuccessPageIIState extends State<SuccessPageII> {
   String? datetime;
 
- @override
+  @override
   void initState() {
     super.initState();
     getData();
   }
- 
+
   Future<void> getData() async {
     final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/get-time');
     var request = http.MultipartRequest('GET', url);
@@ -123,9 +123,10 @@ class _SuccessPageIIState extends State<SuccessPageII> {
                   padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                 ),
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
                   ); // Action when back to menu button is pressed
                 },
                 child: Text('Back To Menu'),

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:absen/profil/ChagePassPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/utils/preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -20,8 +21,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   File? profileImage;
-  File? idCardImage;
-  File? cvImage;
   PageController _pageController = PageController();
   int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
   String profileImageUrl = 'https://via.placeholder.com/150';
@@ -42,20 +41,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String Limit = '';
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
-  bool _isPasswordHidden =
-      true; // Kontrol visibilitas password di tampilan profil
+  final ImagePicker _picker = ImagePicker();
   List<String> defaultAvatars = [
     'https://via.placeholder.com/150/FF0000/FFFFFF?text=Avatar+1',
     'https://via.placeholder.com/150/00FF00/FFFFFF?text=Avatar+2',
     'https://via.placeholder.com/150/0000FF/FFFFFF?text=Avatar+3'
   ];
 
-  final ImagePicker _picker = ImagePicker();
-
   @override
   void initState() {
     super.initState();
     getProfile();
+  }
+
+  void _logout(BuildContext context) async {
+    // Hapus token dari SharedPreferences
+    await Preferences.clearToken();
+
+    // Navigasi kembali ke WelcomeScreen
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (route) => false,
+    );
   }
 
   Future<void> setProfile() async {
@@ -73,16 +81,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       var data = jsonDecode(rp.body.toString());
       print(data);
 
+      setState(() {
+        request.fields['no_hp'] = phoneNumber;
+        request.fields['alamat_domisili'] = address;
+        request.fields['alamat_ktp'] = idCardAddress;
+      });
       if (response.statusCode == 200) {
-        setState(() {
-          phoneNumber = data['data']['no_hp'].toString();
-          address = data['data']['alamat_domisili'].toString();
-          idCardAddress = data['data']['alamat_ktp'].toString();
-        });
-        localStorage.setString('id', data['data']['id']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Berhasil'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
-        print("Error retrieving profile");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+      ;
     } catch (e) {
       print("Error: $e");
     }
@@ -387,7 +406,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             setState(() => idCardAddress = newValue),
                       ),
                       SizedBox(height: 14),
-
                       _buildImageCard(
                           "ID Card Picture", _idCardImage, 'ID Card'),
                       const Divider(
@@ -397,7 +415,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _buildImageCard("CV", _cvImage, 'CV'),
                       SizedBox(height: 14),
-
                       _buildProfileItem(
                         title: 'Employment Contract Start',
                         value: employmentStart,
@@ -440,8 +457,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                             ),
-                            items:
-                                [education ?? '......'].map((String education) {
+                            items: [education].map((String education) {
                               return DropdownMenuItem<String>(
                                 value: education,
                                 child: Text(education),
@@ -483,7 +499,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                             ),
-                            items: [bank ?? '......'].map((String education) {
+                            items: [bank].map((String education) {
                               return DropdownMenuItem<String>(
                                 value: bank,
                                 child: Text(bank),
@@ -509,7 +525,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               height: 8), // Jarak antara judul dan TextField
                           TextField(
                             controller: TextEditingController(
-                                text: bankAccount ?? '......'), // Isi TextField
+                                text: bankAccount), // Isi TextField
                             readOnly: true, // Disabled agar tidak bisa di-edit
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
@@ -528,22 +544,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       SizedBox(height: 14),
-
-                      // _buildProfileItem(
-                      //   title: 'Leave Limit',
-                      //   value: Limit,
-                      //   isEditable: false, // Tidak bisa diedit
-                      // ),
-                      SizedBox(height: 18),
-
+                      _buildProfileItem(
+                        title: 'Leave Limit',
+                        value: Limit,
+                        isEditable: false, // Tidak bisa diedit
+                      ),
+                      SizedBox(height: 20),
                       ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      LoginScreen())); // Aksi saat tombol login ditekan
-                        },
+                        onPressed: () => _logout(context),
                         icon: const Icon(Icons.logout),
                         label: const Text('Log Out'),
                         style: ElevatedButton.styleFrom(
@@ -614,28 +622,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
               break;
             case 1:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => TimeOffScreen()),
               );
               break;
             case 2:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ReimbursementPage()),
               );
               break;
             case 3:
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationPage()),
               );
               break;
             case 4:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
+              // Navigator.pop(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => ProfileScreen()),
+              // );
               break;
           }
         },
