@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:absen/homepage/home.dart';
 import 'package:absen/susses&failde/berhasilV1.dart';
 import 'package:absen/susses&failde/gagalV1.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'package:absen/homepage/home.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class ClockInPage extends StatefulWidget {
   const ClockInPage({super.key});
@@ -22,19 +22,76 @@ class _ClockInPageState extends State<ClockInPage> {
   String? _selectedWorkType = 'Reguler';
   String? _selectedWorkplaceType = 'WFO';
   File? _image; // To store the image file
-  final ImagePicker _picker = ImagePicker();
   List<String> workTypes = []; // Dynamically set work types
-  final List<String> workplaceTypes = ['WFO', 'WFH'];
   bool _isImageRequired = false; // Flag to indicate if image is required
   bool _isHoliday = false; // Flag for holiday status
+  final ImagePicker _picker = ImagePicker();
+  List<String> workplaceTypes = [];
 
   @override
   void initState() {
     super.initState();
     _setWorkTypesBasedOnDay();
+    getStatus();
+    getLocation();
   }
 
   // Check if today is a weekend or holiday from API
+
+  Future<void> getStatus() async {
+    final url =
+        Uri.parse('https://dev-portal.eksam.cloud/api/v1/attendance/get-type');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          workTypes =
+              List<String>.from(data['data'].map((item) => item['name']));
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> getLocation() async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/attendance/get-location');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          workplaceTypes =
+              List<String>.from(data['data'].map((item) => item['name']));
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
   Future<void> _setWorkTypesBasedOnDay() async {
     try {
       // Get current day
@@ -388,7 +445,6 @@ class _ClockInPageState extends State<ClockInPage> {
                 ),
               ),
             const SizedBox(height: 160),
-
             // Submit Button
             Center(
               child: ElevatedButton(

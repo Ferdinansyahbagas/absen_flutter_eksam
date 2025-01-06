@@ -13,6 +13,8 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   String menit = '';
   String day = '';
+  String menitTelat = '';
+  String Totalday = '';
 
   @override
   void initState() {
@@ -21,7 +23,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     getHistoryData;
   }
 
-  // Function to fetch history data from the API
+  // fungsi untuk ngambil api history
   void getHistoryData(BuildContext context) async {
     try {
       final url = Uri.parse(
@@ -39,8 +41,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       if (response.statusCode == 200) {
         print("Successfully retrieved data");
 
-        List historyData =
-            data['data']; // Assuming 'data' contains the list of history
+        List historyData = data['data'];
 
         for (var i = 0; i <= historyData.length - 1; i++) {
           if (historyData[i]['endtime'] == null) {
@@ -57,7 +58,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
           }
         }
 
-        // Navigate to bottom sheet with the fetched data
         _onCheckHistoryPressed(context, historyData);
       } else {
         print("Error fetching data");
@@ -67,10 +67,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+// total telat api
   Future<void> getMenit() async {
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/get-work-hour');
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-user-info');
 
       var request = http.MultipartRequest('GET', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -90,12 +91,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
         setState(() {
           menit = data['data']['menit'].toString();
           day = data['data']['hari'].toString();
+          menitTelat = data['data']['menit_telat'].toString();
+          Totalday = data['data']['telat'].toString();
         });
 
         print("test");
         print(menit);
-
-        // Navigate to bottom sheet with the fetched data
       } else {
         print("Error fetching data");
       }
@@ -104,7 +105,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-// Function to show the bottom sheet with attendance history
   void _onCheckHistoryPressed(BuildContext context, List historyData) {
     TextEditingController searchController = TextEditingController();
     List filteredData = List.from(historyData);
@@ -342,10 +342,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     fontSize: 14,
                                                     color: Colors.grey),
                                               ),
-                                              SizedBox(
-                                                  width:
-                                                      50), // Jarak horizontal
-
+                                              SizedBox(width: 50),
                                               Text(
                                                 '${historyItem['starttime']} AM',
                                                 style: TextStyle(
@@ -428,6 +425,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                                               Text(
                                                 historyItem['status']['name'],
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.black),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                "Type",
+                                                style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 14),
+                                              ),
+                                              SizedBox(
+                                                  width:
+                                                      66), // Jarak horizontal
+
+                                              Text(
+                                                historyItem['type']['name'],
                                                 style: TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
@@ -521,12 +538,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 20),
             _buildCard(
               title: "You're Late For Work In Total",
-              value: "34 Days",
+              value: "$Totalday Days",
               color: Colors.orange,
             ),
             _buildSubtitleCard(
               subtitle: "Total Hours You're Late For Work",
-              subtitleValue: "2316 Minutes",
+              subtitleValue: "$menitTelat Minutes",
             ),
             const SizedBox(height: 160),
             Center(

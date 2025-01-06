@@ -17,18 +17,19 @@ class ReimbursementForm extends StatefulWidget {
 }
 
 class _ReimbursementFormState extends State<ReimbursementForm> {
-  final _formKey = GlobalKey<FormState>();
-  String name = '';
+  File? _image;
   String description = '';
   String totalReimbursement = '';
-  DateTime? selectedDate;
   String formattedDate = '';
-  final _dateController = TextEditingController();
-  File? _image; // To store the image file
-  final ImagePicker _picker = ImagePicker();
+  DateTime? selectedDate;
   bool _isImageRequired = false;
+  bool _isDescriptionEmpty = false;
+  bool _isTotalEmpty = false;
+  bool _isDateEmpty = false;
+  final _formKey = GlobalKey<FormState>();
+  // final _dateController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
-  // Function to pick image from gallery or camera
   Future<void> _pickImage() async {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
@@ -41,7 +42,26 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
   }
 
   Future<void> _submitData() async {
+    setState(() {
+      _isDescriptionEmpty = description.isEmpty;
+      _isTotalEmpty = totalReimbursement.isEmpty;
+      _isDateEmpty = formattedDate.isEmpty;
+    });
+
+    if (_isDescriptionEmpty || _isTotalEmpty || _isDateEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All fields are required.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) return;
+
     if (_image == null) {
+      // Show error if no image is uploaded
       setState(() {
         _isImageRequired = true;
       });
@@ -51,30 +71,35 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
           backgroundColor: Colors.red,
         ),
       );
-      return;
+      return; // Stop submission if no image
     }
+
     try {
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/other/add-self-reimbursement');
       var request = http.MultipartRequest('POST', url);
+
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+      String? token = localStorage.getString('token');
+
+      if (token == null) {
+        throw Exception('Authorization token not found');
+      }
+
+      request.headers['Authorization'] = 'Bearer $token';
       request.fields['harga'] = totalReimbursement;
-      request.fields['date'] = 'selectedDate';
+      request.fields['date'] = formattedDate;
       request.fields['name'] = description;
 
-      if (_image != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'invoice',
-          _image!.path,
-          contentType: MediaType('image', 'jpeg'),
-        ));
-      }
+      request.files.add(await http.MultipartFile.fromPath(
+        'invoice',
+        _image!.path,
+        contentType: MediaType('image', 'jpeg'),
+      ));
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+      var data = jsonDecode(rp.body);
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
@@ -101,19 +126,20 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
     }
   }
 
-  void _pickDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-
-    if (pickedDate != null) {
+    if (picked != null) {
       setState(() {
-        selectedDate = pickedDate;
-        formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate!);
-        _dateController.text = formattedDate;
+        if (isStartDate) {
+          selectedDate = picked;
+          formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+          _isDateEmpty = false;
+        }
       });
     }
   }
@@ -142,59 +168,20 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
           key: _formKey,
           child: ListView(
             children: [
-              // Field for name
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  labelStyle: TextStyle(color: Colors.purple),
-                  floatingLabelBehavior:
-                      FloatingLabelBehavior.always, // Always show label on top
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple, width: 2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Colors.red), // Border saat error
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: Colors.red), // Border saat error dan fokus
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    name = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-
               // Field for description
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  labelStyle: TextStyle(color: Colors.purple),
+                  labelStyle: TextStyle(color:  const Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
                       FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple),
-                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                        color:
+                            _isDescriptionEmpty ? Colors.red :  const Color.fromARGB(255, 101, 19, 116)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple, width: 2),
+                    borderSide: BorderSide(color:  const Color.fromARGB(255, 101, 19, 116), width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
@@ -207,17 +194,14 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  errorText:
+                      _isDescriptionEmpty ? 'Please enter a description' : null,
                 ),
                 onChanged: (value) {
                   setState(() {
                     description = value;
+                    _isDescriptionEmpty = false;
                   });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
                 },
               ),
               SizedBox(height: 16),
@@ -227,15 +211,15 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Total Reimbursement',
-                  labelStyle: TextStyle(color: Colors.purple),
+                  labelStyle: TextStyle(color:  const Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
                       FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple),
-                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                        color: _isTotalEmpty ? Colors.red :  const Color.fromARGB(255, 101, 19, 116)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple, width: 2),
+                    borderSide: BorderSide(color:  const Color.fromARGB(255, 101, 19, 116), width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
@@ -248,44 +232,63 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  errorText: _isTotalEmpty
+                      ? 'Please enter the total reimbursement'
+                      : null,
                 ),
                 onChanged: (value) {
                   setState(() {
                     totalReimbursement = value;
+                    _isTotalEmpty = false;
                   });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the total reimbursement';
-                  }
-                  return null;
                 },
               ),
               SizedBox(height: 16),
 
               // Date picker field
-              TextFormField(
-                controller: _dateController,
-                decoration: InputDecoration(
-                  labelText: 'Date',
-                  labelStyle: TextStyle(color: Colors.purple),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple),
-                    borderRadius: BorderRadius.circular(8),
+              InkWell(
+                onTap: () => _selectDate(context, true),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Date',
+                    labelStyle: TextStyle(color:  const Color.fromARGB(255, 101, 19, 116)),
+                    floatingLabelBehavior: FloatingLabelBehavior
+                        .always, // Always show label on top
+                    border: OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: _isDateEmpty ? Colors.red :  const Color.fromARGB(255, 101, 19, 116)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color:  const Color.fromARGB(255, 101, 19, 116), width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Colors.red), // Border saat error
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: Colors.red), // Border saat error dan fokus
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorText: _isDateEmpty
+                        ? 'Date is required'
+                        : null, // Error message
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple, width: 2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.calendar_today, color: Colors.orange),
-                    onPressed: () => _pickDate(context),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        selectedDate == null ? 'Select Date' : formattedDate,
+                      ),
+                      Icon(Icons.calendar_today, color: Colors.orange),
+                    ],
                   ),
                 ),
-                readOnly: true,
               ),
               SizedBox(height: 20),
-
               // Upload Photo Button
               GestureDetector(
                 onTap: _pickImage, // Langsung panggil kamera
@@ -297,7 +300,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                       color: _isImageRequired
                           ? Colors.red
                           : (_image == null
-                              ? Colors.purple
+                              ? const Color.fromRGBO(101, 19, 116, 1)
                               : Colors.orange), // Red if image is required
                       width: 2,
                     ),
@@ -312,7 +315,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                         color: _isImageRequired
                             ? Colors.red
                             : (_image == null
-                                ? Colors.purple
+                                ? const Color.fromRGBO(101, 19, 116, 1)
                                 : Colors
                                     .orange), // Red icon if image is required
                       ),
@@ -322,7 +325,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                           'Upload Your Photo',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.purple,
+                            color: const Color.fromRGBO(101, 19, 116, 1),
                           ),
                         ),
                     ],
@@ -378,7 +381,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                   ),
                 ),
 
-              SizedBox(height: 70),
+              SizedBox(height: 130),
               // Submit button
               ElevatedButton(
                 onPressed: _submitData, // Call the function to submit data

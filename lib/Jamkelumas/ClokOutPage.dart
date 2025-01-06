@@ -22,12 +22,12 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   String? _selectedWorkplaceType;
   String note = '';
   File? _image;
-  final ImagePicker _picker = ImagePicker();
-  final TextEditingController _noteController = TextEditingController();
   bool _isImageRequired = false;
   bool _isNoteRequired = false;
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
+  final ImagePicker _picker = ImagePicker();
+  final TextEditingController _noteController = TextEditingController();
 
   @override
   void initState() {
@@ -341,7 +341,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 120),
+              const SizedBox(height: 20),
               // TextField for Note
               TextField(
                 controller: _noteController,
@@ -375,7 +375,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                   }
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 120),
               Center(
                 child: ElevatedButton(
                   onPressed: _submitData, // Call the function to submit data

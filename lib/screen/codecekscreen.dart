@@ -11,10 +11,10 @@ class Codecekscreen extends StatefulWidget {
 }
 
 class _CodecekscreenState extends State<Codecekscreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
   String? errorMessage;
   String? _errorMessage; // Tambahkan variabel untuk pesan error
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
 
   Future<void> _submit() async {
     try {

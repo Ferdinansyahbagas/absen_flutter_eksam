@@ -14,6 +14,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:http/http.dart' as http; // menyambungakan ke API
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   String? currentCity; // Menyimpan nama kota
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String? name = ""; // Variabel untuk name pengguna
+  String? message;
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
   String? avatarUrl;
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
@@ -41,12 +43,14 @@ class _HomePageState extends State<HomePage> {
   bool isLate = false; // Status untuk card terlambat
   bool isholiday = false; //status untuk card libur
   bool isovertime = false; //status untuk card lembur
+  List<String> announcements = []; // List untuk menyimpan pesan pengumuman
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
     getData();
+    getPengumuman();
     _startClock(); // Memulai timer untuk jam
     _resetNoteAtFiveAM();
     _pageController.addListener(() {
@@ -209,6 +213,33 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       hasClockedIn = status;
     });
+  }
+
+  Future<void> getPengumuman() async {
+    final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-th');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          announcements = List<String>.from(
+            data['data'].map((item) => item['message']),
+          );
+        });
+      } else {
+        print('Error fetching announcements: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
   }
 
   // Fungsi untuk mengambil data dari API
@@ -677,6 +708,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   const SizedBox(height: 20),
                   // Announcement Section
+                  // Bagian Announcement
                   const Text(
                     'Announcement',
                     style: TextStyle(
@@ -686,7 +718,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // PageView for slideshow of announcements with indicators
+
                   Container(
                     height: 150,
                     decoration: BoxDecoration(
@@ -698,19 +730,31 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         PageView.builder(
                           controller: _pageController,
-                          itemCount: 3, // Jumlah slide
+                          itemCount: announcements.length,
                           itemBuilder: (context, index) {
-                            final imagePaths = [
-                              'assets/announcement/messi.jpeg',
-                              'assets/announcement/dodo.jpeg',
-                              'assets/announcement/neymar.jpeg',
-                            ];
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                image: DecorationImage(
-                                  image: AssetImage(imagePaths[index]),
-                                  fit: BoxFit.cover,
+                            final messageHtml = announcements[index];
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        AnnouncementDetailPage(
+                                      messageHtml: messageHtml,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.white,
+                                ),
+                                child: HtmlWidget(
+                                  messageHtml,
+                                  textStyle: TextStyle(fontSize: 14),
                                 ),
                               ),
                             );
@@ -728,19 +772,17 @@ class _HomePageState extends State<HomePage> {
                           right: 0,
                           child: Center(
                             child: SmoothPageIndicator(
-                              controller:
-                                  _pageController, // Gunakan _pageController yang dideklarasikan
-                              count: 3, // Jumlah slide
+                              controller: _pageController,
+                              count: announcements.length,
                               effect: ExpandingDotsEffect(
-                                activeDotColor:
-                                    Colors.purple, // Warna dot aktif
-                                dotColor: Colors.white, // Warna dot tidak aktif
-                                dotHeight: 8, // Tinggi dot
-                                dotWidth: 8, // Lebar dot
+                                activeDotColor: Colors.purple,
+                                dotColor: Colors.grey,
+                                dotHeight: 8,
+                                dotWidth: 8,
                               ),
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -903,6 +945,32 @@ class _HomePageState extends State<HomePage> {
             label: 'Profil',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class AnnouncementDetailPage extends StatelessWidget {
+  final String messageHtml;
+
+  const AnnouncementDetailPage({
+    Key? key,
+    required this.messageHtml,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detail Announcement'),
+        backgroundColor: Colors.purple,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: HtmlWidget(
+          messageHtml,
+          textStyle: TextStyle(fontSize: 14),
+        ),
       ),
     );
   }

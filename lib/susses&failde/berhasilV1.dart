@@ -21,13 +21,13 @@ class _SuccessPageState extends State<SuccessPage> {
   }
 
   Future<void> getData() async {
+    try {
     final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/get-time');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
         'Bearer ${localStorage.getString('token')}';
 
-    try {
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());

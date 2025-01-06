@@ -11,14 +11,14 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   String? errorMessage;
   String? _errorMessage;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
@@ -26,10 +26,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         SharedPreferences localStorage = await SharedPreferences.getInstance();
         var code = localStorage.getString('code');
         Response response = await post(
-          Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/password/reset'),
+          Uri.parse(
+              'https://dev-portal.eksam.cloud/api/v1/auth/password/reset'),
           body: {
-            'code' : code,
-                'password': _confirmPasswordController.text.toString(),
+            'code': code,
+            'password': _confirmPasswordController.text.toString(),
           },
         );
 
@@ -42,10 +43,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           });
 
           Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
-                    (route) => false,
-                  ); 
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+            (route) => false,
+          );
         } else {
           var data = jsonDecode(response.body.toString());
           setState(() {

@@ -1,10 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
 import 'package:absen/profil/profilscreen.dart';
 
-class NotificationPage extends StatelessWidget {
+class NotificationPage extends StatefulWidget {
+  const NotificationPage({super.key});
+
+  @override
+  _NotificationPageState createState() => _NotificationPageState();
+}
+
+class _NotificationPageState extends State<NotificationPage> {
+  List<dynamic> notifications = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    getNotif();
+  }
+
+  Future<void> getNotif() async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      // Debugging respons API
+      print('Response Body: ${rp.body}');
+
+      if (rp.statusCode == 200 && data['data'] != null) {
+        setState(() {
+          notifications = List.from(data['data']).map((notif) {
+            return {
+              'title': notif['title']?.toString(),
+              'description': notif['description']?.toString(),
+              'fileUrl': notif['file'] != null
+                  ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
+                  : null,
+            };
+          }).toList();
+          isLoading = false;
+        });
+      } else {
+        print('Error fetching notifications: ${rp.body}');
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,12 +87,21 @@ class NotificationPage extends StatelessWidget {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: ListView(
-          padding: EdgeInsets.all(16.0),
-          children: List.generate(4, (index) {
-            return NotificationItem();
-          }),
-        ),
+        child: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : notifications.isEmpty
+                ? Center(child: Text('Tidak ada notifikasi hari ini'))
+                : ListView.builder(
+                    padding: EdgeInsets.all(16.0),
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      return NotificationItem(
+                        title: notifications[index]['title'] ?? '',
+                        description: notifications[index]['description'] ?? '',
+                        fileUrl: notifications[index]['fileUrl'],
+                      );
+                    },
+                  ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -99,10 +170,6 @@ class NotificationPage extends StatelessWidget {
               );
               break;
             case 3:
-              // Navigator.pushReplacement(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => NotificationPage()),
-              // );
               break;
             case 4:
               Navigator.push(
@@ -118,12 +185,22 @@ class NotificationPage extends StatelessWidget {
 }
 
 class NotificationItem extends StatelessWidget {
+  final String title;
+  final String description;
+  final String? fileUrl;
+
+  const NotificationItem({
+    required this.title,
+    required this.description,
+    this.fileUrl,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8.0),
       child: ListTile(
-        title: Text("This month's payslip has just been sent ✨"),
+        title: Text(title),
         subtitle: Text(
           'Click To View',
           style: TextStyle(color: Colors.blue),
@@ -131,7 +208,13 @@ class NotificationItem extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PayslipDetailPage()),
+            MaterialPageRoute(
+              builder: (context) => PayslipDetailPage(
+                title: title,
+                description: description,
+                fileUrl: fileUrl,
+              ),
+            ),
           );
         },
       ),
@@ -139,8 +222,17 @@ class NotificationItem extends StatelessWidget {
   }
 }
 
-// Halaman detail sesuai gambar yang diberikan
 class PayslipDetailPage extends StatelessWidget {
+  final String title;
+  final String description;
+  final String? fileUrl;
+
+  const PayslipDetailPage({
+    required this.title,
+    required this.description,
+    this.fileUrl,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,30 +249,56 @@ class PayslipDetailPage extends StatelessWidget {
               children: [
                 Icon(Icons.circle, color: Colors.red, size: 12),
                 SizedBox(width: 8),
-                Text("This month's payslip has just been sent ✨"),
+                Text(
+                  title,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
               ],
             ),
             SizedBox(height: 16),
             Text(
-              "Ornare cursus magna mauris sit elementum morbi. Magna massa dolor suspendisse nunc...",
-              style: TextStyle(color: Colors.black54),
+              description,
+              style: TextStyle(color: Colors.black54, fontSize: 14),
             ),
             SizedBox(height: 16),
-            Container(
-              height: 100,
-              width: double.infinity,
-              color: Colors.grey[300],
-              alignment: Alignment.center,
-              child: Text("Payslip Placeholder"),
-            ),
-            SizedBox(height: 8),
-            Text(
-              "Download File",
-              style: TextStyle(color: Colors.orange),
-            ),
+            if (fileUrl != null)
+              InkWell(
+                onTap: () {
+                  _downloadFile(context, fileUrl!);
+                },
+                child: Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "View/Download File",
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                      Icon(Icons.download, color: Colors.orange),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Text(
+                "No file available.",
+                style:
+                    TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  void _downloadFile(BuildContext context, String url) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Download started for $url")),
     );
   }
 }

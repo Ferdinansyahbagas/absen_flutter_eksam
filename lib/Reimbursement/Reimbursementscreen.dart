@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:absen/Reimbursement/requestReimbursement.dart';
 import 'package:absen/homepage/notif.dart';
 import 'package:absen/homepage/home.dart';
@@ -15,44 +16,20 @@ class ReimbursementPage extends StatefulWidget {
 
 class _ReimbursementPageState extends State<ReimbursementPage> {
   List<dynamic> historyData = [];
+  bool isLoading = true; // Menambahkan status loading
 
   @override
   void initState() {
     super.initState();
-    getHistoryData();
+    getHistoryData(); // Fetch history data when the page loads
   }
-
-  // Future<void> getHistoryData() async {
-  //   final url = Uri.parse(
-  //       'https://dev-portal.eksam.cloud/api/v1/other/get-reimbursement');
-  //   var request = http.MultipartRequest('POST', url);
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-
-  //   try {
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-
-  //     if (rp.statusCode == 200) {
-  //       var data = jsonDecode(rp.body);
-  //       setState(() {
-  //         historyData = data['data'] ?? [];
-  //       });
-  //       print(historyData);
-  //     } else {
-  //       print('Error fetching history data: ${rp.statusCode}');
-  //       print(rp.body);
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
 
   Future<void> getHistoryData() async {
     final url = Uri.parse(
         'https://dev-portal.eksam.cloud/api/v1/other/get-self-reimbursement');
-    var request = http.MultipartRequest('POST', url);
+    var request = http.Request('GET', url);
+
+    // Ambil token dari shared preferences
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
         'Bearer ${localStorage.getString('token')}';
@@ -63,41 +40,62 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
 
       if (rp.statusCode == 200) {
         var data = jsonDecode(rp.body);
-        setState(() {
-          historyData = data['data']?.map((item) {
-            // Ambil hanya status
-            String status = item['status']['name']?.toString() ?? 'submission';
-            // if (status == '1') {
-            //   status = 'Approved';
-            // } else if (status == '0') {
-            //   status = 'Rejected';
-            // } else {
-            //   status = 'Submission';
-            // }
-            return {
-              'name': item['name'],
-              'harga': item['harga'],
-              'status': status,
-            };
-          }).toList();
-        });
+
+        if (data != null && data['data'] != null) {
+          // Ambil data dan update state
+          setState(() {
+            historyData = data['data'] ?? []; // Validasi key
+            isLoading = false; // Selesai memuat
+          });
+        } else {
+          setState(() {
+            isLoading = false; // Data tidak ditemukan, stop loading
+          });
+        }
       } else {
+        setState(() {
+          isLoading = false; // Error fetching data, stop loading
+        });
         print('Error fetching history data: ${rp.statusCode}');
-        print(rp.body);
       }
     } catch (e) {
-      print('Error occurred: $e');
+      setState(() {
+        isLoading = false; // Error terjadi, stop loading
+      });
+      print('Error occurred while fetching data: $e');
     }
+  }
+
+  String formatCurrency(String amount) {
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'id', symbol: 'IDR. ', decimalDigits: 0);
+    return currencyFormatter.format(double.tryParse(amount) ?? 0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reimbursement'),
+        title: Text(
+          'Reimbursement',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+        ),
         elevation: 0,
         foregroundColor: Colors.black,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +105,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
             alignment: Alignment.center,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ReimbursementForm()),
                 );
@@ -124,11 +122,11 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
-          ), //f;utter local notifikasi 
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'History Time Off',
+              'History Reimbursement',
               style: TextStyle(
                 color: Colors.pink,
                 fontSize: 18,
@@ -137,19 +135,37 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: historyData.length,
-              itemBuilder: (context, index) {
-                final item = historyData[index];
-                return ReimbursementHistoryCard(
-                  title: item['name']?.toString() ?? 'Unknown',
-                  amount: item['harga']?.toString() ?? 'Unknown',
-                  statusText: item['status']?.toString() ?? 'Unknown',
-                  statusColor:
-                      _getStatusColor(item['status']?.toString() ?? 'Unknown'),
-                );
-              },
-            ),
+            child: isLoading
+                ? Center(
+                    child: CircularProgressIndicator(), // Menunggu data
+                  )
+                : historyData.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Anda belum request.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: historyData.length,
+                        itemBuilder: (context, index) {
+                          final item =
+                              historyData[index] as Map<String, dynamic>;
+                          return ReimbursementHistoryCard(
+                            title: item['name'] ?? 'Unknown Type',
+                            amount: formatCurrency(
+                                item['harga']?.toString() ?? '0'),
+                            statusText: item['status']['name']?.toString() ??
+                                'Unknown Status',
+                            statusColor: _getStatusColor(
+                                item['status']['id']?.toString() ?? ''),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
@@ -158,7 +174,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
         items: const [
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/home.png'), // Custom icon
+              AssetImage('assets/icon/home.png'),
               size: 18,
               color: Colors.white,
             ),
@@ -166,7 +182,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
           ),
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/timeoff.png'), // Custom icon
+              AssetImage('assets/icon/timeoff.png'),
               size: 20,
               color: Colors.white,
             ),
@@ -178,7 +194,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
           ),
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/notifikasi.png'), // Custom icon
+              AssetImage('assets/icon/notifikasi.png'),
               size: 20,
               color: Colors.white,
             ),
@@ -186,7 +202,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
           ),
           BottomNavigationBarItem(
             icon: ImageIcon(
-              AssetImage('assets/icon/profil.png'), // Custom icon
+              AssetImage('assets/icon/profil.png'),
               size: 20,
               color: Colors.white,
             ),
@@ -201,7 +217,6 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
         currentIndex: 2,
         onTap: (index) {
           // Handle bottom navigation bar tap
-          // Navigate to the appropriate screen
           switch (index) {
             case 0:
               Navigator.pushReplacement(
@@ -216,10 +231,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
               );
               break;
             case 2:
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => ReimbursementPage()),
-              // );
+              // This is the current screen, so no action needed
               break;
             case 3:
               Navigator.push(
@@ -242,11 +254,11 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
 
 Color _getStatusColor(String status) {
   switch (status.toLowerCase()) {
-    case 'submission':
-      return Colors.pink;
-    case 'submission accepted':
-      return Colors.green;
-    case 'submission rejected':
+    case '1':
+      return Colors.purple;
+    case '2':
+      return Colors.grey;
+    case '3':
       return Colors.red;
     default:
       return Colors.grey;
@@ -286,7 +298,7 @@ class ReimbursementHistoryCard extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      color: Colors.pink,
+                      color: Colors.orange,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),

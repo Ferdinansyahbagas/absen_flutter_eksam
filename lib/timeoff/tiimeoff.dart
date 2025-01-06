@@ -13,21 +13,23 @@ class TimeOff extends StatefulWidget {
 }
 
 class _TimeOffState extends State<TimeOff> {
-  final _reasonController = TextEditingController();
-  DateTime? _selectedStartDate;
-  DateTime? _selectedEndDate;
-  DateTime? selectedDate;
   String formattedDate = '';
-  String _selectedType = 'Permission';
+  String? _selectedType = 'Cuti';
   String Reason = '';
   String? iduser;
   String? limit;
   String? type = '1';
+  DateTime? _selectedStartDate;
+  DateTime? _selectedEndDate;
+  DateTime? selectedDate;
+  List<String> _typeOptions = [];
+  final _reasonController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     getProfile();
+    getData();
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
@@ -45,6 +47,32 @@ class _TimeOffState extends State<TimeOff> {
           _selectedEndDate = picked;
         }
       });
+    }
+  }
+
+  Future<void> getData() async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/request-history/get-type');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    try {
+      var response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${localStorage.getString('token')}',
+        },
+      );
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        setState(() {
+          _typeOptions =
+              List<String>.from(data['data'].map((item) => item['name']));
+        });
+      } else {
+        print('Gagal mengambil data: ${response.statusCode}');
+        print(response.body);
+      }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
     }
   }
 
@@ -78,6 +106,16 @@ class _TimeOffState extends State<TimeOff> {
   }
 
   Future<void> _submitData() async {
+    if (_reasonController.text.isEmpty ||
+        _selectedStartDate == null ||
+        _selectedEndDate == null) {
+      setState(() {
+        // Jika ada field yang kosong, tampilkan error pada form
+      });
+      return;
+    }
+
+    // Lanjutkan proses submit jika semua data valid
     showDialog(
       context: context,
       barrierDismissible: false, // Prevent dismissing the dialog
@@ -93,7 +131,6 @@ class _TimeOffState extends State<TimeOff> {
       await getProfile();
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/request-history/make-request');
-
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
@@ -104,13 +141,17 @@ class _TimeOffState extends State<TimeOff> {
           ? DateFormat('yyyy-MM-dd').format(_selectedEndDate!)
           : '';
 
-      if (_selectedType == "Permission") {
+      if (_selectedType == "Izin") {
         setState(() {
           type = '3';
         });
-      } else if (_selectedType == "Sick") {
+      } else if (_selectedType == "Sakit") {
         setState(() {
           type = '2';
+        });
+      } else {
+        setState(() {
+          type = '1';
         });
       }
 
@@ -124,9 +165,7 @@ class _TimeOffState extends State<TimeOff> {
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
-      print(rp.body.toString());
       var data = jsonDecode(rp.body.toString());
-      print(data);
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
@@ -171,209 +210,243 @@ class _TimeOffState extends State<TimeOff> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Remaining Leave
-            SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              height: 140,
-              padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 243, 147, 4),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Teks di sebelah kiri
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment:
-                        MainAxisAlignment.center, // Tengah vertikal
-                    children: [
-                      Text(
-                        'Your Remaining\nLeave Is',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Angka di sebelah kanan
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline
-                          .alphabetic, // Menambahkan baseline agar teks sejajar
+      body: SingleChildScrollView(
+        // Membungkus body agar bisa digulir
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Remaining Leave
+              SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                height: 140,
+                padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 243, 147, 4),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Teks di sebelah kiri
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment:
+                          MainAxisAlignment.center, // Tengah vertikal
                       children: [
                         Text(
-                          limit.toString(),
+                          'Your Remaining\nLeave Is',
                           style: TextStyle(
-                            fontSize: 50,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4.0),
-                          child: Text(
-                            '/',
-                            style: TextStyle(
-                              fontSize: 44,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '12',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
+                    // Angka di sebelah kanan
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline
+                            .alphabetic, // Menambahkan baseline agar teks sejajar
+                        children: [
+                          Text(
+                            limit.toString(),
+                            style: TextStyle(
+                              fontSize: 50,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4.0),
+                            child: Text(
+                              '/',
+                              style: TextStyle(
+                                fontSize: 44,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '12',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24),
+              Text(
+                'Type Time off',
+                style: TextStyle(color: Colors.black54),
+              ),
+              SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: const Color.fromRGBO(
+                          101, 19, 116, 1), // Customize border color
+                      width: 2, // Customize border width
+                    ),
                   ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24),
-            Text(
-              'Type Time off',
-              style: TextStyle(color: Colors.black54),
-            ),
-            SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-              ),
-              value: _selectedType,
-              items:
-                  ['Permission', 'Sick', 'Annual Vacation'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  _selectedType = newValue!;
-                });
-              },
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Reason',
-                labelStyle: TextStyle(color: Colors.purple),
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.purple),
-                  borderRadius: BorderRadius.circular(8),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.purple, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.red),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.red),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  Reason = value;
-                });
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your reason';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Start Date',
-              style: TextStyle(color: Colors.black54),
-            ),
-            InkWell(
-              onTap: () => _selectDate(context, true),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _selectedStartDate == null
-                          ? 'Select Start Date'
-                          : DateFormat('yyyy-MM-dd')
-                              .format(_selectedStartDate!),
-                    ),
-                    Icon(Icons.calendar_today, color: Colors.orange),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'End Date',
-              style: TextStyle(color: Colors.black54),
-            ),
-            InkWell(
-              onTap: () => _selectDate(context, false),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _selectedEndDate == null
-                          ? 'Select End Date'
-                          : DateFormat('yyyy-MM-dd').format(_selectedEndDate!),
-                    ),
-                    Icon(Icons.calendar_today, color: Colors.orange),
-                  ],
-                ),
-              ),
-            ),
-            Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  _submitData();
+                items: _typeOptions.map((String _typeOptions) {
+                  return DropdownMenuItem<String>(
+                    value: _typeOptions,
+                    child: Text(_typeOptions),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedType = newValue;
+                  });
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: EdgeInsets.symmetric(vertical: 16),
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Reason',
+                  labelStyle:
+                      TextStyle(color: const Color.fromARGB(255, 101, 19, 116)),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: const Color.fromARGB(255, 101, 19, 116)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: const Color.fromARGB(255, 101, 19, 116),
+                        width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.red),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.red),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: Text(
-                  'Submit',
-                  style: TextStyle(
-                    color: Colors.white,
+                onChanged: (value) {
+                  setState(() {
+                    Reason = value;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your reason';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Start Date',
+                style: TextStyle(color: Colors.black54),
+              ),
+              InkWell(
+                onTap: () => _selectDate(context, true),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: _selectedStartDate == null
+                            ? Colors.red
+                            : Colors.purple,
+                      ),
+                    ),
+                    errorText: _selectedStartDate == null
+                        ? 'Tanggal Mulai wajib diisi.'
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedStartDate == null
+                            ? 'Pilih Tanggal Mulai'
+                            : DateFormat('yyyy-MM-dd')
+                                .format(_selectedStartDate!),
+                      ),
+                      Icon(Icons.calendar_today, color: Colors.orange),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 16),
+              Text(
+                'End Date',
+                style: TextStyle(color: Colors.black54),
+              ),
+              InkWell(
+                onTap: () => _selectDate(context, false),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: _selectedEndDate == null
+                            ? Colors.red
+                            : Colors.purple,
+                      ),
+                    ),
+                    errorText: _selectedEndDate == null
+                        ? 'Tanggal Akhir wajib diisi.'
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedEndDate == null
+                            ? 'Pilih Tanggal Akhir'
+                            : DateFormat('yyyy-MM-dd')
+                                .format(_selectedEndDate!),
+                      ),
+                      Icon(Icons.calendar_today, color: Colors.orange),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 50),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _submitData();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    'Submit',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

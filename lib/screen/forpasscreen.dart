@@ -10,11 +10,11 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  String? errorMessage;
+  String? _errorMessage; // Tambahkan variabel untuk pesan error
+  bool _isEmailValid = true;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
-  String? errorMessage;
-  bool _isEmailValid = true;
-  String? _errorMessage; // Tambahkan variabel untuk pesan error
 
   Future<void> _submit() async {
     if (!_isEmailValid) {

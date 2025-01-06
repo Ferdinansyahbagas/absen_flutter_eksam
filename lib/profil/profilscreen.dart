@@ -6,10 +6,11 @@ import 'package:absen/timeoff/TimeoffScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:absen/profil/ChagePassPage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:absen/utils/preferences.dart';
 import 'dart:convert';
+import 'package:http_parser/http_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image/image.dart' as img;
+import 'package:absen/utils/preferences.dart';
 import 'package:http/http.dart' as http;
 
 class ProfileScreen extends StatefulWidget {
@@ -20,19 +21,20 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  File? profileImage;
-  PageController _pageController = PageController();
   int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
-  String profileImageUrl = 'https://via.placeholder.com/150';
-  String idCardImageUrl = 'https://via.placeholder.com/100';
-  String cvImageUrl = '';
+  PageController _pageController = PageController();
+  String? profileImageUrl;
+  String? idCardImageUrl;
+  String? cvImageUrl;
   String name = '';
   String email = '';
   String phoneNumber = '';
   String address = '';
   String idCardAddress = '';
+  File? profileImage;
   File? _idCardImage;
   File? _cvImage;
+  File? _ProfilImage;
   String employmentStart = '';
   String employmentEnd = '';
   String education = '';
@@ -42,28 +44,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
   final ImagePicker _picker = ImagePicker();
-  List<String> defaultAvatars = [
-    'https://via.placeholder.com/150/FF0000/FFFFFF?text=Avatar+1',
-    'https://via.placeholder.com/150/00FF00/FFFFFF?text=Avatar+2',
-    'https://via.placeholder.com/150/0000FF/FFFFFF?text=Avatar+3'
-  ];
+  List<String> pendidikanOptions = [];
+  List<String> bankOptions = [];
 
   @override
   void initState() {
     super.initState();
+    getPendidikan();
+    _getBank();
+    loadProfileImage();
     getProfile();
   }
 
-  void _logout(BuildContext context) async {
-    // Hapus token dari SharedPreferences
-    await Preferences.clearToken();
+  Future<void> saveImageUrls({
+    String? profileUrl,
+    String? idCardUrl,
+    String? cvUrl,
+  }) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (profileUrl != null) {
+      await prefs.setString('profileImageUrl', profileUrl);
+    }
+    if (idCardUrl != null) {
+      await prefs.setString('idCardImageUrl', idCardUrl);
+    }
+    if (cvUrl != null) {
+      await prefs.setString('cvImageUrl', cvUrl);
+    }
+  }
 
-    // Navigasi kembali ke WelcomeScreen
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-      (route) => false,
-    );
+  // Fungsi untuk mengambil URL dari SharedPreferences
+  Future<void> loadProfileImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      profileImageUrl = prefs.getString('profileImageUrl');
+      idCardImageUrl = prefs.getString('idCardImageUrl');
+      cvImageUrl = prefs.getString('cvImageUrl');
+    });
+  }
+
+  Future<void> getPendidikan() async {
+    final url =
+        Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-pendidikan');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    var token = localStorage.getString('token');
+
+    try {
+      final response =
+          await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          pendidikanOptions =
+              List<String>.from(data['data'].map((item) => item['pendidikan']));
+        });
+      } else {
+        print('Error fetching education data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> _getBank() async {
+    final url =
+        Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-bank');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    var token = localStorage.getString('token');
+
+    try {
+      final response =
+          await http.get(url, headers: {'Authorization': 'Bearer $token'});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          bankOptions =
+              List<String>.from(data['data'].map((item) => item['name']));
+        });
+      } else {
+        print('Error fetching bank data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
   }
 
   Future<void> setProfile() async {
@@ -75,33 +140,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
+      request.fields['no_rekening'] = bankAccount;
+      request.fields['no_hp'] = phoneNumber;
+      request.fields['alamat_domisili'] = address;
+      request.fields['alamat_ktp'] = idCardAddress;
+      request.fields['email'] = email;
 
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-      print(data);
-
-      setState(() {
-        request.fields['no_hp'] = phoneNumber;
-        request.fields['alamat_domisili'] = address;
-        request.fields['alamat_ktp'] = idCardAddress;
-      });
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Berhasil'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      request.fields['pendidikan_id'] = education;
+      request.fields['bank_id'] = bank;
+      if (_cvImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'riwayat_hidup',
+          _cvImage!.path,
+          contentType: MediaType('image', 'jpg'),
+        ));
       }
-      ;
+
+      if (_ProfilImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'foto',
+          _ProfilImage!.path,
+          contentType: MediaType('image', 'jpg'),
+        ));
+      }
+
+      if (_idCardImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'ktp',
+          _idCardImage!.path,
+          contentType: MediaType('image', 'jpg'),
+        ));
+      }
+
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final responseBody = await http.Response.fromStream(response);
+        final data = jsonDecode(responseBody.body);
+      } else {}
     } catch (e) {
       print("Error: $e");
     }
@@ -112,18 +187,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
 
-      var request = http.MultipartRequest('GET', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-      print(data);
+      final token = localStorage.getString('token');
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
+          profileImageUrl =
+              "https://dev-portal.eksam.cloud/storage/foto/${data['data']['foto']}";
+          idCardImageUrl =
+              "https://dev-portal.eksam.cloud/storage/ktp/${data['data']['foto_ktp']}";
+          cvImageUrl =
+              "https://dev-portal.eksam.cloud/storage/cv/${data['data']['riwayat_hidup']}";
           name = data['data']['name'].toString();
           email = data['data']['email'].toString();
           phoneNumber = data['data']['no_hp'].toString();
@@ -136,7 +215,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bankAccount = data['data']['no_rekening'].toString();
           Limit = data['data']['batas_cuti'].toString();
         });
-        localStorage.setString('id', data['data']['id']);
+        saveImageUrls(
+            profileUrl: profileImageUrl,
+            idCardUrl: idCardImageUrl,
+            cvUrl: cvImageUrl);
       } else {
         print("Error retrieving profile");
       }
@@ -145,12 +227,270 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Fungsi untuk menampilkan dialog edit
+  // Fungsi untuk mengambil gambar dari galeri
+  Future<void> _pickImage(String imageType) async {
+    final pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 20);
+
+    if (pickedFile != null) {
+      final imageFile = File(pickedFile.path);
+
+      // Resize image if needed
+      img.Image? decodedImage = img.decodeImage(imageFile.readAsBytesSync());
+      if (decodedImage != null) {
+        img.Image resizedImage = img.copyResize(decodedImage, width: 600);
+        final resizedFile = File(pickedFile.path)
+          ..writeAsBytesSync(img.encodeJpg(resizedImage));
+
+        setState(() {
+          switch (imageType) {
+            // case 'Profile':
+            //   profileImage = resizedFile;
+            //   profileImageUrl = resizedFile.path;
+            //   saveImageUrls(profileUrl: profileImageUrl);
+            //   break;
+            case 'ID CARD':
+              _idCardImage = resizedFile;
+              idCardImageUrl = resizedFile.path;
+              saveImageUrls(idCardUrl: idCardImageUrl);
+              break;
+            case 'CV':
+              _cvImage = resizedFile;
+              cvImageUrl = resizedFile.path;
+              saveImageUrls(cvUrl: cvImageUrl);
+              break;
+          }
+        });
+
+        await setProfile(); // Send updated image to API
+      }
+    }
+  }
+
+  // Fungsi untuk mengambil gambar dari galeri
+  Future<void> _pickImageId(String imageType) async {
+    final pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 20);
+
+    if (pickedFile != null) {
+      final imageFile = File(pickedFile.path);
+
+      // Resize image if needed
+      img.Image? decodedImage = img.decodeImage(imageFile.readAsBytesSync());
+      if (decodedImage != null) {
+        img.Image resizedImage = img.copyResize(decodedImage, width: 600);
+        final resizedFile = File(pickedFile.path)
+          ..writeAsBytesSync(img.encodeJpg(resizedImage));
+
+        setState(() {
+          switch (imageType) {
+            // case 'Profile':
+            //   profileImage = resizedFile;
+            //   profileImageUrl = resizedFile.path;
+            //   saveImageUrls(profileUrl: profileImageUrl);
+            //   break;
+            case 'ID CARD':
+              _idCardImage = resizedFile;
+              idCardImageUrl = resizedFile.path;
+              saveImageUrls(idCardUrl: idCardImageUrl);
+            //   break;
+            // case 'CV':
+            //   _cvImage = resizedFile;
+            //   cvImageUrl = resizedFile.path;
+            //   saveImageUrls(cvUrl: cvImageUrl);
+            //   break;
+          }
+        });
+
+        await setProfile(); // Send updated image to API
+      }
+    }
+  }
+
+  // Fungsi untuk mengambil gambar dari galeri
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+
+      // Mengubah ukuran gambar
+      img.Image? image = img.decodeImage(imageFile.readAsBytesSync());
+      if (image != null) {
+        // Ubah ukuran gambar menjadi lebih kecil jika terlalu besar
+        img.Image resized = img.copyResize(image,
+            width: 600); // Sesuaikan ukuran sesuai kebutuhan
+        final resizedFile = File(pickedFile.path)
+          ..writeAsBytesSync(img.encodeJpg(resized));
+
+        setState(() {
+          profileImage = resizedFile;
+          _ProfilImage = resizedFile; // Simpan gambar ke variabel
+        });
+      }
+      await setProfile(); // Panggil setProfile tanpa parameter
+    }
+  }
+
+  Widget _buildImageCard(String title, String? imageUrl, String imageType) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: titleStyle),
+        SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _pickImage(imageType), // Memilih gambar
+          child: Container(
+            height: 150,
+            width: 150,
+            color: Colors.grey[300],
+            child: imageUrl != null && Uri.parse(imageUrl).isAbsolute
+                ? Image.network(imageUrl, fit: BoxFit.cover)
+                : imageUrl != null
+                    ? Image.file(File(imageUrl), fit: BoxFit.cover)
+                    : Center(
+                        child: Icon(Icons.add_a_photo,
+                            size: 20, color: Colors.grey),
+                      ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageCardId(String title, String? imageUrl, String imageType) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: titleStyle),
+        SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _pickImageId(imageType), // Memilih gambar
+          child: Container(
+            height: 150,
+            width: 150,
+            color: Colors.grey[300],
+            child: imageUrl != null && Uri.parse(imageUrl).isAbsolute
+                ? Image.network(imageUrl, fit: BoxFit.cover)
+                : imageUrl != null
+                    ? Image.file(File(imageUrl), fit: BoxFit.cover)
+                    : Center(
+                        child: Icon(Icons.add_a_photo,
+                            size: 20, color: Colors.grey),
+                      ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileItem({
+    required String title,
+    required String value,
+    Function(String)?
+        onEdit, // Fungsi hanya diperlukan untuk item yang bisa diedit
+    bool isEditable = true, // Default: bisa diedit
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 5),
+          Row(
+            crossAxisAlignment:
+                CrossAxisAlignment.center, // Menjaga elemen tetap sejajar
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(fontSize: 16),
+                  softWrap: true, // Agar teks membungkus
+                  overflow: TextOverflow.visible, // Biarkan teks tetap terlihat
+                ),
+              ),
+              if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
+                IconButton(
+                  icon: Icon(Icons.edit, color: Colors.orange),
+                  onPressed: () {
+                    if (onEdit != null) {
+                      _showEditDialog(title, value, onEdit);
+                    }
+                  },
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNohp({
+    required String title,
+    required String value,
+    Function(String)?
+        onEdit, // Fungsi hanya diperlukan untuk item yang bisa diedit
+    bool isEditable = true, // Default: bisa diedit
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 5),
+          Row(
+            crossAxisAlignment:
+                CrossAxisAlignment.center, // Menjaga elemen sejajar vertikal
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(fontSize: 16),
+                  softWrap: true, // Agar teks membungkus
+                  overflow: TextOverflow
+                      .ellipsis, // Tambahkan elipsis jika teks terlalu panjang
+                ),
+              ),
+              if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
+                IconButton(
+                  icon: Icon(Icons.edit, color: Colors.orange),
+                  onPressed: () {
+                    if (onEdit != null) {
+                      _showEditNoHp(title, value, onEdit);
+                    }
+                  },
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Fungsi untuk menampilkan dialog edit lain lain
   void _showEditDialog(
       String title, String currentValue, Function(String) onSave,
       {bool isPasswordField = false}) {
     TextEditingController controller =
         TextEditingController(text: currentValue);
+    String? errorText; // Variabel untuk menampung pesan error
 
     showDialog(
       context: context,
@@ -159,24 +499,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
           builder: (context, setState) {
             return AlertDialog(
               title: Text('Edit $title'),
-              content: TextField(
-                controller: controller,
-                obscureText: isPasswordField ? _obscureText : false,
-                decoration: InputDecoration(
-                  labelText: 'Enter new $title',
-                  suffixIcon: isPasswordField
-                      ? IconButton(
-                          icon: Icon(_obscureText
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              _obscureText = !_obscureText;
-                            });
-                          },
-                        )
-                      : null,
-                ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: controller,
+                    obscureText: isPasswordField ? _obscureText : false,
+                    decoration: InputDecoration(
+                      labelText: 'Enter new $title',
+                      errorText: errorText, // Tampilkan error jika ada
+                      suffixIcon: isPasswordField
+                          ? IconButton(
+                              icon: Icon(_obscureText
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: errorText == null
+                              ? Colors.grey
+                              : Colors.red, // Border merah jika error
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: errorText == null
+                              ? Colors.purple
+                              : Colors.red, // Border merah jika error
+                        ),
+                      ),
+                    ),
+                  ),
+                  // if (errorText != null) // Tampilkan pesan error jika ada
+                  //   Padding(
+                  //     padding: const EdgeInsets.only(top: 5),
+                  //     child: Text(
+                  //       "Wajib diisi!!!",
+                  //       style: TextStyle(
+                  //         color: Colors.red,
+                  //         fontSize: 12,
+                  //       ),
+                  //     ),
+                  //   ),
+                ],
               ),
               actions: [
                 TextButton(
@@ -184,7 +557,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: setProfile,
+                  onPressed: () {
+                    // Validasi input
+                    if (controller.text.trim().isEmpty) {
+                      setState(() {
+                        errorText = "Wajib Di Isi !!!";
+                      });
+                    } else {
+                      // Panggil onSave dengan nilai baru
+                      onSave(controller.text);
+
+                      // Setelah menyimpan perubahan, perbarui data di API
+                      setProfile();
+
+                      Navigator.pop(context);
+                    }
+                  },
                   child: Text('Save'),
                 ),
               ],
@@ -195,60 +583,284 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Fungsi untuk mengambil gambar dari galeri
-  Future<void> _pickImage(ImageSource source, String imageType) async {
-    final pickedFile = await ImagePicker().pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        switch (imageType) {
-          case 'profile':
-            profileImage = File(pickedFile.path);
-        }
-        if (imageType == 'ID Card') {
-          _idCardImage = File(pickedFile.path);
-        } else if (imageType == 'CV') {
-          _cvImage = File(pickedFile.path);
-        }
-      });
-    }
-  }
+  void _showEditNoHp(String title, String currentValue, Function(String) onSave,
+      {bool isPasswordField = false}) {
+    TextEditingController controller =
+        TextEditingController(text: currentValue);
+    String? errorText; // Variabel untuk menampung pesan error
 
-  // Fungsi untuk memilih gambar dari galeri
-  Future<void> _pickImageFromGallery() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        profileImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  // Fungsi untuk mengganti avatar dengan pilihan default
-  void _selectDefaultAvatar(String imageUrl) {
-    setState(() {
-      profileImage = null; // Reset file image
-    });
-  }
-
-  void _showAvatarOptions() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
       builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.photo),
-              title: Text('Select from Gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImageFromGallery();
-              },
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Edit $title'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: controller,
+                    obscureText: isPasswordField ? _obscureText : false,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Enter new $title',
+                      errorText: errorText, // Tampilkan error jika ada
+                      suffixIcon: isPasswordField
+                          ? IconButton(
+                              icon: Icon(_obscureText
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: errorText == null
+                              ? Colors.grey
+                              : Colors.red, // Border merah jika error
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: errorText == null
+                              ? Colors.purple
+                              : Colors.red, // Border merah jika error
+                        ),
+                      ),
+                    ),
+                  ),
+                  // if (errorText != null) // Tampilkan pesan error jika ada
+                  //   Padding(
+                  //     padding: const EdgeInsets.only(top: 5),
+                  //     child: Text(
+                  //       "Wajib diisi!!!",
+                  //       style: TextStyle(
+                  //         color: Colors.red,
+                  //         fontSize: 12,
+                  //       ),
+                  //     ),
+                  //   ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Validasi input
+                    if (controller.text.trim().isEmpty) {
+                      setState(() {
+                        errorText = "Wajib Di Isi !!!";
+                      });
+                    } else {
+                      // Panggil onSave dengan nilai baru
+                      onSave(controller.text);
+
+                      // Setelah menyimpan perubahan, perbarui data di API
+                      setProfile();
+
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
+    );
+  }
+
+  void _showChangePasswordDialog() {
+    TextEditingController oldPasswordController = TextEditingController();
+    TextEditingController newPasswordController = TextEditingController();
+    bool _obscureOldPassword = true;
+    bool _obscureNewPassword = true;
+    String? oldPasswordError;
+    String? newPasswordError;
+
+    Future<void> setPass() async {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-self');
+      var request = http.MultipartRequest('POST', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      // Isi body request dengan password lama dan baru
+      request.fields['old_password'] = oldPasswordController.text;
+      request.fields['new_password'] = newPasswordController.text;
+
+      try {
+        var response = await request.send();
+        var rp = await http.Response.fromStream(response);
+
+        if (response.statusCode == 200) {
+          // Password berhasil diubah
+          Navigator.pop(context); // Tutup dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Password successfully updated')),
+          );
+        } else {
+          // Tangani error jika password lama salah
+          final data = jsonDecode(rp.body);
+          if (data['message'] == 'Old password is incorrect') {
+            setState(() {
+              oldPasswordError = 'Incorrect old password';
+            });
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to update password')),
+            );
+          }
+        }
+      } catch (e) {
+        print('Error occurred: $e');
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Change Password'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: oldPasswordController,
+                    obscureText: _obscureOldPassword,
+                    decoration: InputDecoration(
+                      labelText: 'Old Password',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: oldPasswordError != null
+                              ? Colors.red
+                              : Colors.purple,
+                        ),
+                      ),
+                      errorText: oldPasswordError,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureOldPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureOldPassword = !_obscureOldPassword;
+                          });
+                        },
+                      ),
+                    ),
+                    onChanged: (_) {
+                      setState(() {
+                        oldPasswordError = null; // Reset error saat mengetik
+                      });
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    controller: newPasswordController,
+                    obscureText: _obscureNewPassword,
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: newPasswordError != null
+                              ? Colors.red
+                              : Colors.purple,
+                        ),
+                      ),
+                      errorText: newPasswordError,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureNewPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureNewPassword = !_obscureNewPassword;
+                          });
+                        },
+                      ),
+                    ),
+                    onChanged: (_) {
+                      setState(() {
+                        newPasswordError = null; // Reset error saat mengetik
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // Validasi sebelum mengirim data ke API
+                        setState(() {
+                          oldPasswordError = oldPasswordController.text.isEmpty
+                              ? 'Old password is required'
+                              : null;
+
+                          // Validasi password baru minimal 6 karakter
+                          if (newPasswordController.text.isEmpty) {
+                            newPasswordError = 'New password is required';
+                          } else if (newPasswordController.text.length < 6) {
+                            newPasswordError =
+                                'New password must be at least \n 6 characters';
+                          } else {
+                            newPasswordError = null;
+                          }
+                        });
+
+                        if (oldPasswordError == null &&
+                            newPasswordError == null) {
+                          setPass(); // Panggil fungsi untuk update password
+                        }
+                      },
+                      child: Text('Submit'),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _logout(BuildContext context) async {
+    // Hapus token dari SharedPreferences
+    await Preferences.clearToken();
+
+    // Navigasi kembali ke WelcomeScreen
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (route) => false,
     );
   }
 
@@ -296,10 +908,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               radius: 50,
                               backgroundImage: profileImage != null
                                   ? FileImage(profileImage!)
-                                  : (selectedAvatarUrl != null
-                                      ? NetworkImage(selectedAvatarUrl!)
-                                      : NetworkImage(defaultAvatars[0])),
-                              backgroundColor: Colors.grey[200],
+                                  : (profileImageUrl != null
+                                      ? NetworkImage(profileImageUrl!)
+                                      : AssetImage(
+                                          'assets/image/logo_circle.png')),
+                              //         as ImageProvider,
+                              // backgroundColor: Colors.grey[200],
                             ),
                             Positioned(
                               right: 0,
@@ -307,7 +921,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: IconButton(
                                 icon: Icon(Icons.camera_alt,
                                     color: Colors.orange, size: 30),
-                                onPressed: _showAvatarOptions,
+                                onPressed: _pickImageFromGallery,
                               ),
                             ),
                           ],
@@ -328,7 +942,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -365,34 +978,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     width:
                                         10), // Menambah jarak tetap antara teks dan ikon
                                 IconButton(
-                                  icon: Icon(Icons.arrow_forward_ios,
-                                      color: Colors.orange),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            Chagepasspage(), // Pindah ke halaman EditPasswordPage
-                                      ),
-                                    );
-                                  },
-                                ),
+                                    icon:
+                                        Icon(Icons.edit, color: Colors.orange),
+                                    onPressed: _showChangePasswordDialog),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      _buildProfileItem(
+                      _buildNohp(
                         title: 'Phone Number',
                         value: phoneNumber,
-                        onEdit: (newValue) =>
-                            setState(() => phoneNumber = newValue),
+                        onEdit: (newValue) => setState(() {
+                          phoneNumber = newValue; // Update value setelah edit
+                        }),
                       ),
                       _buildProfileItem(
                         title: 'Address',
                         value: address,
-                        onEdit: (newValue) =>
-                            setState(() => address = newValue),
+                        onEdit: (newValue) => setState(() {
+                          address = newValue; // Update value setelah edit
+                        }),
                       ),
                       const Divider(
                         height: 30,
@@ -402,18 +1008,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _buildProfileItem(
                         title: 'ID Card Address',
                         value: idCardAddress,
-                        onEdit: (newValue) =>
-                            setState(() => idCardAddress = newValue),
+                        onEdit: (newValue) => setState(() {
+                          idCardAddress = newValue; // Update value setelah edit
+                        }),
                       ),
                       SizedBox(height: 14),
-                      _buildImageCard(
-                          "ID Card Picture", _idCardImage, 'ID Card'),
+                      _buildImageCardId(
+                          "ID Card Image", idCardImageUrl, 'ID CARD'),
                       const Divider(
                         height: 30,
                         thickness: 1,
                         color: const Color.fromRGBO(101, 19, 116, 1),
                       ),
-                      _buildImageCard("CV", _cvImage, 'CV'),
+                      _buildImageCard("CV Image", cvImageUrl, 'CV'),
                       SizedBox(height: 14),
                       _buildProfileItem(
                         title: 'Employment Contract Start',
@@ -437,33 +1044,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Colors.grey,
                             ),
                           ),
-                          const SizedBox(
-                              height: 8), // Spasi antara title dan dropdown
+                          const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: education,
+                            value: education.isNotEmpty ? education : null,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: const BorderSide(
-                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  color: Color.fromRGBO(101, 19, 116, 1),
                                   width: 2,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: const BorderSide(
-                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  color: Color.fromRGBO(101, 19, 116, 1),
                                   width: 2,
                                 ),
                               ),
                             ),
-                            items: [education].map((String education) {
+                            items: pendidikanOptions.map((String id) {
                               return DropdownMenuItem<String>(
-                                value: education,
-                                child: Text(education),
+                                value: id,
+                                child: Text(id),
                               );
                             }).toList(),
-                            onChanged: null, // Disabled
+                            onChanged: (newValue) {
+                              setState(() {
+                                education = newValue!;
+                              });
+                              setProfile();
+                            },
                           ),
                         ],
                       ),
@@ -479,72 +1090,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Colors.grey,
                             ),
                           ),
-                          const SizedBox(
-                              height: 8), // Spasi antara title dan dropdown
+                          const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: bank,
+                            value: bank.isNotEmpty ? bank : null,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: const BorderSide(
-                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  color: Color.fromRGBO(101, 19, 116, 1),
                                   width: 2,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: const BorderSide(
-                                  color: const Color.fromRGBO(101, 19, 116, 1),
+                                  color: Color.fromRGBO(101, 19, 116, 1),
                                   width: 2,
                                 ),
                               ),
                             ),
-                            items: [bank].map((String education) {
+                            items: bankOptions.map((String value) {
                               return DropdownMenuItem<String>(
-                                value: bank,
-                                child: Text(bank),
+                                value: value,
+                                child: Text(value),
                               );
                             }).toList(),
-                            onChanged: null, // Disabled
+                            onChanged: (newValue) {
+                              setState(() {
+                                bank = newValue!;
+                              });
+                              setProfile();
+                            },
                           ),
                         ],
                       ),
                       SizedBox(height: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Bank Account Number',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(
-                              height: 8), // Jarak antara judul dan TextField
-                          TextField(
-                            controller: TextEditingController(
-                                text: bankAccount), // Isi TextField
-                            readOnly: true, // Disabled agar tidak bisa di-edit
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(
-                                    color:
-                                        const Color.fromRGBO(101, 19, 116, 1)),
-                              ),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
+                       _buildNohp(
+                        title: 'Bank Account Number',
+                        value: bankAccount,
+                        onEdit: (newValue) => setState(() {
+                          bankAccount = newValue; // Update value setelah edit
+                        }),
                       ),
                       SizedBox(height: 14),
-                      _buildProfileItem(
+                      _buildNohp(
                         title: 'Leave Limit',
                         value: Limit,
                         isEditable: false, // Tidak bisa diedit
@@ -648,74 +1237,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
         },
       ),
-    );
-  }
-
-  Widget _buildProfileItem({
-    required String title,
-    required String value,
-    Function(String)?
-        onEdit, // Fungsi hanya diperlukan untuk item yang bisa diedit
-    bool isEditable = true, // Default: bisa diedit
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                value,
-                style: TextStyle(fontSize: 16),
-              ),
-            ],
-          ),
-          if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.orange),
-              onPressed: () {
-                if (onEdit != null) {
-                  _showEditDialog(title, value, onEdit);
-                }
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImageCard(String title, File? imageFile, String imageType) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: titleStyle),
-        SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => _pickImage(ImageSource.gallery, imageType),
-          child: Container(
-            height: 150,
-            width: 150,
-            color: Colors.grey[300],
-            child: imageFile != null
-                ? Image.file(imageFile, fit: BoxFit.cover)
-                : Center(
-                    child:
-                        Icon(Icons.add_a_photo, size: 20, color: Colors.grey),
-                  ),
-          ),
-        ),
-      ],
     );
   }
 }

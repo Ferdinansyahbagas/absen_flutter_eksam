@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
 import 'package:absen/utils/preferences.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,12 +12,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  String? _errorMessage;
   bool _showPassword = false;
   bool _isEmailValid = true;
   bool _isPasswordValid = true;
-  String? _errorMessage; // Tambahkan variabel untuk pesan error
+  bool _isLoading = false; // Track loading state
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -29,31 +28,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _login() {
     setState(() {
-      // Validasi sederhana
+      // Validate email and password
       _isEmailValid = _emailController.text.contains('@');
       _isPasswordValid = _passwordController.text.length >= 6;
 
       if (_isEmailValid && _isPasswordValid) {
-        // Jika login berhasil, Anda bisa menambahkan logika di sini
+        // Start loading
+        _isLoading = true;
+        // Call the login function
         login2();
       }
-    }); 
+    });
   }
 
   void login2() async {
-
-        showDialog(
-      context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog
-      builder: (BuildContext context) {
-        return Center(
-          child: CircularProgressIndicator(
-            color: const Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
-
     try {
       Response response = await post(
         Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/login'),
@@ -63,37 +51,33 @@ class _LoginScreenState extends State<LoginScreen> {
         },
       );
 
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
+
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body.toString());
-        // print(data['data']['token']);
-       String token = data['data']['token'];
-        // SharedPreferences localStorage = await SharedPreferences.getInstance();
-        // localStorage.setString('token', data['data']['token']);
-        // // Reset pesan error jika login berhasil
-        // setState(() {
-        //   _errorMessage = null;
-        // });
+        String token = data['data']['token'];
 
-         // Simpan token ke SharedPreferences
+        // Save token to preferences
         await Preferences.setToken(token);
 
-        // Fungsi pindah halaman
-       Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                    (route) => false,
-                  ); 
+        // Navigate to HomePage
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+          (route) => false,
+        );
       } else {
         var data = jsonDecode(response.body.toString());
         setState(() {
-          _errorMessage = data['message']; // Set pesan error dari server
+          _errorMessage = data['message']; // Set error message
         });
       }
     } catch (e) {
-      print(e.toString());
       setState(() {
-        _errorMessage =
-            "Terjadi kesalahan. Coba lagi nanti."; // Pesan error umum
+        _isLoading = false; // Stop loading
+        _errorMessage = "Terjadi kesalahan. Coba lagi nanti."; // General error
       });
     }
   }
@@ -108,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => WelcomeScreen()),
-            ); // Aksi kembali ke halaman sebelumnya
+            );
           },
         ),
         title: const Text(
@@ -117,101 +101,115 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              "log in",
-              style: TextStyle(
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              "Log in first before you join us ✨",
-              style: TextStyle(
-                fontSize: 16.0,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 32.0),
-            // Email Field
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-                errorText: _isEmailValid ? null : 'Email tidak valid',
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            SizedBox(height: 16.0),
-            // Password Field
-            TextField(
-              controller: _passwordController,
-              obscureText: !_showPassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-                errorText:
-                    _isPasswordValid ? null : 'Password minimal 6 karakter',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _showPassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: _togglePasswordVisibility,
-                ),
-              ),
-            ),
-            SizedBox(height: 16.0),
-            // Tampilkan pesan error jika ada
-            if (_errorMessage != null)
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Colors.red),
-              ),
-            SizedBox(height: 32.0),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                gradient: LinearGradient(
-                  colors: [Colors.orange, Colors.pink, Colors.purple],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-              ),
-              child: ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  minimumSize: Size(double.infinity, 50),
-                ),
-                child: Text(
-                  'Log In',
+      body: Stack(
+        // Use Stack to overlay the loading indicator
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  "Log in",
                   style: TextStyle(
-                    fontSize: 18.0,
-                    color: Colors.white,
+                    fontSize: 32.0,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ),
-            SizedBox(height: 12.0),
-            Align(
-                alignment: Alignment.center,
-                child: InkWell(
+                SizedBox(height: 8.0),
+                Text(
+                  "Log in first before you join us ✨",
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 32.0),
+                // Email Field
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                    errorText: _isEmailValid ? null : 'Email tidak valid',
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                SizedBox(height: 16.0),
+                // Password Field
+                TextField(
+                  controller: _passwordController,
+                  obscureText: !_showPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                    errorText:
+                        _isPasswordValid ? null : 'Password minimal 6 karakter',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _showPassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: _togglePasswordVisibility,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                // Display error message if any
+                if (_errorMessage != null)
+                  Text(
+                    _errorMessage!,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                SizedBox(height: 32.0),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    gradient: LinearGradient(
+                      colors: [Colors.orange, Colors.pink, Colors.purple],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                    child: Text(
+                      'Log In',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.0),
+                Align(
+                  alignment: Alignment.center,
+                  child: InkWell(
                     onTap: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => ForgotPasswordPage()));
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ForgotPasswordPage()),
+                      );
                     },
-                    child: const Text('Forgot Your Password?'))),
-          ],
-        ),
+                    child: const Text('Forgot Your Password?'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Show loading spinner on top of the screen
+          if (_isLoading)
+            Center(
+              child: CircularProgressIndicator(),
+            ),
+        ],
       ),
     );
   }
 }
+ 
