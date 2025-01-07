@@ -14,7 +14,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:http/http.dart' as http; // menyambungakan ke API
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+// import 'package:flutter_html/flutter_html.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   String? currentCity; // Menyimpan nama kota
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String? name = ""; // Variabel untuk name pengguna
-  String? message;
+  String? message; //variabel untuk th messange
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
   String? avatarUrl;
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
@@ -214,7 +214,8 @@ class _HomePageState extends State<HomePage> {
       hasClockedIn = status;
     });
   }
-
+ 
+   // Fungsi untuk mengambil data dari API townhall
   Future<void> getPengumuman() async {
     final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-th');
     var request = http.MultipartRequest('GET', url);
@@ -259,6 +260,8 @@ class _HomePageState extends State<HomePage> {
       var data = jsonDecode(rp.body.toString());
       setState(() {
         name = data['data']['name'];
+        // avatarUrl =
+        //     "https://dev-portal.eksam.cloud/storage/foto/${data['data']['foto']}";
       });
       print("Profil pengguna: ${data['data']}");
     } catch (e) {
@@ -707,18 +710,16 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   const SizedBox(height: 20),
-                  // Announcement Section
                   // Bagian Announcement
                   const Text(
                     'Announcement',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.purple,
+                      color: const Color.fromARGB(255, 101, 19, 116),
                     ),
                   ),
                   const SizedBox(height: 10),
-
                   Container(
                     height: 150,
                     decoration: BoxDecoration(
@@ -732,7 +733,7 @@ class _HomePageState extends State<HomePage> {
                           controller: _pageController,
                           itemCount: announcements.length,
                           itemBuilder: (context, index) {
-                            final messageHtml = announcements[index];
+                            final message = announcements[index];
 
                             return GestureDetector(
                               onTap: () {
@@ -741,7 +742,7 @@ class _HomePageState extends State<HomePage> {
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         AnnouncementDetailPage(
-                                      messageHtml: messageHtml,
+                                      message: message,
                                     ),
                                   ),
                                 );
@@ -752,9 +753,15 @@ class _HomePageState extends State<HomePage> {
                                   borderRadius: BorderRadius.circular(12),
                                   color: Colors.white,
                                 ),
-                                child: HtmlWidget(
-                                  messageHtml,
-                                  textStyle: TextStyle(fontSize: 14),
+                                child: Center(
+                                  child: Text(
+                                    message,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
                             );
@@ -775,7 +782,8 @@ class _HomePageState extends State<HomePage> {
                               controller: _pageController,
                               count: announcements.length,
                               effect: ExpandingDotsEffect(
-                                activeDotColor: Colors.purple,
+                                activeDotColor:
+                                    const Color.fromARGB(255, 101, 19, 116),
                                 dotColor: Colors.grey,
                                 dotHeight: 8,
                                 dotWidth: 8,
@@ -800,7 +808,7 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.purple,
+                              color: const Color.fromARGB(255, 101, 19, 116),
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -951,11 +959,11 @@ class _HomePageState extends State<HomePage> {
 }
 
 class AnnouncementDetailPage extends StatelessWidget {
-  final String messageHtml;
+  final String message;
 
   const AnnouncementDetailPage({
     Key? key,
-    required this.messageHtml,
+    required this.message,
   }) : super(key: key);
 
   @override
@@ -966,10 +974,11 @@ class AnnouncementDetailPage extends StatelessWidget {
         backgroundColor: Colors.purple,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: HtmlWidget(
-          messageHtml,
-          textStyle: TextStyle(fontSize: 14),
+        physics:
+            const BouncingScrollPhysics(), // Memberikan efek scroll yang halus        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          message,
+          style: const TextStyle(fontSize: 16, color: Colors.black87),
         ),
       ),
     );

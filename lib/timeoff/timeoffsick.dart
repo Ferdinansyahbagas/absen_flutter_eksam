@@ -16,19 +16,24 @@ class TimeOffSick extends StatefulWidget {
 }
 
 class _TimeOffSickState extends State<TimeOffSick> {
-  String formattedDate = '';
+  String formatStarttedDate = '';
+  String formatEndtedDate = '';
   String Reason = '';
   String? limit;
   String? iduser;
   String? type = '2';
   String _selectedType = 'Sick';
   File? _image; // To store the image file
+  bool _isReasonEmpty = false;
+  bool _isStartDateEmpty = false;
+  bool _isEndDateEmpty = false;
+  bool _isImageRequired = false;
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
-  bool _isImageRequired = false;
   final ImagePicker _picker = ImagePicker();
-  final _reasonController = TextEditingController();
+  // final _reasonController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -46,24 +51,19 @@ class _TimeOffSickState extends State<TimeOffSick> {
     if (picked != null) {
       setState(() {
         if (isStartDate) {
+          formatStarttedDate = DateFormat('yyyy-MM-dd').format(picked);
           _selectedStartDate = picked;
+          _isStartDateEmpty = false;
         } else {
+          formatEndtedDate = DateFormat('yyyy-MM-dd').format(picked);
           _selectedEndDate = picked;
+          _isEndDateEmpty = false;
         }
       });
     }
   }
 
   Future<void> getProfile() async {
-    if (_reasonController.text.isEmpty ||
-        _selectedStartDate == null ||
-        _selectedEndDate == null) {
-      setState(() {
-        // Jika ada field yang kosong, tampilkan error pada form
-      });
-      return;
-    }
-
     try {
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
@@ -105,6 +105,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
 
   // Function to submit data to API
   Future<void> _submitData() async {
+   
     if (_image == null) {
       setState(() {
         _isImageRequired = true;
@@ -298,15 +299,20 @@ class _TimeOffSickState extends State<TimeOffSick> {
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Reason',
-                  labelStyle: TextStyle(color: Colors.purple),
+                  labelStyle:
+                      TextStyle(color: const Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
                       FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple),
-                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                        color: _isReasonEmpty
+                            ? Colors.red
+                            : const Color.fromARGB(255, 101, 19, 116)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple, width: 2),
+                    borderSide: BorderSide(
+                        color: const Color.fromARGB(255, 101, 19, 116),
+                        width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
@@ -319,39 +325,58 @@ class _TimeOffSickState extends State<TimeOffSick> {
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  errorText: _isReasonEmpty ? 'Please enter a Reason' : null,
                 ),
                 onChanged: (value) {
                   setState(() {
                     Reason = value;
+                    _isReasonEmpty = false;
                   });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your reason';
-                  }
-                  return null;
                 },
               ),
               SizedBox(height: 16),
-              Text(
-                'Start Date',
-                style: TextStyle(color: Colors.black54),
-              ),
               InkWell(
                 onTap: () => _selectDate(context, true),
                 child: InputDecorator(
                   decoration: InputDecoration(
+                    labelText: 'Start Date',
+                    labelStyle: TextStyle(
+                        color: const Color.fromARGB(255, 101, 19, 116)),
+                    floatingLabelBehavior: FloatingLabelBehavior
+                        .always, // Always show label on top
                     border: OutlineInputBorder(),
-                    errorText: _selectedStartDate == null
-                        ? 'Tanggal mulai wajib diisi'
-                        : null, // Pesan error jika tidak diisi
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: _isStartDateEmpty
+                              ? Colors.red
+                              : const Color.fromARGB(255, 101, 19, 116)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: const Color.fromARGB(255, 101, 19, 116),
+                          width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Colors.red), // Border saat error
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: Colors.red), // Border saat error dan fokus
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorText: _isStartDateEmpty
+                        ? 'Date is required'
+                        : null, // Error message
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         _selectedStartDate == null
-                            ? 'Pilih Tanggal Mulai' // Ganti ke bahasa Indonesia
+                            ? 'Select Start Date'
                             : DateFormat('yyyy-MM-dd')
                                 .format(_selectedStartDate!),
                       ),
@@ -360,26 +385,50 @@ class _TimeOffSickState extends State<TimeOffSick> {
                   ),
                 ),
               ),
+
               SizedBox(height: 16),
-              Text(
-                'End Date',
-                style: TextStyle(color: Colors.black54),
-              ),
               InkWell(
                 onTap: () => _selectDate(context, false),
                 child: InputDecorator(
                   decoration: InputDecoration(
+                    labelText: 'End Date',
+                    labelStyle: TextStyle(
+                        color: const Color.fromARGB(255, 101, 19, 116)),
+                    floatingLabelBehavior: FloatingLabelBehavior
+                        .always, // Always show label on top
                     border: OutlineInputBorder(),
-                    errorText: _selectedEndDate == null
-                        ? 'Tanggal selesai wajib diisi'
-                        : null, // Pesan error jika tidak diisi
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: _isEndDateEmpty
+                              ? Colors.red
+                              : const Color.fromARGB(255, 101, 19, 116)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: const Color.fromARGB(255, 101, 19, 116),
+                          width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Colors.red), // Border saat error
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: Colors.red), // Border saat error dan fokus
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorText: _isEndDateEmpty
+                        ? 'Date is required'
+                        : null, // Error message
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         _selectedEndDate == null
-                            ? 'Pilih Tanggal Selesai' // Ganti ke bahasa Indonesia
+                            ? 'Select Start Date'
                             : DateFormat('yyyy-MM-dd')
                                 .format(_selectedEndDate!),
                       ),
@@ -484,8 +533,39 @@ class _TimeOffSickState extends State<TimeOffSick> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    _submitData(); // Action for submit button
+                  onPressed: () async {
+                    // Pastikan semua input sudah diisi
+                    if (_selectedStartDate == null) {
+                      setState(() {
+                        _isStartDateEmpty = true;
+                      });
+                    }
+                    if (_selectedEndDate == null) {
+                      setState(() {
+                        _isEndDateEmpty = true;
+                      });
+                    }
+                    if (Reason.isEmpty) {
+                      setState(() {
+                        _isReasonEmpty = true;
+                      });
+                    }
+
+                    // Jika ada input yang belum diisi, jangan lanjutkan
+                    if (_isStartDateEmpty ||
+                        _isEndDateEmpty ||
+                        _isReasonEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please complete all required fields.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Jika semua input valid, kirim data
+                    await _submitData();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,

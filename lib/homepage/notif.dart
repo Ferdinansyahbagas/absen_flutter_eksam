@@ -6,6 +6,9 @@ import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
 import 'package:absen/profil/profilscreen.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -37,9 +40,6 @@ class _NotificationPageState extends State<NotificationPage> {
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
 
-      // Debugging respons API
-      print('Response Body: ${rp.body}');
-
       if (rp.statusCode == 200 && data['data'] != null) {
         setState(() {
           notifications = List.from(data['data']).map((notif) {
@@ -54,13 +54,11 @@ class _NotificationPageState extends State<NotificationPage> {
           isLoading = false;
         });
       } else {
-        print('Error fetching notifications: ${rp.body}');
         setState(() {
           isLoading = false;
         });
       }
     } catch (e) {
-      print('Error occurred: $e');
       setState(() {
         isLoading = false;
       });
@@ -72,11 +70,7 @@ class _NotificationPageState extends State<NotificationPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.orange,
-        elevation: 0,
-        title: Text(
-          'Notification',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text('Notification', style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       body: Container(
@@ -201,10 +195,7 @@ class NotificationItem extends StatelessWidget {
       margin: EdgeInsets.symmetric(vertical: 8.0),
       child: ListTile(
         title: Text(title),
-        subtitle: Text(
-          'Click To View',
-          style: TextStyle(color: Colors.blue),
-        ),
+        subtitle: Text('Click To View', style: TextStyle(color: Colors.blue)),
         onTap: () {
           Navigator.push(
             context,
@@ -240,7 +231,7 @@ class PayslipDetailPage extends StatelessWidget {
         title: Text("Notification"),
         backgroundColor: Colors.orange,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,15 +281,57 @@ class PayslipDetailPage extends StatelessWidget {
                 style:
                     TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
               ),
+            SizedBox(
+                height: 32), // Spacer tambahan untuk melihat skrol lebih baik
           ],
         ),
       ),
     );
   }
 
-  void _downloadFile(BuildContext context, String url) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Download started for $url")),
-    );
+  Future<bool> _requestStoragePermission() async {
+    if (await Permission.storage.request().isGranted) {
+      return true;
+    } else if (await Permission.manageExternalStorage.request().isGranted) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _downloadFile(BuildContext context, String url) async {
+    bool permissionGranted = await _requestStoragePermission();
+
+    if (!permissionGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Storage permission denied")),
+      );
+      return;
+    }
+
+    try {
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
+      }
+
+      final fileName = url.split('/').last;
+      final savePath = '${directory.path}/$fileName';
+
+      Dio dio = Dio();
+      await dio.download(url, savePath, onReceiveProgress: (received, total) {
+        if (total != -1) {
+          print(
+              'Download progress: ${(received / total * 100).toStringAsFixed(0)}%');
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("File downloaded to $savePath")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error downloading file")),
+      );
+    }
   }
 }

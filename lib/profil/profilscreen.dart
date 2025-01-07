@@ -699,7 +699,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       // Isi body request dengan password lama dan baru
       request.fields['old_password'] = oldPasswordController.text;
-      request.fields['new_password'] = newPasswordController.text;
+      request.fields['password'] = newPasswordController.text;
 
       try {
         var response = await request.send();
@@ -1125,7 +1125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       SizedBox(height: 14),
-                       _buildNohp(
+                      _buildNohp(
                         title: 'Bank Account Number',
                         value: bankAccount,
                         onEdit: (newValue) => setState(() {
