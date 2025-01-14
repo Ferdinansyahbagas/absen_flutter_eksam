@@ -1,11 +1,7 @@
 import 'package:absen/screen/loadingwelcome.dart'; // Mengimpor SplashScreen
 import 'package:flutter/material.dart';
-// import 'package:timezone/data/latest.dart' as tz;
 
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized();
-  // tz.initializeTimeZones();
-  // await NotificationService().initialize();
   runApp(const MyApp());
 }
 

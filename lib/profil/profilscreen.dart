@@ -31,16 +31,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String phoneNumber = '';
   String address = '';
   String idCardAddress = '';
-  File? profileImage;
-  File? _idCardImage;
-  File? _cvImage;
-  File? _ProfilImage;
   String employmentStart = '';
   String employmentEnd = '';
   String education = '';
   String bankAccount = '';
   String bank = '';
   String Limit = '';
+  File? profileImage;
+  File? _idCardImage;
+  File? _cvImage;
+  File? _ProfilImage;
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
   final ImagePicker _picker = ImagePicker();

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // for formatting date
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 import 'package:absen/susses&failde/berhasilV3.dart';
 import 'package:absen/susses&failde/gagalV3.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; // for formatting date
+import 'dart:convert';
+import 'dart:io';
 
 class ReimbursementForm extends StatefulWidget {
   @override
@@ -17,11 +17,11 @@ class ReimbursementForm extends StatefulWidget {
 }
 
 class _ReimbursementFormState extends State<ReimbursementForm> {
-  File? _image;
   String description = '';
   String totalReimbursement = '';
   String formattedDate = '';
   DateTime? selectedDate;
+  File? _image;
   bool _isImageRequired = false;
   bool _isDescriptionEmpty = false;
   bool _isTotalEmpty = false;

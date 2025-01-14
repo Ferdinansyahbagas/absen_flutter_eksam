@@ -1,1084 +1,1035 @@
-import 'package:absen/homepage/notif.dart';
-import 'package:absen/Reimbursement/Reimbursementscreen.dart';
-import 'package:absen/homepage/home.dart';
-import 'package:absen/screen/loginscreen.dart';
-import 'package:absen/timeoff/TimeoffScreen.dart';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:http_parser/http_parser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:image/image.dart' as img;
-import 'package:absen/utils/preferences.dart';
-import 'package:http/http.dart' as http;
+// import 'package:flutter/material.dart';
+// import 'package:absen/homepage/notif.dart'; // Mengimpor halaman notif
+// import 'package:absen/jamkelumas/ClockInPage.dart'; // Mengimpor halaman clockin
+// import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor halaman Reimbursement
+// import 'package:absen/history/depan.dart'; // Mengimpor halaman history
+// import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
+// import 'package:absen/jamkelumas/clokOutPage.dart'; // Mengimpor halaman clockout
+// import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
+// import 'package:geolocator/geolocator.dart'; //tempat
+// import 'package:geocoding/geocoding.dart'; //kordinat
+// import 'package:intl/intl.dart'; //unntuk format tanggal
+// import 'dart:async'; // Untuk timer
+// import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+// import 'package:http/http.dart' as http; // menyambungakan ke API
+// import 'package:shared_preferences/shared_preferences.dart';
+// import 'dart:convert';
+// // import 'package:flutter_html/flutter_html.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+// class HomePage extends StatefulWidget {
+//   const HomePage({super.key});
+//   @override
+//   _HomePageState createState() => _HomePageState();
+// }
 
-  @override
-  _ProfileScreenState createState() => _ProfileScreenState();
-}
+// class _HomePageState extends State<HomePage> {
+//   PageController _pageController =
+//       PageController(); // PageController for PageView
+//   String? currentCity; // Menyimpan nama kota
+//   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
+//   String? name = ""; // Variabel untuk name pengguna
+//   String? message; //variabel untuk th messange
+//   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
+//   String? avatarUrl;
+//   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
+//   Timer? _timer; // Timer untuk memperbarui jam setiap detik
+//   int currentIndex = 0; // Default to the home page
+//   int _currentPage = 0; // Variable to keep track of the current page
+//   int clockInCount = 0; // Jumlah clock-in harian
+//   int clockOutCount = 0; // Jumlah clock-out harian
+//   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
+//   bool hasClockedIn = false; // Variabel baru untuk status clock-in
+//   bool hasClockedOut = false; // Variabel baru untuk status clock-out
+//   bool showNote = true; // Status untuk menampilkan note
+//   bool isSuccess = false; // Status untuk menampilkan card
+//   bool isLate = false; // Status untuk card terlambat
+//   bool isholiday = false; //status untuk card libur
+//   bool isovertime = false; //status untuk card lembur
+//   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
-  PageController _pageController = PageController();
-  String? profileImageUrl;
-  String? idCardImageUrl;
-  String? cvImageUrl;
-  String name = '';
-  String email = '';
-  String phoneNumber = '';
-  String address = '';
-  String idCardAddress = '';
-  File? profileImage;
-  File? _idCardImage;
-  File? _cvImage;
-  File? _ProfilImage;
-  String employmentStart = '';
-  String employmentEnd = '';
-  String education = '';
-  String bankAccount = '123456789';
-  String bank = '';
-  String Limit = '';
-  String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
-  bool _obscureText = true; // Kontrol visibilitas password di dialog edit
-  final ImagePicker _picker = ImagePicker();
-  List<String> pendidikanOptions = [];
-  List<String> bankOptions = [];
+//   @override
+//   void initState() {
+//     super.initState();
+//     _getCurrentLocation();
+//     getData();
+//     getPengumuman();
+//     _startClock(); // Memulai timer untuk jam
+//     _resetAtFiveAM();
+//     _pageController.addListener(() {
+//       _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
+//       setState(() {
+//         _currentPage = _pageController.page!.round();
+//       });
+//     });
+//   }
 
-  @override
-  void initState() {
-    super.initState();
-    getPendidikan();
-    _getBank();
-    loadProfileImage();
-    getProfile();
-  }
+//   Future<void> _fetchUserProfile() async {
+//     try {
+//       // Panggil API untuk mendapatkan URL avatar
+//       final response = await http.get(Uri.parse('URL_API_PROFIL'));
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+//         setState(() {
+//           avatarUrl = data['avatarUrl']; // Pastikan key sesuai dengan API
+//         });
+//       }
+//     } catch (e) {
+//       print('Gagal memuat profil: $e');
+//     }
+//   }
 
-  Future<void> saveImageUrls({
-    String? profileUrl,
-    String? idCardUrl,
-    String? cvUrl,
-  }) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (profileUrl != null) {
-      await prefs.setString('profileImageUrl', profileUrl);
-    }
-    if (idCardUrl != null) {
-      await prefs.setString('idCardImageUrl', idCardUrl);
-    }
-    if (cvUrl != null) {
-      await prefs.setString('cvImageUrl', cvUrl);
-    }
-  }
+//   // Fungsi untuk memulai jam dan memperbaruinya setiap detik
+//   void _startClock() {
+//     _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
+//     _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+//       setState(() {
+//         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
+//       });
+//     });
+//   }
 
-  // Fungsi untuk mengambil URL dari SharedPreferences
-  Future<void> loadProfileImage() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      profileImageUrl = prefs.getString('profileImageUrl');
-      idCardImageUrl = prefs.getString('idCardImageUrl');
-      cvImageUrl = prefs.getString('cvImageUrl');
-    });
-  }
+//   // Fungsi untuk membuat menu shortcut dengan warna ikon dan latar belakang yang bisa disesuaikan
+//   Column _buildMenuShortcut({
+//     required String label,
+//     TextStyle? labelStyle,
+//     required Widget targetPage,
+//     Color bgColor =
+//         const Color.fromARGB(255, 101, 19, 116), // Warna background default
+//     IconData? iconData, // Opsional untuk menggunakan Icon Flutter
+//     String? imagePath, // Opsional untuk menggunakan gambar dari asset
+//     Color iconColor = Colors.white, // Warna icon atau filter warna
+//     double? iconSize = 30, // Ukuran default untuk ikon atau gambar
+//   }) {
+//     return Column(
+//       children: [
+//         GestureDetector(
+//           onTap: () {
+//             Navigator.push(
+//               context,
+//               MaterialPageRoute(builder: (context) => targetPage),
+//             );
+//           },
+//           child: Container(
+//             width: 60, // Lebar container shortcut
+//             height: 60, // Tinggi container shortcut
+//             decoration: BoxDecoration(
+//               color: bgColor,
+//               borderRadius:
+//                   BorderRadius.circular(12), // Membuat sudut melengkung
+//             ),
+//             child: Center(
+//               child: imagePath != null
+//                   ? ColorFiltered(
+//                       colorFilter: ColorFilter.mode(
+//                         iconColor, // Warna filter yang diterapkan
+//                         BlendMode.srcIn, // Mengatur mode blending
+//                       ),
+//                       child: Image.asset(
+//                         imagePath,
+//                         width: iconSize, // Sesuaikan ukuran gambar
+//                         height: iconSize, // Sesuaikan ukuran gambar
+//                         fit: BoxFit.contain,
+//                       ),
+//                     )
+//                   : Icon(
+//                       iconData,
+//                       color: iconColor,
+//                       size: iconSize,
+//                     ),
+//             ),
+//           ),
+//         ),
+//         const SizedBox(height: 10),
+//         Text(
+//           label,
+//           style: const TextStyle(color: Colors.pink, fontSize: 14),
+//         ),
+//       ],
+//     );
+//   }
 
-  Future<void> getPendidikan() async {
-    final url =
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-pendidikan');
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    var token = localStorage.getString('token');
+//   // Fungsi untuk mendapatkan lokasi saat ini
+//   Future<void> _getCurrentLocation() async {
+//     bool serviceEnabled;
+//     LocationPermission permission;
 
-    try {
-      final response =
-          await http.get(url, headers: {'Authorization': 'Bearer $token'});
+//     // Mengecek apakah layanan lokasi tersedia
+//     serviceEnabled = await Geolocator.isLocationServiceEnabled();
+//     if (!serviceEnabled) {
+//       // Jika layanan lokasi tidak aktif, tampilkan pesan "Location not available"
+//       setState(() {
+//         currentCity = 'Location not available';
+//         isLoadingLocation = false;
+//       });
+//       return;
+//     }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          pendidikanOptions =
-              List<String>.from(data['data'].map((item) => item['pendidikan']));
-        });
-      } else {
-        print('Error fetching education data: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
+//     // Meminta izin lokasi
+//     permission = await Geolocator.checkPermission();
+//     if (permission == LocationPermission.denied) {
+//       permission = await Geolocator.requestPermission();
+//       if (permission == LocationPermission.denied) {
+//         // Jika izin lokasi ditolak, tampilkan pesan "Location not available"
+//         setState(() {
+//           currentCity = 'Location not available';
+//           isLoadingLocation = false;
+//         });
+//         return;
+//       }
+//     }
 
-  Future<void> _getBank() async {
-    final url =
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-bank');
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    var token = localStorage.getString('token');
+//     if (permission == LocationPermission.deniedForever) {
+//       // Jika izin lokasi ditolak selamanya, tampilkan pesan "Location not available"
+//       setState(() {
+//         currentCity = 'Location not available';
+//         isLoadingLocation = false;
+//       });
+//       return;
+//     }
 
-    try {
-      final response =
-          await http.get(url, headers: {'Authorization': 'Bearer $token'});
+//     // Mendapatkan posisi pengguna jika semua syarat terpenuhi
+//     try {
+//       Position position = await Geolocator.getCurrentPosition(
+//           desiredAccuracy: LocationAccuracy.high);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          bankOptions =
-              List<String>.from(data['data'].map((item) => item['name']));
-        });
-      } else {
-        print('Error fetching bank data: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
+//       // Menggunakan geocoding untuk mendapatkan nama kota dari koordinat
+//       List<Placemark> placemarks =
+//           await placemarkFromCoordinates(position.latitude, position.longitude);
 
-  Future<void> setProfile() async {
-    try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/set-profile');
+//       if (placemarks.isNotEmpty) {
+//         setState(() {
+//           currentCity = placemarks.first.locality; // Mengambil nama kota
+//           isLoadingLocation = false; // Lokasi selesai di-load
+//         });
+//       }
+//     } catch (e) {
+//       // Jika ada error lainnya, tampilkan pesan "Location not available"
+//       setState(() {
+//         currentCity = 'Location not available';
+//         isLoadingLocation = false;
+//       });
+//     }
+//   }
 
-      var request = http.MultipartRequest('POST', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-      request.fields['no_rekening'] = bankAccount;
-      request.fields['no_hp'] = phoneNumber;
-      request.fields['alamat_domisili'] = address;
-      request.fields['alamat_ktp'] = idCardAddress;
-      request.fields['email'] = email;
+//   void _updateClockInStatus(bool status) {
+//     setState(() {
+//       hasClockedIn = status;
+//       if (status) clockInCount++;
+//     });
+//   }
 
-      // request.fields['pendidikan_id'] = education;
-      // request.fields['bank_id'] = bank;
-      if (_cvImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'riwayat_hidup',
-          _cvImage!.path,
-          contentType: MediaType('image', 'jpg'),
-        ));
-      }
+//   void _updateClockOutStatus(bool status) {
+//     setState(() {
+//       hasClockedOut = status;
+//       if (status) clockOutCount++;
+//     });
+//   }
 
-      if (_ProfilImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'foto',
-          _ProfilImage!.path,
-          contentType: MediaType('image', 'jpg'),
-        ));
-      }
+//   // Fungsi untuk mengambil data dari API townhall
+//   Future<void> getPengumuman() async {
+//     final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-th');
+//     var request = http.MultipartRequest('GET', url);
+//     SharedPreferences localStorage = await SharedPreferences.getInstance();
+//     request.headers['Authorization'] =
+//         'Bearer ${localStorage.getString('token')}';
 
-      if (_idCardImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'ktp',
-          _idCardImage!.path,
-          contentType: MediaType('image', 'jpg'),
-        ));
-      }
+//     try {
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
 
-      final response = await request.send();
-      if (response.statusCode == 200) {
-        final responseBody = await http.Response.fromStream(response);
-        final data = jsonDecode(responseBody.body);
-      } else {}
-    } catch (e) {
-      print("Error: $e");
-    }
-  }
+//       if (rp.statusCode == 200) {
+//         setState(() {
+//           announcements = List<String>.from(
+//             data['data'].map((item) => item['message']),
+//           );
+//         });
+//       } else {
+//         print('Error fetching announcements: ${rp.statusCode}');
+//         print(rp.body);
+//       }
+//     } catch (e) {
+//       print('Error occurred: $e');
+//     }
+//   }
 
-  Future<void> getProfile() async {
-    try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+//   // Fungsi untuk mengambil data dari API
+//   Future<void> getData() async {
+//     // Ambil profil pengguna
+//     try {
+//       final url = Uri.parse(
+//           'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      final token = localStorage.getString('token');
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Bearer $token'},
-      );
+//       var request = http.MultipartRequest('GET', url);
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          profileImageUrl =
-              "https://dev-portal.eksam.cloud/storage/foto/${data['data']['foto']}";
-          idCardImageUrl =
-              "https://dev-portal.eksam.cloud/storage/ktp/${data['data']['foto_ktp']}";
-          cvImageUrl =
-              "https://dev-portal.eksam.cloud/storage/cv/${data['data']['riwayat_hidup']}";
-          name = data['data']['name'].toString();
-          email = data['data']['email'].toString();
-          phoneNumber = data['data']['no_hp'].toString();
-          address = data['data']['alamat_domisili'].toString();
-          idCardAddress = data['data']['alamat_ktp'].toString();
-          employmentStart = data['data']['kontrak_mulai'].toString();
-          employmentEnd = data['data']['kontrak_selesai'].toString();
-          education = data['data']['pendidikan']['pendidikan'].toString();
-          bank = data['data']['bank']['name'].toString();
-          bankAccount = data['data']['no_rekening'].toString();
-          Limit = data['data']['batas_cuti'].toString();
-        });
-        saveImageUrls(
-            profileUrl: profileImageUrl,
-            idCardUrl: idCardImageUrl,
-            cvUrl: cvImageUrl);
-      } else {
-        print("Error retrieving profile");
-      }
-    } catch (e) {
-      print("Error: $e");
-    }
-  }
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
+//       setState(() {
+//         name = data['data']['name'];
+//         // avatarUrl =
+//         //     "https://dev-portal.eksam.cloud/storage/foto/${data['data']['foto']}";
+//       });
+//       print("Profil pengguna: ${data['data']}");
+//     } catch (e) {
+//       print("Error mengambil profil pengguna: $e");
+//     }
 
-  // Fungsi untuk mengambil gambar dari galeri
-  Future<void> _pickImage(String imageType) async {
-    final pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 20);
+//     // Cek status clock-in
+//     try {
+//       final url = Uri.parse(
+//           'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-in');
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-    if (pickedFile != null) {
-      final imageFile = File(pickedFile.path);
+//       var request = http.MultipartRequest('GET', url);
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
 
-      // Resize image if needed
-      img.Image? decodedImage = img.decodeImage(imageFile.readAsBytesSync());
-      if (decodedImage != null) {
-        img.Image resizedImage = img.copyResize(decodedImage, width: 600);
-        final resizedFile = File(pickedFile.path)
-          ..writeAsBytesSync(img.encodeJpg(resizedImage));
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
 
-        setState(() {
-          switch (imageType) {
-            // case 'Profile':
-            //   profileImage = resizedFile;
-            //   profileImageUrl = resizedFile.path;
-            //   saveImageUrls(profileUrl: profileImageUrl);
-            //   break;
-            case 'ID CARD':
-              _idCardImage = resizedFile;
-              idCardImageUrl = resizedFile.path;
-              saveImageUrls(idCardUrl: idCardImageUrl);
-              break;
-            case 'CV':
-              _cvImage = resizedFile;
-              cvImageUrl = resizedFile.path;
-              saveImageUrls(cvUrl: cvImageUrl);
-              break;
-          }
-        });
+//       setState(() {
+//         // Status clock-in diambil dari respons API
+//         hasClockedIn = data['message'] != 'belum clock-in';
 
-        await setProfile(); // Send updated image to API
-      }
-    }
-  }
+//         if (hasClockedIn) {
+//           showNote = false;
 
-  // Fungsi untuk mengambil gambar dari galeri
-  Future<void> _pickImageFromGallery() async {
-    final pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+//           // Periksa waktu clock-in
+//           final now = DateTime.now();
+//           if (now.hour < 8) {
+//             isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+//           } else {
+//             isLate = true; // Clock-in terlambat setelah jam 8 pagi
+//           }
+//         }
+//       });
+//     } catch (e) {
+//       print("Error mengecek status clock-in: $e");
+//     }
 
-    if (pickedFile != null) {
-      File imageFile = File(pickedFile.path);
+//     // Cek status clock-out
+//     try {
+//       final url = Uri.parse(
+//           'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-out');
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      // Mengubah ukuran gambar
-      img.Image? image = img.decodeImage(imageFile.readAsBytesSync());
-      if (image != null) {
-        // Ubah ukuran gambar menjadi lebih kecil jika terlalu besar
-        img.Image resized = img.copyResize(image,
-            width: 600); // Sesuaikan ukuran sesuai kebutuhan
-        final resizedFile = File(pickedFile.path)
-          ..writeAsBytesSync(img.encodeJpg(resized));
+//       var request = http.MultipartRequest('GET', url);
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
 
-        setState(() {
-          profileImage = resizedFile;
-          _ProfilImage = resizedFile; // Simpan gambar ke variabel
-        });
-      }
-      await setProfile(); // Panggil setProfile tanpa parameter
-    }
-  }
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
 
-  Widget _buildImageCard(String title, String? imageUrl, String imageType) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: titleStyle),
-        SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => _pickImage(imageType), // Memilih gambar
-          child: Container(
-            height: 150,
-            width: 150,
-            color: Colors.grey[300],
-            child: imageUrl != null && Uri.parse(imageUrl).isAbsolute
-                ? Image.network(imageUrl, fit: BoxFit.cover)
-                : imageUrl != null
-                    ? Image.file(File(imageUrl), fit: BoxFit.cover)
-                    : Center(
-                        child: Icon(Icons.add_a_photo,
-                            size: 20, color: Colors.grey),
-                      ),
-          ),
-        ),
-      ],
-    );
-  }
+//       setState(() {
+//         hasClockedOut = data['message'] == 'sudah clock-out';
+//       });
+//     } catch (e) {
+//       print("Error mengecek status clock-out: $e");
+//     }
+//   }
 
-  Widget _buildProfileItem({
-    required String title,
-    required String value,
-    Function(String)?
-        onEdit, // Fungsi hanya diperlukan untuk item yang bisa diedit
-    bool isEditable = true, // Default: bisa diedit
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          SizedBox(height: 5),
-          Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Menjaga elemen tetap sejajar
-            children: [
-              Expanded(
-                child: Text(
-                  value,
-                  style: TextStyle(fontSize: 16),
-                  softWrap: true, // Agar teks membungkus
-                  overflow: TextOverflow.visible, // Biarkan teks tetap terlihat
-                ),
-              ),
-              if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
-                IconButton(
-                  icon: Icon(Icons.edit, color: Colors.orange),
-                  onPressed: () {
-                    if (onEdit != null) {
-                      _showEditDialog(title, value, onEdit);
-                    }
-                  },
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+//   // Fungsi untuk mereset note pada pukul 5 pagi
+//   void _resetAtFiveAM() {
+//     final now = DateTime.now();
+//     final fiveAM = DateTime(now.year, now.month, now.day, 5);
+//     final timeUntilReset = fiveAM.isBefore(now)
+//         ? fiveAM.add(const Duration(days: 1)).difference(now)
+//         : fiveAM.difference(now);
 
-  Widget _buildNohp({
-    required String title,
-    required String value,
-    Function(String)?
-        onEdit, // Fungsi hanya diperlukan untuk item yang bisa diedit
-    bool isEditable = true, // Default: bisa diedit
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          SizedBox(height: 5),
-          Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Menjaga elemen sejajar vertikal
-            children: [
-              Expanded(
-                child: Text(
-                  value,
-                  style: TextStyle(fontSize: 16),
-                  softWrap: true, // Agar teks membungkus
-                  overflow: TextOverflow
-                      .ellipsis, // Tambahkan elipsis jika teks terlalu panjang
-                ),
-              ),
-              if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
-                IconButton(
-                  icon: Icon(Icons.edit, color: Colors.orange),
-                  onPressed: () {
-                    if (onEdit != null) {
-                      _showEditNoHp(title, value, onEdit);
-                    }
-                  },
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+//     resetNoteTimer = Timer(timeUntilReset, () {
+//       setState(() {
+//         clockInCount = 0;
+//         clockOutCount = 0;
+//         hasClockedIn = false;
+//         hasClockedOut = false;
+//         showNote = true;
+//         isSuccess = false;
+//         isLate = false;
+//         isholiday = false;
+//         isLate = false;
+//         clockInMessage = null;
+//       });
+//       _resetAtFiveAM(); // Reset ulang timer untuk esok hari
+//     });
+//   }
 
-  // Fungsi untuk menampilkan dialog edit lain lain
-  void _showEditDialog(
-      String title, String currentValue, Function(String) onSave,
-      {bool isPasswordField = false}) {
-    TextEditingController controller =
-        TextEditingController(text: currentValue);
+//   @override
+//   void dispose() {
+//     resetNoteTimer?.cancel(); // Membatalkan timer saat widget dibuang
+//     super.dispose();
+//   }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Edit $title'),
-              content: TextField(
-                controller: controller,
-                obscureText: isPasswordField ? _obscureText : false,
-                decoration: InputDecoration(
-                  labelText: 'Enter new $title',
-                  suffixIcon: isPasswordField
-                      ? IconButton(
-                          icon: Icon(_obscureText
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              _obscureText = !_obscureText;
-                            });
-                          },
-                        )
-                      : null,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Panggil onSave dengan nilai baru
-                    onSave(controller.text);
-                    // Setelah menyimpan perubahan, perbarui data di API
-                    setProfile();
-                    Navigator.pop(context);
-                  },
-                  child: Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: SingleChildScrollView(
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             // Bagian Header
+//             Container(
+//               decoration: const BoxDecoration(
+//                 gradient: LinearGradient(
+//                   colors: [
+//                     Colors.orange,
+//                     Colors.pink,
+//                     const Color.fromARGB(255, 101, 19, 116)
+//                   ],
+//                   begin: Alignment.topLeft,
+//                   end: Alignment.bottomCenter,
+//                 ),
+//               ),
+//               padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       GestureDetector(
+//                         onTap: () async {
+//                           // Navigasi ke halaman profil dan tunggu hasilnya
+//                           final updatedAvatarUrl = await Navigator.push(
+//                             context,
+//                             MaterialPageRoute(
+//                               builder: (context) => ProfileScreen(),
+//                             ),
+//                           );
 
-  // Fungsi untuk menampilkan dialog edit untuk no hp
-  void _showEditNoHp(String title, String currentValue, Function(String) onSave,
-      {bool isPasswordField = false}) {
-    TextEditingController controller =
-        TextEditingController(text: currentValue);
+//                           // Perbarui avatar jika ada perubahan
+//                           if (updatedAvatarUrl != null) {
+//                             setState(() {
+//                               avatarUrl = updatedAvatarUrl;
+//                             });
+//                           }
+//                         },
+//                         child: CircleAvatar(
+//                           radius: 25,
+//                           backgroundColor: Colors.grey[200],
+//                           backgroundImage: avatarUrl != null
+//                               ? NetworkImage('avatarUrl')
+//                               : AssetImage('assets/image/logo_circle.png')
+//                                   as ImageProvider,
+//                           // child: avatarUrl == null
+//                           //     ? Icon(Icons.person, color: Colors.grey)
+//                           //     : null,
+//                         ),
+//                       ),
+//                       Text(
+//                         _currentTime, // Menampilkan waktu yang di-update setiap detik
+//                         style: const TextStyle(
+//                           fontSize: 16,
+//                           color:
+//                               Color.fromARGB(255, 255, 255, 255), // Warna teks
+//                         ),
+//                       ),
+//                       IconButton(
+//                         icon: const Icon(Icons.notifications,
+//                             color: Colors.white),
+//                         onPressed: () {
+//                           Navigator.pushReplacement(
+//                             context,
+//                             MaterialPageRoute(
+//                                 builder: (context) => NotificationPage()),
+//                           ); // Tambahkan aksi untuk notification
+//                         },
+//                       ),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 20),
+//                   Text(
+//                     'Welcome Back,\n $name',
+//                     style: TextStyle(
+//                       color: Colors.white,
+//                       fontSize: 26,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                   const Text(
+//                     'Don\'t Forget To Clock In Today ✨',
+//                     style: TextStyle(
+//                       color: Colors.white70,
+//                       fontSize: 14,
+//                     ),
+//                   ),
+//                   const SizedBox(height: 30),
+//                   Container(
+//                     padding: const EdgeInsets.all(16),
+//                     decoration: BoxDecoration(
+//                       color: Colors.white,
+//                       borderRadius: BorderRadius.circular(16),
+//                     ),
+//                     child: Column(
+//                       children: [
+//                         Text(
+//                           isLoadingLocation
+//                               ? 'Loading your location...'
+//                               : 'Your Location Is Now In $currentCity',
+//                           style: const TextStyle(color: Colors.black54),
+//                         ),
+//                         Text(
+//                           DateFormat('EEEE, dd MMMM yyyy')
+//                               .format(DateTime.now()),
+//                           style: const TextStyle(
+//                             fontSize: 18,
+//                             fontWeight: FontWeight.bold,
+//                           ),
+//                         ),
+//                         const SizedBox(height: 20),
+//                         Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           children: [
+//                             ElevatedButton.icon(
+//                               onPressed: clockInCount < 2
+//                                   ? () async {
+//                                       final result = await Navigator.push(
+//                                         context,
+//                                         MaterialPageRoute(
+//                                           builder: (context) =>
+//                                               const ClockInPage(),
+//                                         ),
+//                                       );
+//                                       if (result == true) {
+//                                         _updateClockInStatus(true);
+//                                       }
+//                                     }
+//                                   : null,
+//                               icon: const Icon(Icons.login),
+//                               label: Text('Clock In ($clockInCount/2)'),
+//                               style: ElevatedButton.styleFrom(
+//                                 backgroundColor: clockInCount < 2
+//                                     ? Colors.white
+//                                     : Colors.grey,
+//                               ),
+//                             ),
+//                             ElevatedButton.icon(
+//                               onPressed: clockOutCount < 2 &&
+//                                       clockInCount > clockOutCount
+//                                   ? () async {
+//                                       final result = await Navigator.push(
+//                                         context,
+//                                         MaterialPageRoute(
+//                                           builder: (context) =>
+//                                               const ClockOutScreen(),
+//                                         ),
+//                                       );
+//                                       if (result == true) {
+//                                         _updateClockOutStatus(true);
+//                                       }
+//                                     }
+//                                   : null,
+//                               icon: const Icon(Icons.logout),
+//                               label: Text('Clock Out ($clockOutCount/2)'),
+//                               style: ElevatedButton.styleFrom(
+//                                 backgroundColor: clockOutCount < 2 &&
+//                                         clockInCount > clockOutCount
+//                                     ? Colors.white
+//                                     : Colors.grey,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             const SizedBox(height: 20),
+//             // Bagian Middle
+//             Padding(
+//               padding:
+//                   const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Menu Shortcut
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment
+//                         .spaceAround, // Memberi jarak di antara shortcut
+//                     children: [
+//                       // Menggunakan gambar dari aset dan mengatur ukuran gambar
+//                       _buildMenuShortcut(
+//                         label: 'Time Off',
+//                         targetPage: TimeOffScreen(),
+//                         bgColor: const Color.fromRGBO(
+//                             101, 19, 116, 1), // Warna background
+//                         imagePath:
+//                             'assets/icon/timeoff.png', // Path gambar aset
+//                         iconColor:
+//                             Colors.white, // Warna yang diterapkan ke gambar
+//                         iconSize: 32, // Ukuran gambar
+//                         labelStyle: const TextStyle(
+//                           color: Colors.pink, // Warna label menjadi pink
+//                           fontSize: 14,
+//                         ),
+//                       ),
+//                       // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
+//                       _buildMenuShortcut(
+//                         label: 'Reimbursement',
+//                         targetPage: ReimbursementPage(),
+//                         bgColor: const Color.fromARGB(
+//                             255, 101, 19, 116), // Warna background
+//                         iconData: Icons.receipt, // Ikon bawaan Flutter
+//                         iconColor: Colors.white, // Warna ikon
+//                         iconSize: 30, // Ukuran ikon
+//                         labelStyle: const TextStyle(
+//                           color: Colors.pink, // Warna label menjadi pink
+//                           fontSize: 14,
+//                         ),
+//                       ),
+//                       // Menggunakan gambar dari aset dan mengatur ukuran gambar
+//                       _buildMenuShortcut(
+//                         label: 'History',
+//                         targetPage: HistoryScreen(),
+//                         bgColor: const Color.fromARGB(
+//                             255, 101, 19, 116), // Warna background
+//                         imagePath:
+//                             'assets/icon/history.png', // Path gambar aset
+//                         iconColor:
+//                             Colors.white, // Warna yang diterapkan ke gambar
+//                         iconSize: 26, // Ukuran gambar
+//                         labelStyle: const TextStyle(
+//                           color: Colors.pink, // Warna label menjadi pink
+//                           fontSize: 14,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 20),
+//                   if (isSuccess)
+//                     Card(
+//                       color: Colors.orange,
+//                       elevation: 5,
+//                       margin: const EdgeInsets.symmetric(
+//                           horizontal: 1, vertical: 12),
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(16),
+//                       ),
+//                       child: Padding(
+//                         padding: const EdgeInsets.symmetric(
+//                             vertical: 30.0, horizontal: 16.0),
+//                         child: Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           crossAxisAlignment: CrossAxisAlignment.center,
+//                           children: [
+//                             // Teks Kiri
+//                             Flexible(
+//                               child: Text(
+//                                 '✨ Your Absence \n Was Successful ✨',
+//                                 style: TextStyle(
+//                                   color: Colors.white,
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 20,
+//                                 ),
+//                               ),
+//                             ),
+//                             // Teks Kanan
+//                             Flexible(
+//                               child: Text(
+//                                 'Good work and \n keep up the spirit',
+//                                 textAlign: TextAlign.right,
+//                                 style: TextStyle(
+//                                     color: Colors.white70, fontSize: 14),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   if (isLate)
+//                     // Card(
+//                     //   color: Colors.redAccent,
+//                     //   elevation: 5,
+//                     //   margin: const EdgeInsets.symmetric(
+//                     //       horizontal: 1, vertical: 12),
+//                     //   shape: RoundedRectangleBorder(
+//                     //     borderRadius: BorderRadius.circular(16),
+//                     //   ),
+//                     //   child: Padding(
+//                     //     padding: const EdgeInsets.symmetric(
+//                     //         vertical: 30.0, horizontal: 16.0),
+//                     //     child: Row(
+//                     //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     //       crossAxisAlignment: CrossAxisAlignment.center,
+//                     //       children: [
+//                     //         // Teks Kiri
+//                     //         Flexible(
+//                     //           child: Text(
+//                     //             '💥 You’re Late!, \n Let’s In Now 💥',
+//                     //             style: TextStyle(
+//                     //               color: Colors.white,
+//                     //               fontWeight: FontWeight.bold,
+//                     //               fontSize: 20,
+//                     //             ),
+//                     //           ),
+//                     //         ),
+//                     //         // Teks Kanan
+//                     //         Flexible(
+//                     //           child: Text(
+//                     //             'How can you be \n absent late?',
+//                     //             textAlign: TextAlign.right,
+//                     //             style: TextStyle(
+//                     //                 color: Colors.white70, fontSize: 14),
+//                     //           ),
+//                     //         ),
+//                     //       ],
+//                     //     ),
+//                     //   ),
+//                     // ),
+//                     Card(
+//                       color: Colors.orange,
+//                       elevation: 5,
+//                       margin: const EdgeInsets.symmetric(
+//                           horizontal: 1, vertical: 12),
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(16),
+//                       ),
+//                       child: Padding(
+//                         padding: const EdgeInsets.symmetric(
+//                             vertical: 30.0, horizontal: 16.0),
+//                         child: Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           crossAxisAlignment: CrossAxisAlignment.center,
+//                           children: [
+//                             // Teks Kiri
+//                             Flexible(
+//                               child: Text(
+//                                 '✨ Your Absence \n Was Successful ✨',
+//                                 style: TextStyle(
+//                                   color: Colors.white,
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 20,
+//                                 ),
+//                               ),
+//                             ),
+//                             // Teks Kanan
+//                             Flexible(
+//                               child: Text(
+//                                 'Good work and \n keep up the spirit',
+//                                 textAlign: TextAlign.right,
+//                                 style: TextStyle(
+//                                     color: Colors.white70, fontSize: 14),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   if (isholiday)
+//                     Card(
+//                       color: Colors.green,
+//                       elevation: 5,
+//                       margin: const EdgeInsets.symmetric(
+//                           horizontal: 1, vertical: 12),
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(16),
+//                       ),
+//                       child: Padding(
+//                         padding: const EdgeInsets.symmetric(
+//                             vertical: 30.0, horizontal: 16.0),
+//                         child: Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           crossAxisAlignment: CrossAxisAlignment.center,
+//                           children: [
+//                             Text(
+//                               '🌴 You’re on Leave 🌴',
+//                               style: TextStyle(
+//                                 color: Colors.white,
+//                                 fontWeight: FontWeight.bold,
+//                                 fontSize: 20,
+//                               ),
+//                             ),
+//                             Flexible(
+//                               child: Text(
+//                                 'Enjoy your time off!',
+//                                 textAlign: TextAlign.right,
+//                                 style: TextStyle(
+//                                     color: Colors.white70, fontSize: 14),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   const SizedBox(height: 20),
+//                   // Bagian Announcement
+//                   const Text(
+//                     'Announcement',
+//                     style: TextStyle(
+//                       fontSize: 18,
+//                       fontWeight: FontWeight.bold,
+//                       color: const Color.fromARGB(255, 101, 19, 116),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 10),
+//                   Container(
+//                     height: 150,
+//                     decoration: BoxDecoration(
+//                       borderRadius: BorderRadius.circular(12),
+//                       color: Colors.grey[300],
+//                     ),
+//                     child: Stack(
+//                       alignment: Alignment.bottomCenter,
+//                       children: [
+//                         PageView.builder(
+//                           controller: _pageController,
+//                           itemCount: announcements.length,
+//                           itemBuilder: (context, index) {
+//                             final message = announcements[index];
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Edit $title'),
-              content: TextField(
-                controller: controller,
-                obscureText: isPasswordField ? _obscureText : false,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Enter new $title',
-                  suffixIcon: isPasswordField
-                      ? IconButton(
-                          icon: Icon(_obscureText
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              _obscureText = !_obscureText;
-                            });
-                          },
-                        )
-                      : null,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Panggil onSave dengan nilai baru
-                    onSave(controller.text);
-                    // Setelah menyimpan perubahan, perbarui data di API
-                    setProfile();
-                    Navigator.pop(context);
-                  },
-                  child: Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+//                             return GestureDetector(
+//                               onTap: () {
+//                                 Navigator.push(
+//                                   context,
+//                                   MaterialPageRoute(
+//                                     builder: (context) =>
+//                                         AnnouncementDetailPage(
+//                                       message: message,
+//                                     ),
+//                                   ),
+//                                 );
+//                               },
+//                               child: Container(
+//                                 padding: const EdgeInsets.all(10),
+//                                 decoration: BoxDecoration(
+//                                   borderRadius: BorderRadius.circular(12),
+//                                   color: Colors.white,
+//                                 ),
+//                                 child: Center(
+//                                   child: Text(
+//                                     message,
+//                                     style: const TextStyle(
+//                                       fontSize: 16,
+//                                       fontWeight: FontWeight.bold,
+//                                     ),
+//                                     textAlign: TextAlign.center,
+//                                   ),
+//                                 ),
+//                               ),
+//                             );
+//                           },
+//                           onPageChanged: (int index) {
+//                             setState(() {
+//                               _currentPage = index;
+//                             });
+//                           },
+//                         ),
+//                         // Tambahkan indikator
+//                         Positioned(
+//                           bottom: 10,
+//                           left: 0,
+//                           right: 0,
+//                           child: Center(
+//                             child: SmoothPageIndicator(
+//                               controller: _pageController,
+//                               count: announcements.length,
+//                               effect: ExpandingDotsEffect(
+//                                 activeDotColor:
+//                                     const Color.fromARGB(255, 101, 19, 116),
+//                                 dotColor: Colors.grey,
+//                                 dotHeight: 8,
+//                                 dotWidth: 8,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   SizedBox(height: 20),
+//                   // Note Section
+//                   Padding(
+//                     padding:
+//                         const EdgeInsets.symmetric(horizontal: 1, vertical: 12),
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         if (showNote) ...[
+//                           const Text(
+//                             'Note',
+//                             style: TextStyle(
+//                               fontSize: 18,
+//                               fontWeight: FontWeight.bold,
+//                               color: const Color.fromARGB(255, 101, 19, 116),
+//                             ),
+//                           ),
+//                           const SizedBox(height: 5),
+//                           Container(
+//                             padding: const EdgeInsets.symmetric(
+//                                 horizontal: 30, vertical: 18),
+//                             decoration: BoxDecoration(
+//                               color: Colors.white,
+//                               borderRadius: BorderRadius.circular(10),
+//                               boxShadow: [
+//                                 BoxShadow(
+//                                   color: Colors.grey.withOpacity(0.2),
+//                                   spreadRadius: 2,
+//                                   blurRadius: 5,
+//                                   offset: const Offset(0, 3), // posisi bayangan
+//                                 ),
+//                               ],
+//                             ),
+//                             child: Row(
+//                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                               children: [
+//                                 const Text(
+//                                   'Today was Good, good work 👏',
+//                                   style: TextStyle(fontSize: 11),
+//                                 ),
+//                                 ElevatedButton(
+//                                   onPressed: () {
+//                                     Navigator.push(
+//                                       context,
+//                                       MaterialPageRoute(
+//                                           builder: (context) =>
+//                                               const ClockInPage()),
+//                                     ); // Aksi ketika tombol ditekan
+//                                   },
+//                                   style: ElevatedButton.styleFrom(
+//                                     backgroundColor:
+//                                         Colors.orange, // Warna tombol
+//                                     shape: RoundedRectangleBorder(
+//                                       borderRadius: BorderRadius.circular(
+//                                           8), // Melengkungkan pinggiran tombol
+//                                     ),
+//                                     padding: const EdgeInsets.symmetric(
+//                                         horizontal: 10, vertical: 8),
+//                                   ),
+//                                   child: const Text(
+//                                     'Submit',
+//                                     style: TextStyle(
+//                                         fontSize: 10, color: Colors.white),
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           ),
+//                         ],
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//       // Bottom Navigation
+//       bottomNavigationBar: BottomNavigationBar(
+//         type: BottomNavigationBarType.fixed,
+//         selectedItemColor: Colors.orange,
+//         unselectedItemColor: Colors.white,
+//         backgroundColor: const Color.fromARGB(255, 101, 19, 116),
+//         selectedLabelStyle: const TextStyle(fontSize: 11),
+//         unselectedLabelStyle: const TextStyle(fontSize: 9),
+//         currentIndex: 0,
+//         onTap: (index) {
+//           switch (index) {
+//             case 0:
+//               // Navigator.pushReplacement(
+//               //   context,
+//               //   MaterialPageRoute(builder: (context) => const HomePage()),
+//               // );
+//               break;
+//             case 1:
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (context) => TimeOffScreen()),
+//               );
+//               break;
+//             case 2:
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (context) => ReimbursementPage()),
+//               );
+//               break;
+//             case 3:
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (context) => NotificationPage()),
+//               );
+//               break;
+//             case 4:
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (context) => ProfileScreen()),
+//               );
+//               break;
+//           }
+//         },
+//         items: const [
+//           BottomNavigationBarItem(
+//             icon: ImageIcon(
+//               AssetImage('assets/icon/home.png'), // Custom icon
+//               size: 20,
+//               color: Colors.orange,
+//             ),
+//             label: 'Home',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: ImageIcon(
+//               AssetImage('assets/icon/timeoff.png'), // Custom icon
+//               size: 20,
+//               color: Colors.white,
+//             ),
+//             label: 'Time Off',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: Icon(Icons.receipt, size: 25),
+//             label: 'Reimbursement',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: ImageIcon(
+//               AssetImage('assets/icon/notifikasi.png'), // Custom icon
+//               size: 20,
+//               color: Colors.white,
+//             ),
+//             label: 'Notification',
+//           ),
+//           BottomNavigationBarItem(
+//             icon: ImageIcon(
+//               AssetImage('assets/icon/profil.png'), // Custom icon
+//               size: 20,
+//               color: Colors.white,
+//             ),
+//             label: 'Profil',
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
-  void _showChangePasswordDialog() {
-    TextEditingController oldPasswordController = TextEditingController();
-    TextEditingController newPasswordController = TextEditingController();
-    bool _obscureOldPassword = true;
-    bool _obscureNewPassword = true;
-    String? oldPasswordError;
-    String? newPasswordError;
+// class AnnouncementDetailPage extends StatelessWidget {
+//   final String message;
 
-    Future<void> setPass() async {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-self');
-      var request = http.MultipartRequest('POST', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+//   const AnnouncementDetailPage({
+//     Key? key,
+//     required this.message,
+//   }) : super(key: key);
 
-      // Isi body request dengan password lama dan baru
-      request.fields['old_password'] = oldPasswordController.text;
-      request.fields['password'] = newPasswordController.text;
-
-      try {
-        var response = await request.send();
-        var rp = await http.Response.fromStream(response);
-
-        if (response.statusCode == 200) {
-          // Password berhasil diubah
-          Navigator.pop(context); // Tutup dialog
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Password successfully updated')),
-          );
-        } else {
-          // Tangani error jika password lama salah
-          final data = jsonDecode(rp.body);
-          if (data['message'] == 'Old password is incorrect') {
-            setState(() {
-              oldPasswordError = 'Incorrect old password';
-            });
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to update password')),
-            );
-          }
-        }
-      } catch (e) {
-        print('Error occurred: $e');
-      }
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text('Change Password'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: oldPasswordController,
-                    obscureText: _obscureOldPassword,
-                    decoration: InputDecoration(
-                      labelText: 'Old Password',
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: oldPasswordError != null
-                              ? Colors.red
-                              : Colors.grey,
-                        ),
-                      ),
-                      errorText: oldPasswordError,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureOldPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureOldPassword = !_obscureOldPassword;
-                          });
-                        },
-                      ),
-                    ),
-                    onChanged: (_) {
-                      setState(() {
-                        oldPasswordError = null; // Reset error saat mengetik
-                      });
-                    },
-                  ),
-                  SizedBox(height: 10),
-                  TextField(
-                    controller: newPasswordController,
-                    obscureText: _obscureNewPassword,
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: newPasswordError != null
-                              ? Colors.red
-                              : Colors.grey,
-                        ),
-                      ),
-                      errorText: newPasswordError,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureNewPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureNewPassword = !_obscureNewPassword;
-                          });
-                        },
-                      ),
-                    ),
-                    onChanged: (_) {
-                      setState(() {
-                        newPasswordError = null; // Reset error saat mengetik
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Validasi sebelum mengirim data ke API
-                        setState(() {
-                          oldPasswordError = oldPasswordController.text.isEmpty
-                              ? 'Old password is required'
-                              : null;
-                          newPasswordError = newPasswordController.text.isEmpty
-                              ? 'New password is required'
-                              : null;
-                        });
-
-                        if (oldPasswordError == null &&
-                            newPasswordError == null) {
-                          setPass(); // Panggil fungsi untuk update password
-                        }
-                      },
-                      child: Text('Submit'),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _logout(BuildContext context) async {
-    // Hapus token dari SharedPreferences
-    await Preferences.clearToken();
-
-    // Navigasi kembali ke WelcomeScreen
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-      (route) => false,
-    );
-  }
-
-  final TextStyle titleStyle = TextStyle(fontSize: 14, color: Colors.black54);
-  final TextStyle valueStyle =
-      TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex =
-                index; // Sinkronisasi indeks ketika halaman berganti
-          });
-        },
-        children: [
-          // Halaman Profile
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.orange,
-                        Colors.pink,
-                        const Color.fromARGB(255, 101, 19, 116)
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: profileImage != null
-                                  ? FileImage(profileImage!)
-                                  : (profileImageUrl != null
-                                      ? NetworkImage(profileImageUrl!)
-                                      : AssetImage(
-                                          'assets/image/logo_circle.png')),
-                              //         as ImageProvider,
-                              // backgroundColor: Colors.grey[200],
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: IconButton(
-                                icon: Icon(Icons.camera_alt,
-                                    color: Colors.orange, size: 30),
-                                onPressed: _pickImageFromGallery,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Hello!',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Text(
-                          name,
-                          style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildProfileItem(
-                        title: 'Email',
-                        value: email,
-                        isEditable: false, // Tidak bisa diedit
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Password',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'Edit Password',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                ),
-                                SizedBox(
-                                    width:
-                                        10), // Menambah jarak tetap antara teks dan ikon
-                                IconButton(
-                                    icon:
-                                        Icon(Icons.edit, color: Colors.orange),
-                                    onPressed: _showChangePasswordDialog),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      _buildNohp(
-                        title: 'Phone Number',
-                        value: phoneNumber,
-                        onEdit: (newValue) => setState(() {
-                          phoneNumber = newValue; // Update value setelah edit
-                        }),
-                      ),
-                      _buildProfileItem(
-                        title: 'Address',
-                        value: address,
-                        onEdit: (newValue) => setState(() {
-                          address = newValue; // Update value setelah edit
-                        }),
-                      ),
-                      const Divider(
-                        height: 30,
-                        thickness: 1,
-                        color: const Color.fromRGBO(101, 19, 116, 1),
-                      ),
-                      _buildProfileItem(
-                        title: 'ID Card Address',
-                        value: idCardAddress,
-                        onEdit: (newValue) => setState(() {
-                          idCardAddress = newValue; // Update value setelah edit
-                        }),
-                      ),
-                      SizedBox(height: 14),
-                      _buildImageCard(
-                          "ID Card Image", idCardImageUrl, 'ID CARD'),
-                      const Divider(
-                        height: 30,
-                        thickness: 1,
-                        color: const Color.fromRGBO(101, 19, 116, 1),
-                      ),
-                      _buildImageCard("CV Image", cvImageUrl, 'CV'),
-                      SizedBox(height: 14),
-                      _buildProfileItem(
-                        title: 'Employment Contract Start',
-                        value: employmentStart,
-                        isEditable: false, // Tidak bisa diedit
-                      ),
-                      _buildProfileItem(
-                        title: 'Employment Contract End',
-                        value: employmentEnd,
-                        isEditable: false, // Tidak bisa diedit
-                      ),
-                      SizedBox(height: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Education',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          DropdownButtonFormField<String>(
-                            value: education.isNotEmpty ? education : null,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Color.fromRGBO(101, 19, 116, 1),
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Color.fromRGBO(101, 19, 116, 1),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            items: pendidikanOptions.map((String id) {
-                              return DropdownMenuItem<String>(
-                                value: id,
-                                child: Text(id),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                education = newValue!;
-                              });
-                              setProfile();
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Bank',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          DropdownButtonFormField<String>(
-                            value: bank.isNotEmpty ? bank : null,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Color.fromRGBO(101, 19, 116, 1),
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Color.fromRGBO(101, 19, 116, 1),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            items: bankOptions.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                bank = newValue!;
-                              });
-                              setProfile();
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 14),
-                      _buildProfileItem(
-                        title: 'Bank Account Number',
-                        value: bankAccount,
-                        onEdit: (newValue) => setState(() {
-                          bankAccount = newValue; // Update value setelah edit
-                        }),
-                      ),
-                      SizedBox(height: 14),
-                      _buildNohp(
-                        title: 'Leave Limit',
-                        value: Limit,
-                        isEditable: false, // Tidak bisa diedit
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () => _logout(context),
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Log Out'),
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/home.png'), // Custom icon
-              size: 18,
-              color: Colors.white,
-            ),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/timeoff.png'), // Custom icon
-              size: 20,
-              color: Colors.white,
-            ),
-            label: 'Time Off',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt, size: 27),
-            label: 'Reimbursement',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/notifikasi.png'), // Custom icon
-              size: 20,
-              color: Colors.white,
-            ),
-            label: 'Notification',
-          ),
-          BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/profil.png'), // Custom icon
-              size: 22,
-              color: Colors.orange,
-            ),
-            label: 'Profil',
-          ),
-        ],
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.white,
-        backgroundColor: const Color.fromARGB(255, 101, 19, 116),
-        selectedLabelStyle: const TextStyle(fontSize: 11),
-        unselectedLabelStyle: const TextStyle(fontSize: 9),
-        currentIndex: 4,
-        onTap: (index) {
-          // Handle bottom navigation bar tap
-          // Navigate to the appropriate screen
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-              break;
-            case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TimeOffScreen()),
-              );
-              break;
-            case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ReimbursementPage()),
-              );
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
-              );
-              break;
-            case 4:
-              // Navigator.pop(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => ProfileScreen()),
-              // );
-              break;
-          }
-        },
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Detail Announcement'),
+//         backgroundColor: Colors.purple,
+//       ),
+//       body: SingleChildScrollView(
+//         physics:
+//             const BouncingScrollPhysics(), // Memberikan efek scroll yang halus        padding: const EdgeInsets.all(16.0),
+//         child: Text(
+//           message,
+//           style: const TextStyle(fontSize: 16, color: Colors.black87),
+//         ),
+//       ),
+//     );
+//   }
+// }

@@ -15,8 +15,8 @@ class TimeOff extends StatefulWidget {
 class _TimeOffState extends State<TimeOff> {
   String formatStarttedDate = '';
   String formatEndtedDate = '';
-  String? _selectedType = 'Cuti';
   String Reason = '';
+  String? _selectedType = 'Cuti';
   String? iduser;
   String? limit;
   String? type = '1';
@@ -115,26 +115,7 @@ class _TimeOffState extends State<TimeOff> {
   }
 
   Future<void> _submitData() async {
-    // setState(() {
-    //   _isReasonEmpty = Reason.isEmpty;
-    //   _isStartDateEmpty = formatStarttedDate.isEmpty;
-    //   _isEndDateEmpty = formatEndtedDate.isEmpty;
-    // });
-
-    // if (!_formKey.currentState!.validate() ||
-    //     _selectedStartDate == null ||
-    //     _selectedEndDate == null) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('All fields are required.'),
-    //       backgroundColor: Colors.red,
-    //     ),
-    //   );
-    //   return;
-    // }
-
-    // if (!_formKey.currentState!.validate()) return;
-
+  
     showDialog(
       context: context,
       barrierDismissible: false,

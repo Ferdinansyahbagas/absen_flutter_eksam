@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'loginscreen.dart';
 import 'package:absen/homepage/home.dart';
+import 'loginscreen.dart';
 import 'package:absen/utils/preferences.dart';
 
 class WelcomeScreen extends StatefulWidget {

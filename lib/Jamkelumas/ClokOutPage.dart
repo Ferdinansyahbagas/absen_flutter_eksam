@@ -34,6 +34,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     super.initState();
     _loadSelectedValues();
     getData();
+    _setWorkTypeLembur();
   }
 
   Future<void> _loadSelectedValues() async {
@@ -83,6 +84,42 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       }
     } catch (e) {
       print('Error occurred: $e');
+    }
+  }
+
+  Future<void> _setWorkTypeLembur() async {
+    try {
+      final url = Uri.parse(
+          'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-in');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (response.statusCode == 200) {
+        bool hasClockedIn = data['message'] != 'belum clock-in';
+        // Cek status clock-in
+        setState(() {
+          if (hasClockedIn) {
+            // Jika sudah clock-in, hanya munculkan Lembur
+            _selectedWorkType = 'Lembur';
+          }
+          // } else {
+          //   // Jika belum clock-in, munculkan opsi Reguler dan Lembur
+          //   workTypes = ['Reguler', 'Lembur'];
+          //   _selectedWorkType = 'Reguler';
+          // }
+        });
+      } else {
+        print("Error mengecek status clock-in: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error mengecek status clock-in: $e");
     }
   }
 

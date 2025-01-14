@@ -19,10 +19,10 @@ class _TimeOffSickState extends State<TimeOffSick> {
   String formatStarttedDate = '';
   String formatEndtedDate = '';
   String Reason = '';
+  String _selectedType = 'Sick';
   String? limit;
   String? iduser;
   String? type = '2';
-  String _selectedType = 'Sick';
   File? _image; // To store the image file
   bool _isReasonEmpty = false;
   bool _isStartDateEmpty = false;
