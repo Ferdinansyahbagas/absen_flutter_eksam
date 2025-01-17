@@ -12,6 +12,7 @@ import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'dart:async'; // Untuk timer
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:http/http.dart' as http; // menyambungakan ke API
+import 'package:absen/utils/notification_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 // import 'package:flutter_html/flutter_html.dart';
@@ -35,17 +36,21 @@ class _HomePageState extends State<HomePage> {
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   int currentIndex = 0; // Default to the home page
   int _currentPage = 0; // Variable to keep track of the current page
+  int holiday = 0;
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
   bool hasHoliday = false;
   bool hasClockedIn = false; // Status clock-in biasa
   bool hasClockedOut = false; // Status clock-out biasa
   bool hasClockedInOvertime = false; // Status clock-in lembur
   bool hasClockedOutOvertime = false; // Status clock-out lembur
+  bool isCuti = false;
   bool showNote = true; // Status untuk menampilkan note
   bool isSuccess = false; // Status untuk menampilkan card
   bool isLate = false; // Status untuk card terlambat
   bool isholiday = false; //status untuk card libur
   bool isovertime = false; //status untuk card lembur
+  bool hasUnreadNotifications = false;
+  List<dynamic> notifications = [];
   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
 
   @override
@@ -56,6 +61,7 @@ class _HomePageState extends State<HomePage> {
     getPengumuman();
     _startClock(); // Memulai timer untuk jam
     // _resetNoteAtFiveAM();
+    getNotif();
     _pageController.addListener(() {
       _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
       setState(() {
@@ -224,6 +230,94 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> getNotif() async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200 && data['data'] != null) {
+        List<dynamic> loadedNotifications =
+            List.from(data['data']).map((notif) {
+          return {
+            // 'id': notif['id'],
+            // 'title': notif['title']?.toString(),
+            // 'description': notif['description']?.toString(),
+            // 'fileUrl': notif['file'] != null
+            //     ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
+            //     : null,
+            'isRead': notif['isRead'] ?? false,
+          };
+        }).toList();
+
+        // Cek status dari SharedPreferences
+        for (var notif in loadedNotifications) {
+          notif['isRead'] = await _isNotificationRead(notif['id']) ||
+              notif['isRead']; // Gabungkan status dari API dan lokal
+        }
+
+        setState(() {
+          notifications = loadedNotifications;
+          bool hasUnread = notifications.any((notif) => !notif['isRead']);
+          NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
+        });
+      } else {
+        setState(() {});
+      }
+    } catch (e) {
+      setState(() {});
+    }
+  }
+
+  Future<bool> _isNotificationRead(int id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('notif_read_$id') ?? false;
+  }
+
+  Future<void> _markNotificationAsRead(int id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_read_$id', true);
+  }
+
+  Future<void> putRead(int id) async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+    var request = http.MultipartRequest('PUT', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        // Tandai sebagai dibaca
+        await _markNotificationAsRead(id);
+
+        // Update status unread
+        bool hasUnread = notifications.any((notif) => !notif['isRead']);
+        await NotificationHelper.setUnreadNotifications(hasUnread);
+
+        setState(() {
+          notifications = notifications.map((notif) {
+            if (notif['id'] == id) {
+              notif['isRead'] = true;
+            }
+            return notif;
+          }).toList();
+        });
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
   // Fungsi untuk mengambil data dari API townhall
   Future<void> getPengumuman() async {
     final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-th');
@@ -306,6 +400,7 @@ class _HomePageState extends State<HomePage> {
           //   isLate = true; // Clock-in terlambat setelah jam 8 pagi
           // }
           final hasHoliday = data['data']['attendance_status_id'] ?? false;
+          holiday = hasHoliday;
 
           if (hasHoliday == 5) {
             isholiday = true;
@@ -355,12 +450,14 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         hasClockedInOvertime = data['message'] != 'belum clock-in';
+        hasClockedInOvertime = holiday == 5;
         if (hasClockedInOvertime) {
           showNote = false;
           isSuccess = false;
           isholiday = false;
-
-          if (hasClockedInOvertime) {
+          if (holiday == 5) {
+            isholiday = true;
+          } else {
             isovertime = true;
           }
         }
@@ -384,6 +481,7 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         hasClockedOutOvertime = data['message'] != 'belum clock-out';
+        hasClockedOutOvertime = holiday == 5;
       });
     } catch (e) {
       print("Error mengecek status clock-out: $e");
@@ -487,8 +585,30 @@ class _HomePageState extends State<HomePage> {
                       ),
                       // notifikasi icon
                       IconButton(
-                        icon: const Icon(Icons.notifications,
-                            color: Colors.white),
+                        icon: Stack(
+                          children: [
+                            const Icon(Icons.notifications,
+                                color: Colors.white),
+                            FutureBuilder<bool>(
+                              future:
+                                  NotificationHelper.hasUnreadNotifications(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData && snapshot.data == true) {
+                                  return Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Icon(
+                                      Icons.circle,
+                                      color: Colors.red,
+                                      size: 10,
+                                    ),
+                                  );
+                                }
+                                return SizedBox.shrink();
+                              },
+                            ),
+                          ],
+                        ),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -1055,7 +1175,7 @@ class _HomePageState extends State<HomePage> {
               break;
           }
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'), // Custom icon
@@ -1077,10 +1197,31 @@ class _HomePageState extends State<HomePage> {
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/notifikasi.png'), // Custom icon
-              size: 20,
-              color: Colors.white,
+            icon: Stack(
+              children: [
+                ImageIcon(
+                  AssetImage('assets/icon/notifikasi.png'),
+                  size: 20,
+                  color: Colors.white,
+                ),
+                FutureBuilder<bool>(
+                  future: NotificationHelper.hasUnreadNotifications(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data == true) {
+                      return Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Icon(
+                          Icons.circle,
+                          color: Colors.red,
+                          size: 10,
+                        ),
+                      );
+                    }
+                    return SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
             label: 'Notification',
           ),

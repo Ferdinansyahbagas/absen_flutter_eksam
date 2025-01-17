@@ -52,7 +52,7 @@ class _NotificationPageState extends State<NotificationPage> {
             'fileUrl': notif['file'] != null
                 ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
                 : null,
-            'isRead': notif['isRead'] ?? false,
+            'isRead': notif['is_read'] == 1,
           };
         }).toList();
 

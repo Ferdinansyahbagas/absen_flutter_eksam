@@ -1,11 +1,12 @@
 //nanti jangan lupa ganti nama filenya
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/notif.dart';
+import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/profil/profilscreen.dart';
 import 'package:absen/timeoff/tiimeoff.dart';
 import 'package:absen/timeoff/timeoffsick.dart';
-import 'package:absen/Reimbursement/Reimbursementscreen.dart';
+import 'package:absen/utils/notification_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,12 +19,103 @@ class TimeOffScreen extends StatefulWidget {
 class _TimeOffScreenState extends State<TimeOffScreen> {
   String? limit;
   List<dynamic> historyData = []; // Tambahkan list untuk menyimpan data history
+  List<dynamic> notifications = [];
+  bool hasUnreadNotifications = false;
 
   @override
   void initState() {
     super.initState();
     getProfile();
     getHistoryData(); // Panggil fungsi untuk mengambil data history
+    getNotif();
+  }
+
+  Future<void> getNotif() async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200 && data['data'] != null) {
+        List<dynamic> loadedNotifications =
+            List.from(data['data']).map((notif) {
+          return {
+            // 'id': notif['id'],
+            // 'title': notif['title']?.toString(),
+            // 'description': notif['description']?.toString(),
+            // 'fileUrl': notif['file'] != null
+            //     ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
+            //     : null,
+            'isRead': notif['isRead'] ?? false,
+          };
+        }).toList();
+
+        // Cek status dari SharedPreferences
+        for (var notif in loadedNotifications) {
+          notif['isRead'] = await _isNotificationRead(notif['id']) ||
+              notif['isRead']; // Gabungkan status dari API dan lokal
+        }
+
+        setState(() {
+          notifications = loadedNotifications;
+          bool hasUnread = notifications.any((notif) => !notif['isRead']);
+          NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
+        });
+      } else {
+        setState(() {});
+      }
+    } catch (e) {
+      setState(() {});
+    }
+  }
+
+  Future<bool> _isNotificationRead(int id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('notif_read_$id') ?? false;
+  }
+
+  Future<void> _markNotificationAsRead(int id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_read_$id', true);
+  }
+
+  Future<void> putRead(int id) async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+    var request = http.MultipartRequest('PUT', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        // Tandai sebagai dibaca
+        await _markNotificationAsRead(id);
+
+        // Update status unread
+        bool hasUnread = notifications.any((notif) => !notif['isRead']);
+        await NotificationHelper.setUnreadNotifications(hasUnread);
+
+        setState(() {
+          notifications = notifications.map((notif) {
+            if (notif['id'] == id) {
+              notif['isRead'] = true;
+            }
+            return notif;
+          }).toList();
+        });
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
   }
 
   Future<void> getProfile() async {
@@ -182,7 +274,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,         
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
@@ -325,7 +417,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'), // Custom icon
@@ -347,10 +439,31 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/notifikasi.png'), // Custom icon
-              size: 20,
-              color: Colors.white,
+            icon: Stack(
+              children: [
+                ImageIcon(
+                  AssetImage('assets/icon/notifikasi.png'),
+                  size: 20,
+                  color: Colors.white,
+                ),
+                FutureBuilder<bool>(
+                  future: NotificationHelper.hasUnreadNotifications(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data == true) {
+                      return Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Icon(
+                          Icons.circle,
+                          color: Colors.red,
+                          size: 10,
+                        ),
+                      );
+                    }
+                    return SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
             label: 'Notification',
           ),
