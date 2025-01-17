@@ -5,6 +5,7 @@ import 'package:absen/profil/profilscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:absen/utils/notification_helper.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'dart:convert';
@@ -19,6 +20,7 @@ class NotificationPage extends StatefulWidget {
 
 class _NotificationPageState extends State<NotificationPage> {
   List<dynamic> notifications = [];
+  bool hasUnreadNotifications = false;
   bool isLoading = true;
 
   @override
@@ -41,16 +43,29 @@ class _NotificationPageState extends State<NotificationPage> {
       var data = jsonDecode(rp.body.toString());
 
       if (rp.statusCode == 200 && data['data'] != null) {
+        List<dynamic> loadedNotifications =
+            List.from(data['data']).map((notif) {
+          return {
+            'id': notif['id'],
+            'title': notif['title']?.toString(),
+            'description': notif['description']?.toString(),
+            'fileUrl': notif['file'] != null
+                ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
+                : null,
+            'isRead': notif['isRead'] ?? false,
+          };
+        }).toList();
+
+        // Cek status dari SharedPreferences
+        for (var notif in loadedNotifications) {
+          notif['isRead'] = await _isNotificationRead(notif['id']) ||
+              notif['isRead']; // Gabungkan status dari API dan lokal
+        }
+
         setState(() {
-          notifications = List.from(data['data']).map((notif) {
-            return {
-              'title': notif['title']?.toString(),
-              'description': notif['description']?.toString(),
-              'fileUrl': notif['file'] != null
-                  ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
-                  : null,
-            };
-          }).toList();
+          notifications = loadedNotifications;
+          bool hasUnread = notifications.any((notif) => !notif['isRead']);
+          NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
           isLoading = false;
         });
       } else {
@@ -62,6 +77,48 @@ class _NotificationPageState extends State<NotificationPage> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<bool> _isNotificationRead(int id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('notif_read_$id') ?? false;
+  }
+
+  Future<void> _markNotificationAsRead(int id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_read_$id', true);
+  }
+
+  Future<void> putRead(int id) async {
+    final url = Uri.parse(
+        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+    var request = http.MultipartRequest('PUT', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        // Tandai sebagai dibaca
+        await _markNotificationAsRead(id);
+
+        // Update status unread
+        bool hasUnread = notifications.any((notif) => !notif['isRead']);
+        await NotificationHelper.setUnreadNotifications(hasUnread);
+
+        setState(() {
+          notifications = notifications.map((notif) {
+            if (notif['id'] == id) {
+              notif['isRead'] = true;
+            }
+            return notif;
+          }).toList();
+        });
+      }
+    } catch (e) {
+      print('Error occurred: $e');
     }
   }
 
@@ -89,17 +146,22 @@ class _NotificationPageState extends State<NotificationPage> {
                     padding: EdgeInsets.all(16.0),
                     itemCount: notifications.length,
                     itemBuilder: (context, index) {
+                      var notif = notifications[index];
                       return NotificationItem(
-                        title: notifications[index]['title'] ?? '',
-                        description: notifications[index]['description'] ?? '',
-                        fileUrl: notifications[index]['fileUrl'],
+                        title: notif['title'] ?? '',
+                        description: notif['description'] ?? '',
+                        fileUrl: notif['fileUrl'],
+                        isRead: notif['isRead'],
+                        onTap: () async {
+                          await putRead(notif['id']);
+                        },
                       );
                     },
                   ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'),
@@ -121,10 +183,31 @@ class _NotificationPageState extends State<NotificationPage> {
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
-            icon: ImageIcon(
-              AssetImage('assets/icon/notifikasi.png'),
-              size: 22,
-              color: Colors.orange,
+            icon: Stack(
+              children: [
+                ImageIcon(
+                  AssetImage('assets/icon/notifikasi.png'),
+                  size: 22,
+                  color: Colors.orange,
+                ),
+                FutureBuilder<bool>(
+                  future: NotificationHelper.hasUnreadNotifications(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data == true) {
+                      return Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Icon(
+                          Icons.circle,
+                          color: Colors.red,
+                          size: 10,
+                        ),
+                      );
+                    }
+                    return SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
             label: 'Notification',
           ),
@@ -182,21 +265,36 @@ class NotificationItem extends StatelessWidget {
   final String title;
   final String description;
   final String? fileUrl;
+  final bool isRead;
+  final VoidCallback onTap;
 
   const NotificationItem({
     required this.title,
     required this.description,
     this.fileUrl,
+    required this.isRead,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8.0),
+      color: isRead ? Colors.grey[200] : Colors.white,
       child: ListTile(
-        title: Text(title),
-        subtitle: Text('Click To View', style: TextStyle(color: Colors.blue)),
+        title: Text(
+          title,
+          style: TextStyle(
+              fontWeight: isRead ? FontWeight.normal : FontWeight.bold),
+        ),
+        subtitle: Text(
+          'Click To View',
+          style: TextStyle(color: Colors.blue),
+        ),
+        trailing:
+            isRead ? null : Icon(Icons.circle, color: Colors.red, size: 10),
         onTap: () {
+          onTap();
           Navigator.push(
             context,
             MaterialPageRoute(

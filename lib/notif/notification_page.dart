@@ -6,6 +6,7 @@
 // import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
 // import 'package:absen/jamkelumas/clokOutPage.dart'; // Mengimpor halaman clockout
 // import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
+// import 'package:absen/utils/notification_helper.dart';
 // import 'package:geolocator/geolocator.dart'; //tempat
 // import 'package:geocoding/geocoding.dart'; //kordinat
 // import 'package:intl/intl.dart'; //unntuk format tanggal
@@ -35,16 +36,18 @@
 //   Timer? _timer; // Timer untuk memperbarui jam setiap detik
 //   int currentIndex = 0; // Default to the home page
 //   int _currentPage = 0; // Variable to keep track of the current page
-//   int clockInCount = 0; // Jumlah clock-in harian
-//   int clockOutCount = 0; // Jumlah clock-out harian
 //   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
-//   bool hasClockedIn = false; // Variabel baru untuk status clock-in
-//   bool hasClockedOut = false; // Variabel baru untuk status clock-out
+//   bool hasHoliday = false;
+//   bool hasClockedIn = false; // Status clock-in biasa
+//   bool hasClockedOut = false; // Status clock-out biasa
+//   bool hasClockedInOvertime = false; // Status clock-in lembur
+//   bool hasClockedOutOvertime = false; // Status clock-out lembur
 //   bool showNote = true; // Status untuk menampilkan note
 //   bool isSuccess = false; // Status untuk menampilkan card
 //   bool isLate = false; // Status untuk card terlambat
 //   bool isholiday = false; //status untuk card libur
 //   bool isovertime = false; //status untuk card lembur
+//   bool hasUnreadNotifications = false;
 //   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
 
 //   @override
@@ -54,7 +57,8 @@
 //     getData();
 //     getPengumuman();
 //     _startClock(); // Memulai timer untuk jam
-//     _resetAtFiveAM();
+//     // _resetNoteAtFiveAM();
+//     _checkUnreadNotifications();
 //     _pageController.addListener(() {
 //       _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
 //       setState(() {
@@ -211,17 +215,15 @@
 //     }
 //   }
 
-//   void _updateClockInStatus(bool status) {
+//   void _updateClockInStatusRegular(bool status) {
 //     setState(() {
 //       hasClockedIn = status;
-//       if (status) clockInCount++;
 //     });
 //   }
 
-//   void _updateClockOutStatus(bool status) {
+//   void _updateClockInStatusOvertime(bool status) {
 //     setState(() {
-//       hasClockedOut = status;
-//       if (status) clockOutCount++;
+//       hasClockedInOvertime = status;
 //     });
 //   }
 
@@ -295,16 +297,23 @@
 //       setState(() {
 //         // Status clock-in diambil dari respons API
 //         hasClockedIn = data['message'] != 'belum clock-in';
-
+//         print(data['data']);
 //         if (hasClockedIn) {
 //           showNote = false;
 
 //           // Periksa waktu clock-in
-//           final now = DateTime.now();
-//           if (now.hour < 8) {
-//             isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+//           // final now = DateTime.now();
+//           // if (now.hour < 8) {
+//           //   isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+//           // } else {
+//           //   isLate = true; // Clock-in terlambat setelah jam 8 pagi
+//           // }
+//           final hasHoliday = data['data']['attendance_status_id'] ?? false;
+
+//           if (hasHoliday == 5) {
+//             isholiday = true;
 //           } else {
-//             isLate = true; // Clock-in terlambat setelah jam 8 pagi
+//             isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
 //           }
 //         }
 //       });
@@ -332,37 +341,94 @@
 //     } catch (e) {
 //       print("Error mengecek status clock-out: $e");
 //     }
-//   }
 
-//   // Fungsi untuk mereset note pada pukul 5 pagi
-//   void _resetAtFiveAM() {
-//     final now = DateTime.now();
-//     final fiveAM = DateTime(now.year, now.month, now.day, 5);
-//     final timeUntilReset = fiveAM.isBefore(now)
-//         ? fiveAM.add(const Duration(days: 1)).difference(now)
-//         : fiveAM.difference(now);
+//     // Cek status lembur masuk
+//     try {
+//       final url = Uri.parse(
+//           'https://dev-portal.eksam.cloud/api/v1/attendance/is-lembur-in');
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-//     resetNoteTimer = Timer(timeUntilReset, () {
+//       var request = http.MultipartRequest('GET', url);
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
+
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
+
 //       setState(() {
-//         clockInCount = 0;
-//         clockOutCount = 0;
-//         hasClockedIn = false;
-//         hasClockedOut = false;
-//         showNote = true;
-//         isSuccess = false;
-//         isLate = false;
-//         isholiday = false;
-//         isLate = false;
-//         clockInMessage = null;
+//         hasClockedInOvertime = data['message'] != 'belum clock-in';
+//         if (hasClockedInOvertime) {
+//           showNote = false;
+//           isSuccess = false;
+//           isholiday = false;
+
+//           if (hasClockedInOvertime) {
+//             isovertime = true;
+//           }
+//         }
 //       });
-//       _resetAtFiveAM(); // Reset ulang timer untuk esok hari
-//     });
+//     } catch (e) {
+//       print("Error mengecek status clock-out: $e");
+//     }
+//     // Cek status lembur keluar
+//     try {
+//       final url = Uri.parse(
+//           'https://dev-portal.eksam.cloud/api/v1/attendance/is-lembur-out');
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+//       var request = http.MultipartRequest('GET', url);
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
+
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
+
+//       setState(() {
+//         hasClockedOutOvertime = data['message'] != 'belum clock-out';
+//       });
+//     } catch (e) {
+//       print("Error mengecek status clock-out: $e");
+//     }
 //   }
+
+//   // Fungsi untuk mereset status setiap jam 5 pagi
+//   // void _resetNoteAtFiveAM() {
+//   //   final now = DateTime.now();
+//   //   final fiveAM = DateTime(now.year, now.month, now.day, 5);
+//   //   final timeUntilReset = fiveAM.isBefore(now)
+//   //       ? fiveAM.add(const Duration(days: 1)).difference(now)
+//   //       : fiveAM.difference(now);
+
+//   //   resetNoteTimer = Timer(timeUntilReset, () {
+//   //     setState(() {
+//   //       hasClockedIn = false;
+//   //       hasClockedOut = false;
+//   //       hasClockedInOvertime = false;
+//   //       hasClockedOutOvertime = false;
+//   //       showNote = true;
+//   //       isSuccess = false;
+//   //       isLate = false;
+//   //       isholiday = false;
+//   //       isovertime = false;
+//   //       clockInMessage = null;
+//   //     });
+//   //   });
+//   // }
 
 //   @override
 //   void dispose() {
 //     resetNoteTimer?.cancel(); // Membatalkan timer saat widget dibuang
 //     super.dispose();
+//   }
+
+//   // Cek status unread notifications
+//   Future<void> _checkUnreadNotifications() async {
+//     bool hasUnread = await NotificationHelper.hasUnreadNotifications();
+//     setState(() {
+//       hasUnreadNotifications = hasUnread;
+//     });
 //   }
 
 //   @override
@@ -421,23 +487,25 @@
 //                           //     : null,
 //                         ),
 //                       ),
+//                       // Menampilkan waktu yang di-update setiap detik
 //                       Text(
-//                         _currentTime, // Menampilkan waktu yang di-update setiap detik
+//                         _currentTime,
 //                         style: const TextStyle(
 //                           fontSize: 16,
 //                           color:
 //                               Color.fromARGB(255, 255, 255, 255), // Warna teks
 //                         ),
 //                       ),
+//                       // notifikasi icon
 //                       IconButton(
 //                         icon: const Icon(Icons.notifications,
 //                             color: Colors.white),
 //                         onPressed: () {
-//                           Navigator.pushReplacement(
+//                           Navigator.push(
 //                             context,
 //                             MaterialPageRoute(
 //                                 builder: (context) => NotificationPage()),
-//                           ); // Tambahkan aksi untuk notification
+//                           );
 //                         },
 //                       ),
 //                     ],
@@ -467,12 +535,14 @@
 //                     ),
 //                     child: Column(
 //                       children: [
+//                         // untuk melihat kota / lokasi terkini
 //                         Text(
 //                           isLoadingLocation
 //                               ? 'Loading your location...'
 //                               : 'Your Location Is Now In $currentCity',
 //                           style: const TextStyle(color: Colors.black54),
 //                         ),
+//                         //menampilkan jam format
 //                         Text(
 //                           DateFormat('EEEE, dd MMMM yyyy')
 //                               .format(DateTime.now()),
@@ -482,59 +552,130 @@
 //                           ),
 //                         ),
 //                         const SizedBox(height: 20),
-//                         Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           children: [
-//                             ElevatedButton.icon(
-//                               onPressed: clockInCount < 2
-//                                   ? () async {
-//                                       final result = await Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               const ClockInPage(),
-//                                         ),
-//                                       );
-//                                       if (result == true) {
-//                                         _updateClockInStatus(true);
-//                                       }
-//                                     }
-//                                   : null,
-//                               icon: const Icon(Icons.login),
-//                               label: Text('Clock In ($clockInCount/2)'),
-//                               style: ElevatedButton.styleFrom(
-//                                 backgroundColor: clockInCount < 2
-//                                     ? Colors.white
-//                                     : Colors.grey,
+//                         if (!hasClockedOut) ...[
+//                           // Clock In & Clock Out buttons
+//                           Row(
+//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                             children: [
+//                               ElevatedButton.icon(
+//                                 onPressed: hasClockedIn
+//                                     ? null
+//                                     : () async {
+//                                         final result = await Navigator.push(
+//                                           context,
+//                                           MaterialPageRoute(
+//                                             builder: (context) => ClockInPage(),
+//                                           ),
+//                                         );
+//                                         if (result == true) {
+//                                           setState(() {
+//                                             hasClockedIn = true;
+//                                           });
+//                                         }
+//                                       },
+//                                 icon: const Icon(Icons.login),
+//                                 label: const Text('Clock In'),
+//                                 style: ElevatedButton.styleFrom(
+//                                   backgroundColor:
+//                                       hasClockedIn ? Colors.grey : Colors.white,
+//                                 ),
 //                               ),
-//                             ),
-//                             ElevatedButton.icon(
-//                               onPressed: clockOutCount < 2 &&
-//                                       clockInCount > clockOutCount
-//                                   ? () async {
-//                                       final result = await Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               const ClockOutScreen(),
-//                                         ),
-//                                       );
-//                                       if (result == true) {
-//                                         _updateClockOutStatus(true);
+//                               ElevatedButton.icon(
+//                                 onPressed: hasClockedIn && !hasClockedOut
+//                                     ? () async {
+//                                         final result = await Navigator.push(
+//                                           context,
+//                                           MaterialPageRoute(
+//                                             builder: (context) =>
+//                                                 const ClockOutScreen(),
+//                                           ),
+//                                         );
+//                                         if (result == true) {
+//                                           setState(() {
+//                                             hasClockedOut = true;
+//                                           });
+//                                         }
 //                                       }
-//                                     }
-//                                   : null,
-//                               icon: const Icon(Icons.logout),
-//                               label: Text('Clock Out ($clockOutCount/2)'),
-//                               style: ElevatedButton.styleFrom(
-//                                 backgroundColor: clockOutCount < 2 &&
-//                                         clockInCount > clockOutCount
-//                                     ? Colors.white
-//                                     : Colors.grey,
+//                                     : null,
+//                                 icon: const Icon(Icons.logout),
+//                                 label: const Text('Clock Out'),
+//                                 style: ElevatedButton.styleFrom(
+//                                   backgroundColor:
+//                                       hasClockedIn && !hasClockedOut
+//                                           ? Colors.white
+//                                           : Colors.grey,
+//                                 ),
 //                               ),
-//                             ),
-//                           ],
-//                         ),
+//                             ],
+//                           ),
+//                         ] else ...[
+//                           // Overtime In & Overtime Out buttons
+//                           Row(
+//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                             children: [
+//                               ElevatedButton.icon(
+//                                 onPressed: hasClockedInOvertime
+//                                     ? null
+//                                     : () async {
+//                                         final result = await Navigator.push(
+//                                           context,
+//                                           MaterialPageRoute(
+//                                               builder: (context) =>
+//                                                   ClockInPage()),
+//                                         );
+//                                         if (result == true) {
+//                                           setState(() {
+//                                             hasClockedInOvertime = true;
+//                                           });
+//                                         }
+//                                       },
+//                                 icon: const Icon(Icons.login),
+//                                 label: const Text(
+//                                   'Overtime In',
+//                                   style: TextStyle(
+//                                     fontSize: 12,
+//                                   ),
+//                                 ),
+//                                 style: ElevatedButton.styleFrom(
+//                                   backgroundColor: hasClockedInOvertime
+//                                       ? Colors.grey
+//                                       : Colors.white,
+//                                 ),
+//                               ),
+//                               ElevatedButton.icon(
+//                                 onPressed: hasClockedInOvertime &&
+//                                         !hasClockedOutOvertime
+//                                     ? () async {
+//                                         final result = await Navigator.push(
+//                                           context,
+//                                           MaterialPageRoute(
+//                                               builder: (context) =>
+//                                                   ClockOutScreen()),
+//                                         );
+//                                         if (result == true) {
+//                                           setState(() {
+//                                             hasClockedOutOvertime = true;
+//                                           });
+//                                         }
+//                                       }
+//                                     : null,
+//                                 icon: const Icon(Icons.logout),
+//                                 label: const Text(
+//                                   'Overtime Out',
+//                                   style: TextStyle(
+//                                     fontSize: 12,
+//                                   ),
+//                                 ),
+//                                 style: ElevatedButton.styleFrom(
+//                                   backgroundColor: hasClockedInOvertime &&
+//                                           !hasClockedOutOvertime
+//                                       ? Colors.white
+//                                       : Colors.grey,
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                         ],
 //                       ],
 //                     ),
 //                   ),
@@ -626,7 +767,7 @@
 //                                 style: TextStyle(
 //                                   color: Colors.white,
 //                                   fontWeight: FontWeight.bold,
-//                                   fontSize: 20,
+//                                   fontSize: 16,
 //                                 ),
 //                               ),
 //                             ),
@@ -636,55 +777,16 @@
 //                                 'Good work and \n keep up the spirit',
 //                                 textAlign: TextAlign.right,
 //                                 style: TextStyle(
-//                                     color: Colors.white70, fontSize: 14),
+//                                     color: Colors.white70, fontSize: 10),
 //                               ),
 //                             ),
 //                           ],
 //                         ),
 //                       ),
 //                     ),
-//                   if (isLate)
-//                     // Card(
-//                     //   color: Colors.redAccent,
-//                     //   elevation: 5,
-//                     //   margin: const EdgeInsets.symmetric(
-//                     //       horizontal: 1, vertical: 12),
-//                     //   shape: RoundedRectangleBorder(
-//                     //     borderRadius: BorderRadius.circular(16),
-//                     //   ),
-//                     //   child: Padding(
-//                     //     padding: const EdgeInsets.symmetric(
-//                     //         vertical: 30.0, horizontal: 16.0),
-//                     //     child: Row(
-//                     //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     //       crossAxisAlignment: CrossAxisAlignment.center,
-//                     //       children: [
-//                     //         // Teks Kiri
-//                     //         Flexible(
-//                     //           child: Text(
-//                     //             '💥 You’re Late!, \n Let’s In Now 💥',
-//                     //             style: TextStyle(
-//                     //               color: Colors.white,
-//                     //               fontWeight: FontWeight.bold,
-//                     //               fontSize: 20,
-//                     //             ),
-//                     //           ),
-//                     //         ),
-//                     //         // Teks Kanan
-//                     //         Flexible(
-//                     //           child: Text(
-//                     //             'How can you be \n absent late?',
-//                     //             textAlign: TextAlign.right,
-//                     //             style: TextStyle(
-//                     //                 color: Colors.white70, fontSize: 14),
-//                     //           ),
-//                     //         ),
-//                     //       ],
-//                     //     ),
-//                     //   ),
-//                     // ),
+//                   if (isovertime)
 //                     Card(
-//                       color: Colors.orange,
+//                       color: Colors.redAccent,
 //                       elevation: 5,
 //                       margin: const EdgeInsets.symmetric(
 //                           horizontal: 1, vertical: 12),
@@ -701,11 +803,11 @@
 //                             // Teks Kiri
 //                             Flexible(
 //                               child: Text(
-//                                 '✨ Your Absence \n Was Successful ✨',
+//                                 '💥 You’re Late!, \n Let’s In Now💥',
 //                                 style: TextStyle(
 //                                   color: Colors.white,
 //                                   fontWeight: FontWeight.bold,
-//                                   fontSize: 20,
+//                                   fontSize: 16,
 //                                 ),
 //                               ),
 //                             ),
@@ -715,7 +817,7 @@
 //                                 'Good work and \n keep up the spirit',
 //                                 textAlign: TextAlign.right,
 //                                 style: TextStyle(
-//                                     color: Colors.white70, fontSize: 14),
+//                                     color: Colors.white70, fontSize: 10),
 //                               ),
 //                             ),
 //                           ],
@@ -986,12 +1088,25 @@
 //             label: 'Reimbursement',
 //           ),
 //           BottomNavigationBarItem(
-//             icon: ImageIcon(
-//               AssetImage('assets/icon/notifikasi.png'), // Custom icon
-//               size: 20,
-//               color: Colors.white,
+//             icon: Stack(
+//               children: [
+//                 const Icon(Icons.notifications),
+//                 FutureBuilder<bool>(
+//                   future: NotificationHelper.hasUnreadNotifications(),
+//                   builder: (context, snapshot) {
+//                     if (snapshot.hasData && snapshot.data == true) {
+//                       return Positioned(
+//                         right: 0,
+//                         top: 0,
+//                         child: Icon(Icons.circle, color: Colors.red, size: 10),
+//                       );
+//                     }
+//                     return const SizedBox.shrink();
+//                   },
+//                 ),
+//               ],
 //             ),
-//             label: 'Notification',
+//             label: 'Notifications',
 //           ),
 //           BottomNavigationBarItem(
 //             icon: ImageIcon(

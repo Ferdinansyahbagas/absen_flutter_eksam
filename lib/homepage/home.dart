@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   int currentIndex = 0; // Default to the home page
   int _currentPage = 0; // Variable to keep track of the current page
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
+  bool hasHoliday = false;
   bool hasClockedIn = false; // Status clock-in biasa
   bool hasClockedOut = false; // Status clock-out biasa
   bool hasClockedInOvertime = false; // Status clock-in lembur
@@ -293,16 +294,23 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         // Status clock-in diambil dari respons API
         hasClockedIn = data['message'] != 'belum clock-in';
-
+        print(data['data']);
         if (hasClockedIn) {
           showNote = false;
 
           // Periksa waktu clock-in
-          final now = DateTime.now();
-          if (now.hour < 8) {
-            isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+          // final now = DateTime.now();
+          // if (now.hour < 8) {
+          //   isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+          // } else {
+          //   isLate = true; // Clock-in terlambat setelah jam 8 pagi
+          // }
+          final hasHoliday = data['data']['attendance_status_id'] ?? false;
+
+          if (hasHoliday == 5) {
+            isholiday = true;
           } else {
-            isLate = true; // Clock-in terlambat setelah jam 8 pagi
+            isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
           }
         }
       });
@@ -347,6 +355,15 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         hasClockedInOvertime = data['message'] != 'belum clock-in';
+        if (hasClockedInOvertime) {
+          showNote = false;
+          isSuccess = false;
+          isholiday = false;
+
+          if (hasClockedInOvertime) {
+            isovertime = true;
+          }
+        }
       });
     } catch (e) {
       print("Error mengecek status clock-out: $e");
@@ -602,7 +619,12 @@ class _HomePageState extends State<HomePage> {
                                         }
                                       },
                                 icon: const Icon(Icons.login),
-                                label: const Text('Overtime In'),
+                                label: const Text(
+                                  'Overtime In',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: hasClockedInOvertime
                                       ? Colors.grey
@@ -627,7 +649,12 @@ class _HomePageState extends State<HomePage> {
                                       }
                                     : null,
                                 icon: const Icon(Icons.logout),
-                                label: const Text('Overtime Out'),
+                                label: const Text(
+                                  'Overtime Out',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: hasClockedInOvertime &&
                                           !hasClockedOutOvertime
@@ -638,122 +665,6 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         ],
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //   children: [
-                        //     // Tombol Clock In
-                        //     ElevatedButton.icon(
-                        //       onPressed: () async {
-                        //         if (!hasClockedIn) {
-                        //           // Clock In biasa
-                        //           final result = await Navigator.push(
-                        //             context,
-                        //             MaterialPageRoute(
-                        //               builder: (context) =>
-                        //                   ClockInPage(), // Ganti dengan halaman Clock In
-                        //             ),
-                        //           );
-                        //           if (result == true) {
-                        //             setState(() {
-                        //               hasClockedIn = true;
-                        //               isSuccess =
-                        //                   true; // Clock In biasa berhasil
-                        //             });
-                        //           }
-                        //         } else if (!hasClockedInOvertime) {
-                        //           // Clock In lembur
-                        //           final result = await Navigator.push(
-                        //             context,
-                        //             MaterialPageRoute(
-                        //               builder: (context) =>
-                        //                   ClockInPage(), // Ganti dengan halaman Clock In Lembur
-                        //             ),
-                        //           );
-                        //           if (result == true) {
-                        //             setState(() {
-                        //               hasClockedInOvertime = true;
-                        //               isovertime =
-                        //                   true; // Clock In lembur berhasil
-                        //             });
-                        //           }
-                        //         }
-                        //       },
-                        //       icon: const Icon(Icons.login),
-                        //       label: Text(
-                        //         !hasClockedIn
-                        //             ? 'Clock In'
-                        //             : !hasClockedInOvertime
-                        //                 ? 'Overtime In'
-                        //                 : 'Clock In',
-                        //       ),
-                        //       style: ElevatedButton.styleFrom(
-                        //         backgroundColor: (!hasClockedIn ||
-                        //                 !hasClockedInOvertime)
-                        //             ? Colors.white
-                        //             : Colors
-                        //                 .grey, // Disable jika semua clock-in selesai
-                        //       ),
-                        //     ),
-
-                        //     // Tombol Clock Out
-                        //     ElevatedButton.icon(
-                        //       onPressed: () async {
-                        //         if (hasClockedIn && !hasClockedOutRegular) {
-                        //           // Clock Out biasa
-                        //           final result = await Navigator.push(
-                        //             context,
-                        //             MaterialPageRoute(
-                        //               builder: (context) =>
-                        //                   ClockOutScreen(), // Ganti dengan halaman Clock Out
-                        //             ),
-                        //           );
-                        //           if (result == true) {
-                        //             setState(() {
-                        //               hasClockedOutRegular = true;
-                        //               isholiday =
-                        //                   true; // Clock Out biasa berhasil
-                        //             });
-                        //           }
-                        //         } else if (hasClockedOutOvertime &&
-                        //             !hasClockedOutOvertime) {
-                        //           // Clock Out lembur
-                        //           final result = await Navigator.push(
-                        //             context,
-                        //             MaterialPageRoute(
-                        //               builder: (context) =>
-                        //                   ClockOutScreen(), // Ganti dengan halaman Clock Out Lembur
-                        //             ),
-                        //           );
-                        //           if (result == true) {
-                        //             setState(() {
-                        //               hasClockedOutOvertime = true;
-                        //               isovertime =
-                        //                   false; // Clock Out lembur berhasil
-                        //             });
-                        //           }
-                        //         }
-                        //       },
-                        //       icon: const Icon(Icons.logout),
-                        //       label: Text(
-                        //         hasClockedIn && !hasClockedOutRegular
-                        //             ? 'Clock Out'
-                        //             : hasClockedInOvertime &&
-                        //                     !hasClockedOutOvertime
-                        //                 ? 'Overtime Out'
-                        //                 : 'Clock Out',
-                        //       ),
-                        //       style: ElevatedButton.styleFrom(
-                        //         backgroundColor: (hasClockedIn &&
-                        //                     !hasClockedOutRegular) ||
-                        //                 (hasClockedInOvertime &&
-                        //                     !hasClockedOutOvertime)
-                        //             ? Colors.white
-                        //             : Colors
-                        //                 .grey, // Disable jika semua clock-out selesai
-                        //       ),
-                        //     ),
-                        //   ],
-                        // ),
                       ],
                     ),
                   ),
@@ -845,7 +756,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                 ),
                               ),
                             ),
@@ -855,55 +766,16 @@ class _HomePageState extends State<HomePage> {
                                 'Good work and \n keep up the spirit',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
-                                    color: Colors.white70, fontSize: 14),
+                                    color: Colors.white70, fontSize: 10),
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  if (isLate)
-                    // Card(
-                    //   color: Colors.redAccent,
-                    //   elevation: 5,
-                    //   margin: const EdgeInsets.symmetric(
-                    //       horizontal: 1, vertical: 12),
-                    //   shape: RoundedRectangleBorder(
-                    //     borderRadius: BorderRadius.circular(16),
-                    //   ),
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.symmetric(
-                    //         vertical: 30.0, horizontal: 16.0),
-                    //     child: Row(
-                    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //       crossAxisAlignment: CrossAxisAlignment.center,
-                    //       children: [
-                    //         // Teks Kiri
-                    //         Flexible(
-                    //           child: Text(
-                    //             '💥 You’re Late!, \n Let’s In Now 💥',
-                    //             style: TextStyle(
-                    //               color: Colors.white,
-                    //               fontWeight: FontWeight.bold,
-                    //               fontSize: 20,
-                    //             ),
-                    //           ),
-                    //         ),
-                    //         // Teks Kanan
-                    //         Flexible(
-                    //           child: Text(
-                    //             'How can you be \n absent late?',
-                    //             textAlign: TextAlign.right,
-                    //             style: TextStyle(
-                    //                 color: Colors.white70, fontSize: 14),
-                    //           ),
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
+                  if (isovertime)
                     Card(
-                      color: Colors.orange,
+                      color: Colors.redAccent,
                       elevation: 5,
                       margin: const EdgeInsets.symmetric(
                           horizontal: 1, vertical: 12),
@@ -920,11 +792,11 @@ class _HomePageState extends State<HomePage> {
                             // Teks Kiri
                             Flexible(
                               child: Text(
-                                '✨ Your Absence \n Was Successful ✨',
+                                '💥 You’re Late!, \n Let’s In Now💥',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                 ),
                               ),
                             ),
@@ -934,7 +806,7 @@ class _HomePageState extends State<HomePage> {
                                 'Good work and \n keep up the spirit',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
-                                    color: Colors.white70, fontSize: 14),
+                                    color: Colors.white70, fontSize: 10),
                               ),
                             ),
                           ],

@@ -90,7 +90,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   Future<void> _setWorkTypeLembur() async {
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-in');
+          'https://dev-portal.eksam.cloud/api/v1/attendance/is-lembur-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);

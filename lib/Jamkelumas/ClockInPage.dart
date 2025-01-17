@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -162,6 +163,7 @@ class _ClockInPageState extends State<ClockInPage> {
       if (response.statusCode == 200) {
         setState(() {
           _isHoliday = data['data']['libur'];
+          // _isHoliday = data['data']['attendance_status_id'];
         });
 
         // Check if today is in the holiday list
@@ -232,6 +234,12 @@ class _ClockInPageState extends State<ClockInPage> {
     );
 
     try {
+      // Get current location
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      double latitude = position.latitude;
+      double longitude = position.longitude;
       // Example API endpoint
       final url = Uri.parse(
           'https://dev-portal.eksam.cloud/api/v1/attendance/clock-in');
@@ -261,6 +269,8 @@ class _ClockInPageState extends State<ClockInPage> {
       request.fields['type'] = type;
       request.fields['status'] = '1';
       request.fields['location'] = location;
+      request.fields['latitude'] = latitude.toString();
+      request.fields['longitude'] = longitude.toString();
 
       // Add image file
       if (_image != null) {

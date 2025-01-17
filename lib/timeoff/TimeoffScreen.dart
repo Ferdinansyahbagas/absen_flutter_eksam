@@ -1,11 +1,11 @@
 //nanti jangan lupa ganti nama filenya
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/notif.dart';
-import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/profil/profilscreen.dart';
 import 'package:absen/timeoff/tiimeoff.dart';
 import 'package:absen/timeoff/timeoffsick.dart';
+import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -182,7 +182,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.bold,         
                           ),
                         ),
                       ],
@@ -298,7 +298,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                           alignment: Alignment.center,
                           child: Container(
                             padding: EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 120),
+                                vertical: 8, horizontal: 110),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(9),
@@ -309,6 +309,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                               style: TextStyle(
                                 color: Colors.pink,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
                             ),
                           ),

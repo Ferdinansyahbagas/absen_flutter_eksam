@@ -441,10 +441,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      66), // Jarak horizontal
+                                                      70), // Jarak horizontal
 
                                               Text(
                                                 historyItem['type']['name'],
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.black),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                "Geolocation",
+                                                style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 14),
+                                              ),
+                                              SizedBox(
+                                                  width:
+                                                      20), // Jarak horizontal
+
+                                              Text(
+                                                historyItem['geolocation'],
                                                 style: TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
@@ -629,7 +649,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text(
             subtitle,
             style: const TextStyle(
-              fontSize: 14.0,
+              fontSize: 12.0,
               fontWeight: FontWeight.w500,
               color: Colors.black,
             ),
