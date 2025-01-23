@@ -16,7 +16,7 @@ class FailurePage3 extends StatelessWidget {
             children: [
               SizedBox(height: 170),
               Text(
-                'Your',
+                'Anda',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -25,7 +25,7 @@ class FailurePage3 extends StatelessWidget {
                 textAlign: TextAlign.left,
               ),
               Text(
-                'Reimbursement',
+                'Gagal Mengajukan',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -34,7 +34,7 @@ class FailurePage3 extends StatelessWidget {
                 textAlign: TextAlign.left,
               ),
               Text(
-                'Review Was​',
+                'Reimbursement​',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -43,7 +43,7 @@ class FailurePage3 extends StatelessWidget {
                 textAlign: TextAlign.left,
               ),
               Text(
-                'Feiled, Try Again',
+                'Coba Lagi',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -69,7 +69,7 @@ class FailurePage3 extends StatelessWidget {
                     (route) => false,
                   );   // Action when back to menu button is pressed
                 },
-                child: Text('Back To Menu'),
+                child: Text('Kembali Ke Menu'),
               ),
             ],
           ),

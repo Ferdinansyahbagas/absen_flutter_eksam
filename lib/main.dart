@@ -1,5 +1,5 @@
-import 'package:absen/screen/loadingwelcome.dart'; // Mengimpor SplashScreen
 import 'package:flutter/material.dart';
+import 'package:absen/screen/loadingwelcome.dart'; // Mengimpor SplashScreen
 
 void main() {
   runApp(const MyApp());

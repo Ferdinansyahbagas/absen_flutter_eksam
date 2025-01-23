@@ -18,16 +18,15 @@ class ReimbursementForm extends StatefulWidget {
 
 class _ReimbursementFormState extends State<ReimbursementForm> {
   String description = '';
-  String totalReimbursement = '';
   String formattedDate = '';
+  String totalReimbursement = '';
   DateTime? selectedDate;
   File? _image;
+  bool _isDateEmpty = false;
+  bool _isTotalEmpty = false;
   bool _isImageRequired = false;
   bool _isDescriptionEmpty = false;
-  bool _isTotalEmpty = false;
-  bool _isDateEmpty = false;
   final _formKey = GlobalKey<FormState>();
-  // final _dateController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
@@ -195,7 +194,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   errorText:
-                      _isDescriptionEmpty ? 'Please enter a description' : null,
+                      _isDescriptionEmpty ? 'Tolong Isi description' : null,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -233,7 +232,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   errorText: _isTotalEmpty
-                      ? 'Please enter the total reimbursement'
+                      ? 'Tolong Masukan total reimbursement'
                       : null,
                 ),
                 onChanged: (value) {
@@ -250,7 +249,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                 onTap: () => _selectDate(context, true),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Date',
+                    labelText: 'Tanggal',
                     labelStyle: TextStyle(color:  const Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
                         .always, // Always show label on top
@@ -274,7 +273,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     errorText: _isDateEmpty
-                        ? 'Date is required'
+                        ? 'Tanggal Wajib Di isi'
                         : null, // Error message
                   ),
                   child: Row(
@@ -322,7 +321,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                       const SizedBox(height: 3),
                       if (_image == null && !_isImageRequired)
                         const Text(
-                          'Upload Your Photo',
+                          'Upload Photo Anda',
                           style: TextStyle(
                             fontSize: 14,
                             color: const Color.fromRGBO(101, 19, 116, 1),
@@ -370,7 +369,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                       );
                     },
                     child: const Text(
-                      'Preview Photo',
+                      'Lihat Photo',
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.orange, // Warna teks seperti hyperlink

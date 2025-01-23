@@ -70,7 +70,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
           },
         ),
         title: const Text(
-          'verification',
+          'Verifikasi',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
@@ -82,7 +82,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'verification',
+              'Verifikasi',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -90,7 +90,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
             ),
             SizedBox(height: 10),
             Text(
-              'Enter verification code',
+              'Masukan Code Verifikasi',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -104,12 +104,12 @@ class _CodecekscreenState extends State<Codecekscreen> {
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
-                      labelText: 'Verification Code',
+                      labelText: 'Verifikasi Code',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your verification';
+                        return 'Tolong Masukan Code Verifikasi';
                       }
                       return null;
                     },

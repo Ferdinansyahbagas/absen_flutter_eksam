@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart'; //
+import 'package:flutter/material.dart'; 
 import 'welcome_screen.dart'; // Mengimpor halaman welcome
 
 class SplashScreen extends StatefulWidget {

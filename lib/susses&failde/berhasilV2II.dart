@@ -24,7 +24,7 @@ class SuccessPage2II extends StatelessWidget {
             children: [
               SizedBox(height: 220),
               Text(
-                'You Apply For',
+                'Berhasil Mengirim',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -33,7 +33,7 @@ class SuccessPage2II extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Leave Permission',
+                'Pengajuan',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -42,7 +42,7 @@ class SuccessPage2II extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Have a good rest and a speedy recovery  👍​',
+                'Perbanyak Istirahat Dan Semoga Cepet Sembuh👍​',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.white70,
@@ -68,7 +68,7 @@ class SuccessPage2II extends StatelessWidget {
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },
-                child: Text('Back To Menu'),
+                child: Text('Kembali Ke Menu'),
               ),
             ],
           ),

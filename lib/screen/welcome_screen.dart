@@ -60,7 +60,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
             SizedBox(height: 2),
             Text(
-              'Welcome',
+              'Selamat Datang',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 36,
@@ -69,7 +69,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
             SizedBox(height: 10),
             Text(
-              'Log in first before you join us ✨',
+              'Silakan Login Terlebih Dahulu Sebelum Masuk✨',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
                 fontSize: 15,

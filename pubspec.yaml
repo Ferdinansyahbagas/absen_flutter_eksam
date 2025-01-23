@@ -30,20 +30,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  dio: ^5.0.0
+  intl: ^0.18.0
+  image: ^3.0.1
+  provider: ^6.0.0 
+  geolocator: ^10.0.1
   file_picker: ^5.2.3
   image_picker: ^0.8.4+8
-  intl: ^0.18.0
-  geolocator: ^10.0.1
   font_awesome_flutter: ^10.4.0
   smooth_page_indicator: ^1.2.0+3
-  provider: ^6.0.0 
   shared_preferences: ^2.3.2
   animated_custom_dropdown: ^3.1.1
   flutter_image_compress: ^2.3.0
   permission_handler: ^11.0.0
-  image: ^3.0.1
   url_launcher: ^6.0.20
-  dio: ^5.0.0
+  # flutter_local_notifications: ^15.0.0
+  # timezone: ^0.9.1
+  # flutter_native_timezone: ^2.0.0
+
   # firebase_messaging: ^14.0.0
   # flutter_html: ^2.2.1
   # flutter_local_notifications: ^18.0.1
@@ -53,7 +57,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.2.2
   geocoding: ^3.0.0
-  flutter_local_notifications: ^18.0.1
 
 dependency_overrides:
       win32: ^5.5.4

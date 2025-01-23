@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'TimeoffScreen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:absen/susses&failde/berhasilV2I.dart';
 import 'package:absen/susses&failde/gagalV2I.dart';
+import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TimeOff extends StatefulWidget {
   @override
@@ -28,7 +28,7 @@ class _TimeOffState extends State<TimeOff> {
   DateTime? selectedDate;
   List<String> _typeOptions = [];
   final _reasonController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -115,7 +115,6 @@ class _TimeOffState extends State<TimeOff> {
   }
 
   Future<void> _submitData() async {
-  
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -152,14 +151,14 @@ class _TimeOffState extends State<TimeOff> {
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
       request.fields['user_id'] = iduser.toString();
-      request.fields['notes'] = Reason!;
+      request.fields['notes'] = Reason;
       request.fields['startdate'] = formattedStartDate;
       request.fields['enddate'] = formattedEndDate;
       request.fields['type'] = type!;
 
       var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+      // var rp = await http.Response.fromStream(response);
+      // var data = jsonDecode(rp.body.toString());
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
@@ -282,7 +281,7 @@ class _TimeOffState extends State<TimeOff> {
               ),
               SizedBox(height: 24),
               Text(
-                'Type Time off',
+                'Tipe Cuti',
                 style: TextStyle(color: Colors.black54),
               ),
               SizedBox(height: 8),
@@ -313,7 +312,7 @@ class _TimeOffState extends State<TimeOff> {
               SizedBox(height: 16),
               TextFormField(
                 decoration: InputDecoration(
-                  labelText: 'Reason',
+                  labelText: 'Catatan',
                   labelStyle:
                       TextStyle(color: const Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
@@ -340,7 +339,8 @@ class _TimeOffState extends State<TimeOff> {
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  errorText: _isReasonEmpty ? 'Please enter a Reason' : null,
+                  errorText:
+                      _isReasonEmpty ? 'Tolong Masukan Alasan Anda' : null,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -354,7 +354,7 @@ class _TimeOffState extends State<TimeOff> {
                 onTap: () => _selectDate(context, true),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Start Date',
+                    labelText: 'Tanggal mulai',
                     labelStyle: TextStyle(
                         color: const Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
@@ -383,7 +383,7 @@ class _TimeOffState extends State<TimeOff> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     errorText: _isStartDateEmpty
-                        ? 'Date is required'
+                        ? 'Tolong Isi Tanggal Masuk'
                         : null, // Error message
                   ),
                   child: Row(
@@ -406,7 +406,7 @@ class _TimeOffState extends State<TimeOff> {
                 onTap: () => _selectDate(context, false),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'End Date',
+                    labelText: 'Tanggal Akhir',
                     labelStyle: TextStyle(
                         color: const Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
@@ -435,7 +435,7 @@ class _TimeOffState extends State<TimeOff> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     errorText: _isEndDateEmpty
-                        ? 'Date is required'
+                        ? 'Tolong Isi Tanggal Akhir'
                         : null, // Error message
                   ),
                   child: Row(
@@ -457,38 +457,40 @@ class _TimeOffState extends State<TimeOff> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                   onPressed: () async {
-      // Pastikan semua input sudah diisi
-      if (_selectedStartDate == null) {
-        setState(() {
-          _isStartDateEmpty = true;
-        });
-      }
-      if (_selectedEndDate == null) {
-        setState(() {
-          _isEndDateEmpty = true;
-        });
-      }
-      if (Reason.isEmpty) {
-        setState(() {
-          _isReasonEmpty = true;
-        });
-      }
+                  onPressed: () async {
+                    // Pastikan semua input sudah diisi
+                    if (_selectedStartDate == null) {
+                      setState(() {
+                        _isStartDateEmpty = true;
+                      });
+                    }
+                    if (_selectedEndDate == null) {
+                      setState(() {
+                        _isEndDateEmpty = true;
+                      });
+                    }
+                    if (Reason.isEmpty) {
+                      setState(() {
+                        _isReasonEmpty = true;
+                      });
+                    }
 
-      // Jika ada input yang belum diisi, jangan lanjutkan
-      if (_isStartDateEmpty || _isEndDateEmpty || _isReasonEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please complete all required fields.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
+                    // Jika ada input yang belum diisi, jangan lanjutkan
+                    if (_isStartDateEmpty ||
+                        _isEndDateEmpty ||
+                        _isReasonEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please complete all required fields.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
 
-      // Jika semua input valid, kirim data
-      await _submitData();
-    },
+                    // Jika semua input valid, kirim data
+                    await _submitData();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                     padding: EdgeInsets.symmetric(vertical: 16),

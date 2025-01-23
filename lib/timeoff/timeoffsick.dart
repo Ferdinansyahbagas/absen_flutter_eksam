@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'TimeoffScreen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:absen/susses&failde/berhasilV2II.dart';
 import 'package:absen/susses&failde/gagalV2II.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TimeOffSick extends StatefulWidget {
   @override
@@ -33,7 +33,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
   DateTime? selectedDate;
   final ImagePicker _picker = ImagePicker();
   // final _reasonController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -298,7 +298,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
               SizedBox(height: 24),
               TextFormField(
                 decoration: InputDecoration(
-                  labelText: 'Reason',
+                  labelText: 'Catatan',
                   labelStyle:
                       TextStyle(color: const Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
@@ -325,7 +325,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  errorText: _isReasonEmpty ? 'Please enter a Reason' : null,
+                  errorText: _isReasonEmpty ? 'Tolong Berikan Alasan Anda' : null,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -339,7 +339,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                 onTap: () => _selectDate(context, true),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Start Date',
+                    labelText: 'Tanggal Pertama',
                     labelStyle: TextStyle(
                         color: const Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
@@ -368,7 +368,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     errorText: _isStartDateEmpty
-                        ? 'Date is required'
+                        ? 'Tolong Isi Tanggal Pertama'
                         : null, // Error message
                   ),
                   child: Row(
@@ -391,7 +391,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                 onTap: () => _selectDate(context, false),
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'End Date',
+                    labelText: 'Tanggal Akhir',
                     labelStyle: TextStyle(
                         color: const Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
@@ -420,7 +420,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     errorText: _isEndDateEmpty
-                        ? 'Date is required'
+                        ? 'Tolong Isi Tanggal Akhir'
                         : null, // Error message
                   ),
                   child: Row(
@@ -471,7 +471,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                       const SizedBox(height: 3),
                       if (_image == null && !_isImageRequired)
                         const Text(
-                          'Upload Your Photo',
+                          'Upload Photo Anda ',
                           style: TextStyle(
                             fontSize: 14,
                             color: const Color.fromRGBO(101, 19, 116, 1),
@@ -519,7 +519,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                       );
                     },
                     child: const Text(
-                      'Preview Photo',
+                      'Lihat Photo',
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.orange, // Warna teks seperti hyperlink

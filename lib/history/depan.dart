@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
@@ -11,10 +11,10 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  String menitTelat = '';
-  String Totalday = '';
-  String menit = '';
   String day = '';
+  String menit = '';
+  String Totalday = '';
+  String menitTelat = '';
 
   @override
   void initState() {
@@ -309,7 +309,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       height: MediaQuery.of(context)
                                               .size
                                               .height *
-                                          0.40, // Atur tinggi sesuai kebutuhan
+                                          0.50, // Atur tinggi sesuai kebutuhan
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
@@ -381,7 +381,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      15), // Jarak horizontal
+                                                      16), // Jarak horizontal
 
                                               Text(
                                                 '${historyItem['duration']} Menit',
@@ -441,8 +441,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      70), // Jarak horizontal
-
+                                                      75), // Jarak horizontal
                                               Text(
                                                 historyItem['type']['name'],
                                                 style: TextStyle(
@@ -461,7 +460,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                               SizedBox(
                                                   width:
-                                                      20), // Jarak horizontal
+                                                      30), // Jarak horizontal
 
                                               Text(
                                                 historyItem['geolocation'],
@@ -541,49 +540,51 @@ class _HistoryScreenState extends State<HistoryScreen> {
         elevation: 0,
       ),
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCard(
-              title: "Your Total Work Entry",
-              value: '$day Days',
-              color: Colors.orange,
-            ),
-            _buildSubtitleCard(
-              subtitle: "Your Total Hours Work",
-              subtitleValue: '$menit Minutes',
-            ),
-            const SizedBox(height: 20),
-            _buildCard(
-              title: "You're Late For Work In Total",
-              value: "$Totalday Days",
-              color: Colors.orange,
-            ),
-            _buildSubtitleCard(
-              subtitle: "Total Hours You're Late For Work",
-              subtitleValue: "$menitTelat Minutes",
-            ),
-            const SizedBox(height: 160),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 101, 19, 116),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 100.0, vertical: 18.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCard(
+                title: "Total Masuk Kerja Anda",
+                value: '$day Days',
+                color: Colors.orange,
+              ),
+              _buildSubtitleCard(
+                subtitle: "Total Jam Kerja Anda",
+                subtitleValue: '$menit Minutes',
+              ),
+              const SizedBox(height: 20),
+              _buildCard(
+                title: "Anda Terlambat Kerja Secara Total",
+                value: "$Totalday Days",
+                color: Colors.orange,
+              ),
+              _buildSubtitleCard(
+                subtitle: "Total Jam Anda Terlambat Masuk Kerja",
+                subtitleValue: "$menitTelat Minutes",
+              ),
+              const SizedBox(height: 150),
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 101, 19, 116),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 80.0, vertical: 18.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  onPressed: () => getHistoryData(context),
+                  child: const Text(
+                    'Cek History Anda',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
-                onPressed: () => getHistoryData(context),
-                child: const Text(
-                  'Cek Your History',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

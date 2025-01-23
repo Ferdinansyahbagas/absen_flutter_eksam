@@ -81,7 +81,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
+      child : Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -169,6 +170,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

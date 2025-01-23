@@ -1,8 +1,8 @@
-import 'package:absen/Reimbursement/Reimbursementscreen.dart';
-import 'package:absen/homepage/home.dart';
-import 'package:absen/timeoff/TimeoffScreen.dart';
-import 'package:absen/profil/profilscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:absen/homepage/home.dart';
+import 'package:absen/profil/profilscreen.dart';
+import 'package:absen/timeoff/TimeoffScreen.dart';
+import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:absen/utils/notification_helper.dart';
@@ -19,9 +19,9 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  List<dynamic> notifications = [];
-  bool hasUnreadNotifications = false;
   bool isLoading = true;
+  bool hasUnreadNotifications = false;
+  List<dynamic> notifications = [];
 
   @override
   void initState() {
@@ -129,6 +129,15 @@ class _NotificationPageState extends State<NotificationPage> {
         backgroundColor: Colors.orange,
         title: Text('Notification', style: TextStyle(color: Colors.white)),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            ); // Handle back button press
+          },
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(

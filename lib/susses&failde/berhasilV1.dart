@@ -1,10 +1,10 @@
 //Clock In and Out SuccessPage
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; // Package to format the date and time
 import 'dart:convert';
+import 'package:intl/intl.dart'; // Package to format the date and time
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SuccessPage extends StatefulWidget {
   @override
@@ -70,7 +70,7 @@ class _SuccessPageState extends State<SuccessPage> {
             children: [
               SizedBox(height: 150),
               Text(
-                'Your Absence Was',
+                'Absen Anda Telah',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -79,7 +79,7 @@ class _SuccessPageState extends State<SuccessPage> {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Successful✨​ ',
+                'Berhasil Di Rekam✨​ ',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class _SuccessPageState extends State<SuccessPage> {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Great, now You Can Start Working 👍​',
+                'Bagus, Sekarang Kamu Bisa Bekerja👍​',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.white70,
@@ -131,7 +131,7 @@ class _SuccessPageState extends State<SuccessPage> {
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },
-                child: Text('Back To Menu'),
+                child: Text('Kembali Ke Menu'),
               ),
             ],
           ),

@@ -14,7 +14,7 @@ class FailurePage2I extends StatelessWidget {
             children: [
               SizedBox(height: 200),
               Text(
-                'Your Leave',
+                'Anda Gagal',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -23,7 +23,7 @@ class FailurePage2I extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Permission Is',
+                'Mengirimkan',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -32,7 +32,7 @@ class FailurePage2I extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Failed ​😑​🙏​',
+                'Pengajuan ​😑​🙏​',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -41,7 +41,7 @@ class FailurePage2I extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Try Again',
+                'Coba Lagi',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.black54,
@@ -66,7 +66,7 @@ class FailurePage2I extends StatelessWidget {
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },
-                child: Text('Back To Menu'),
+                child: Text('Kembali Ke Menu'),
               ),
             ],
           ),

@@ -80,7 +80,7 @@ class SuccessPage3 extends StatelessWidget {
                     (route) => false,
                   );  // Action when back to menu button is pressed
                 },
-                child: Text('Back To Menu'),
+                child: Text('Kembali ke Menu'),
               ),
             ],
           ),

@@ -1,15 +1,15 @@
 //nanti jangan lupa ganti nama filenya
 import 'package:flutter/material.dart';
-import 'package:absen/homepage/notif.dart';
-import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:absen/homepage/home.dart';
-import 'package:absen/profil/profilscreen.dart';
+import 'package:absen/homepage/notif.dart';
 import 'package:absen/timeoff/tiimeoff.dart';
 import 'package:absen/timeoff/timeoffsick.dart';
+import 'package:absen/profil/profilscreen.dart';
+import 'package:absen/Reimbursement/Reimbursementscreen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:absen/utils/notification_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class TimeOffScreen extends StatefulWidget {
   @override
@@ -233,7 +233,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                         MainAxisAlignment.center, // Tengah vertikal
                     children: [
                       Text(
-                        'Your Remaining\nLeave Is',
+                        'Sisa Cuti Anda \nAdalah',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
@@ -300,7 +300,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                 ); // Handle Apply for Time Off
               },
               child: Center(
-                  child: Text('Apply for Time Off',
+                  child: Text('Izin Untuk Cuti',
                       style: TextStyle(color: Colors.white))),
             ),
 
@@ -323,7 +323,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                 // Handle Apply for Sick Rest
               },
               child: Center(
-                  child: Text('Apply For Sick Rest',
+                  child: Text('Izin Untuk Sakit',
                       style: TextStyle(color: Colors.white))),
             ),
             SizedBox(height: 20),

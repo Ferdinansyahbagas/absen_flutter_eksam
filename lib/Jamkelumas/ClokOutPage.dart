@@ -1,14 +1,14 @@
-import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:absen/susses&failde/berhasilV1.dart';
+import 'package:absen/homepage/home.dart';
 import 'package:absen/susses&failde/gagalV1.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/susses&failde/berhasilV1.dart';
+import 'dart:io';
 import 'dart:convert';
-import 'package:http_parser/http_parser.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ClockOutScreen extends StatefulWidget {
   const ClockOutScreen({super.key});
@@ -18,12 +18,12 @@ class ClockOutScreen extends StatefulWidget {
 }
 
 class _ClockOutScreenState extends State<ClockOutScreen> {
+  File? _image;
+  String note = '';
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
-  String note = '';
-  File? _image;
-  bool _isImageRequired = false;
   bool _isNoteRequired = false;
+  bool _isImageRequired = false;
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
   final ImagePicker _picker = ImagePicker();
@@ -322,7 +322,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                       const SizedBox(height: 3),
                       if (_image == null && !_isImageRequired)
                         const Text(
-                          'Upload Your Photo',
+                          'Upload Photo Anda',
                           style: TextStyle(
                             fontSize: 14,
                             color: const Color.fromRGBO(101, 19, 116, 1),
@@ -368,7 +368,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                       );
                     },
                     child: const Text(
-                      'Preview Photo',
+                      'Lihat Photo',
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.orange, // Warna teks seperti hyperlink

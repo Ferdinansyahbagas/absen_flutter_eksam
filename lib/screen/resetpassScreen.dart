@@ -96,7 +96,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             ),
             SizedBox(height: 10),
             Text(
-              'Enter your new password',
+              'Masukan Password Baru Anda',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -111,7 +111,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     controller: _emailController,
                     obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
-                      labelText: 'Reset your password',
+                      labelText: 'Reset password Anda',
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                             color: Colors.grey), // Border saat tidak fokus
@@ -147,7 +147,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return 'Tolong Masukan Password Anda';
                       }
                       return null;
                     },
@@ -157,7 +157,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     controller: _confirmPasswordController,
                     obscureText: !_isConfirmPasswordVisible,
                     decoration: InputDecoration(
-                      labelText: 'Confirm your password',
+                      labelText: 'Konfirmasi Password Baru Anda',
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey),
                         borderRadius: BorderRadius.circular(12),
@@ -190,9 +190,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
+                        return 'Yolong konfirmasi Terlebih Dahulu Password Baru Anda';
                       } else if (value != _emailController.text) {
-                        return 'Passwords do not match';
+                        return 'Password Tidak Sesuai';
                       }
                       return null;
                     },

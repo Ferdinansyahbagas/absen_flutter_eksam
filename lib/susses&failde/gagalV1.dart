@@ -14,7 +14,7 @@ class FailurePage extends StatelessWidget {
             children: [
               SizedBox(height: 200),
               Text(
-                'Your Absent',
+                'Absen Anda',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -23,7 +23,7 @@ class FailurePage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'Failed ​😑​🙏​',
+                'Gagal ​😑​🙏​',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -32,7 +32,7 @@ class FailurePage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               Text(
-                'your absent failed try absent again',
+                'Absen Anda Gagal, Coba Lagi Nanti',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.black54,
@@ -57,7 +57,7 @@ class FailurePage extends StatelessWidget {
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },
-                child: Text('Back To Menu'),
+                child: Text('Kembali Ke Menu'),
               ),
             ],
           ),

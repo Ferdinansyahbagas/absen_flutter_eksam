@@ -118,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 8.0),
                 Text(
-                  "Log in first before you join us ✨",
+                  "Silakan Login Terlebih Dahulu Sebelum Masuk✨",
                   style: TextStyle(
                     fontSize: 16.0,
                     color: Colors.grey[600],
@@ -212,4 +212,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
- 

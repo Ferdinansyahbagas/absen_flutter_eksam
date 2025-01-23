@@ -264,8 +264,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       final response = await request.send();
       if (response.statusCode == 200) {
-        final responseBody = await http.Response.fromStream(response);
-        final data = jsonDecode(responseBody.body);
+        // final responseBody = await http.Response.fromStream(response);
+        // final data = jsonDecode(responseBody.body);
       } else {}
     } catch (e) {
       print("Error: $e");
@@ -462,7 +462,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: 150,
             color: Colors.grey[300],
             child: imageUrl != null && Uri.parse(imageUrl).isAbsolute
-                ? Image.network(imageUrl, fit: BoxFit.cover)
+                ? Image.network(imageUrl)
                 : imageUrl != null
                     ? Image.file(File(imageUrl), fit: BoxFit.cover)
                     : Center(
@@ -1077,14 +1077,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       _buildNohp(
-                        title: 'Phone Number',
+                        title: 'Nomor HP',
                         value: phoneNumber,
                         onEdit: (newValue) => setState(() {
                           phoneNumber = newValue; // Update value setelah edit
                         }),
                       ),
                       _buildProfileItem(
-                        title: 'Address',
+                        title: 'Alamat',
                         value: address,
                         onEdit: (newValue) => setState(() {
                           address = newValue; // Update value setelah edit
@@ -1096,29 +1096,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: const Color.fromRGBO(101, 19, 116, 1),
                       ),
                       _buildProfileItem(
-                        title: 'ID Card Address',
+                        title: 'Alamat KTP',
                         value: idCardAddress,
                         onEdit: (newValue) => setState(() {
                           idCardAddress = newValue; // Update value setelah edit
                         }),
                       ),
                       SizedBox(height: 14),
-                      _buildImageCardId(
-                          "ID Card Image", idCardImageUrl, 'ID CARD'),
+                      _buildImageCardId("Foto KTP", idCardImageUrl, 'ID CARD'),
                       const Divider(
                         height: 30,
                         thickness: 1,
                         color: const Color.fromRGBO(101, 19, 116, 1),
                       ),
-                      _buildImageCard("CV Image", cvImageUrl, 'CV'),
+                      _buildImageCard("Foto CV", cvImageUrl, 'CV'),
                       SizedBox(height: 14),
                       _buildProfileItem(
-                        title: 'Employment Contract Start',
+                        title: 'Kontrak Kerja Mulai',
                         value: employmentStart,
                         isEditable: false, // Tidak bisa diedit
                       ),
                       _buildProfileItem(
-                        title: 'Employment Contract End',
+                        title: 'Kontrak Kerja Akhir',
                         value: employmentEnd,
                         isEditable: false, // Tidak bisa diedit
                       ),
@@ -1127,7 +1126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Education',
+                            'Pendidikan',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -1224,7 +1223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(height: 14),
                       _buildNohp(
-                        title: 'Leave Limit',
+                        title: 'Batas Cuti',
                         value: Limit,
                         isEditable: false, // Tidak bisa diedit
                       ),

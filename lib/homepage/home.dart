@@ -6,16 +6,15 @@ import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
 import 'package:absen/jamkelumas/clokOutPage.dart'; // Mengimpor halaman clockout
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
-import 'package:geolocator/geolocator.dart'; //tempat
-import 'package:geocoding/geocoding.dart'; //kordinat
-import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'dart:async'; // Untuk timer
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'dart:convert';
+import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'package:http/http.dart' as http; // menyambungakan ke API
+import 'package:geocoding/geocoding.dart'; //kordinat
+import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-// import 'package:flutter_html/flutter_html.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,31 +25,30 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   PageController _pageController =
       PageController(); // PageController for PageView
-  String? currentCity; // Menyimpan nama kota
-  String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String? name = ""; // Variabel untuk name pengguna
   String? message; //variabel untuk th messange
+  String? avatarUrl; // Variable untuk avatar gambar
+  String? currentCity; // Menyimpan nama kota
+  String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
-  String? avatarUrl;
-  Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
+  Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   int currentIndex = 0; // Default to the home page
   int _currentPage = 0; // Variable to keep track of the current page
-  int holiday = 0;
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
-  bool hasHoliday = false;
   bool hasClockedIn = false; // Status clock-in biasa
   bool hasClockedOut = false; // Status clock-out biasa
   bool hasClockedInOvertime = false; // Status clock-in lembur
   bool hasClockedOutOvertime = false; // Status clock-out lembur
-  bool isCuti = false;
+  bool isCuti = false; // Status untuk menampilkan card cuti
   bool showNote = true; // Status untuk menampilkan note
-  bool isSuccess = false; // Status untuk menampilkan card
+  bool isSuccess = false; // Status untuk menampilkan card berhasil absen
   bool isLate = false; // Status untuk card terlambat
   bool isholiday = false; //status untuk card libur
   bool isovertime = false; //status untuk card lembur
-  bool hasUnreadNotifications = false;
-  List<dynamic> notifications = [];
+  bool hasUnreadNotifications =
+      false; //Status untuk melihat notifikasi sudah di baca atau belum
+  List<dynamic> notifications = []; //variabel noifiaksi
   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
 
   @override
@@ -165,7 +163,7 @@ class _HomePageState extends State<HomePage> {
     if (!serviceEnabled) {
       // Jika layanan lokasi tidak aktif, tampilkan pesan "Location not available"
       setState(() {
-        currentCity = 'Location not available';
+        currentCity = 'Lokasi tidak tersedia';
         isLoadingLocation = false;
       });
       return;
@@ -178,7 +176,7 @@ class _HomePageState extends State<HomePage> {
       if (permission == LocationPermission.denied) {
         // Jika izin lokasi ditolak, tampilkan pesan "Location not available"
         setState(() {
-          currentCity = 'Location not available';
+          currentCity = 'Lokasi tidak tersedia';
           isLoadingLocation = false;
         });
         return;
@@ -188,7 +186,7 @@ class _HomePageState extends State<HomePage> {
     if (permission == LocationPermission.deniedForever) {
       // Jika izin lokasi ditolak selamanya, tampilkan pesan "Location not available"
       setState(() {
-        currentCity = 'Location not available';
+        currentCity = 'Lokasi tidak tersedia';
         isLoadingLocation = false;
       });
       return;
@@ -212,7 +210,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       // Jika ada error lainnya, tampilkan pesan "Location not available"
       setState(() {
-        currentCity = 'Location not available';
+        currentCity = 'Lokasi tidak tersedia';
         isLoadingLocation = false;
       });
     }
@@ -230,6 +228,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+// fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
     final url = Uri.parse(
         'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
@@ -317,6 +316,7 @@ class _HomePageState extends State<HomePage> {
       print('Error occurred: $e');
     }
   }
+  //sampai sini buat notifikasi
 
   // Fungsi untuk mengambil data dari API townhall
   Future<void> getPengumuman() async {
@@ -330,13 +330,15 @@ class _HomePageState extends State<HomePage> {
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
+      print(data);
 
       if (rp.statusCode == 200) {
         setState(() {
-          announcements = List<String>.from(
-            data['data'].map((item) => item['message']),
-          );
+          announcements = List<String>.from(data['data']
+              .where((item) => item['status']['id'] == 1)
+              .map((item) => item['message'])).toList();
         });
+        print(announcements);
       } else {
         print('Error fetching announcements: ${rp.statusCode}');
         print(rp.body);
@@ -392,16 +394,7 @@ class _HomePageState extends State<HomePage> {
         if (hasClockedIn) {
           showNote = false;
 
-          // Periksa waktu clock-in
-          // final now = DateTime.now();
-          // if (now.hour < 8) {
-          //   isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
-          // } else {
-          //   isLate = true; // Clock-in terlambat setelah jam 8 pagi
-          // }
           final hasHoliday = data['data']['attendance_status_id'] ?? false;
-          holiday = hasHoliday;
-
           if (hasHoliday == 5) {
             isholiday = true;
           } else {
@@ -450,16 +443,11 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         hasClockedInOvertime = data['message'] != 'belum clock-in';
-        hasClockedInOvertime = holiday == 5;
         if (hasClockedInOvertime) {
           showNote = false;
           isSuccess = false;
           isholiday = false;
-          if (holiday == 5) {
-            isholiday = true;
-          } else {
-            isovertime = true;
-          }
+          isovertime = true;
         }
       });
     } catch (e) {
@@ -481,7 +469,6 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         hasClockedOutOvertime = data['message'] != 'belum clock-out';
-        hasClockedOutOvertime = holiday == 5;
       });
     } catch (e) {
       print("Error mengecek status clock-out: $e");
@@ -620,8 +607,9 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 20),
+                  // menamplakan nama pengguna
                   Text(
-                    'Welcome Back,\n $name',
+                    'Selamat Datang, \n$name',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 26,
@@ -629,7 +617,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const Text(
-                    'Don\'t Forget To Clock In Today ✨',
+                    'Jangan Lupa Absen Hari ini✨',
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
@@ -647,11 +635,13 @@ class _HomePageState extends State<HomePage> {
                         // untuk melihat kota / lokasi terkini
                         Text(
                           isLoadingLocation
-                              ? 'Loading your location...'
-                              : 'Your Location Is Now In $currentCity',
-                          style: const TextStyle(color: Colors.black54),
+                              ? 'Memuat lokasi Anda...'
+                              : 'Lokasi Anda Sekarang Ada Di $currentCity',
+                          style: const TextStyle(
+                              color: Colors.black54, fontSize: 12),
                         ),
-                        //menampilkan jam format
+                        const SizedBox(height: 8),
+                        //menampilkan hari dan tanggal
                         Text(
                           DateFormat('EEEE, dd MMMM yyyy')
                               .format(DateTime.now()),
@@ -660,7 +650,7 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 18),
                         if (!hasClockedOut) ...[
                           // Clock In & Clock Out buttons
                           Row(
@@ -853,6 +843,7 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 20),
+                  //card untuk absen biasa
                   if (isSuccess)
                     Card(
                       color: Colors.orange,
@@ -872,7 +863,7 @@ class _HomePageState extends State<HomePage> {
                             // Teks Kiri
                             Flexible(
                               child: Text(
-                                '✨ Your Absence \n Was Successful ✨',
+                                '✨Absen Anda \nTelah Berhasil ✨',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -883,7 +874,7 @@ class _HomePageState extends State<HomePage> {
                             // Teks Kanan
                             Flexible(
                               child: Text(
-                                'Good work and \n keep up the spirit',
+                                'Kerja bagus dan \ntetap semangat',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                     color: Colors.white70, fontSize: 10),
@@ -893,6 +884,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
+                  //card untuk lembur
                   if (isovertime)
                     Card(
                       color: Colors.redAccent,
@@ -912,7 +904,7 @@ class _HomePageState extends State<HomePage> {
                             // Teks Kiri
                             Flexible(
                               child: Text(
-                                '💥 You’re Late!, \n Let’s In Now💥',
+                                '💥Anda Sedang \nLembur Sekarang💥',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -923,16 +915,17 @@ class _HomePageState extends State<HomePage> {
                             // Teks Kanan
                             Flexible(
                               child: Text(
-                                'Good work and \n keep up the spirit',
+                                'Kerja bagus dan \ntetap semangat',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
-                                    color: Colors.white70, fontSize: 10),
+                                    color: Colors.white70, fontSize: 12),
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
+                  //card untuk cuti
                   if (isholiday)
                     Card(
                       color: Colors.green,
@@ -950,7 +943,7 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              '🌴 You’re on Leave 🌴',
+                              '🌴Selamat Liburan/ \n Istirahat🌴',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -959,7 +952,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             Flexible(
                               child: Text(
-                                'Enjoy your time off!',
+                                'Nikmati waktu \nistirahat Anda!',
                                 textAlign: TextAlign.right,
                                 style: TextStyle(
                                     color: Colors.white70, fontSize: 14),
@@ -972,7 +965,7 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 20),
                   // Bagian Announcement
                   const Text(
-                    'Announcement',
+                    'Pengumuman',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -980,80 +973,258 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 10),
+                  // Slider untuk pengumuman
                   Container(
                     height: 150,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       color: Colors.grey[300],
                     ),
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        PageView.builder(
-                          controller: _pageController,
-                          itemCount: announcements.length,
-                          itemBuilder: (context, index) {
-                            final message = announcements[index];
-
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        AnnouncementDetailPage(
-                                      message: message,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Colors.white,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    message,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
+                    child: announcements.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Hari ini tidak ada pengumuman',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple,
                               ),
-                            );
-                          },
-                          onPageChanged: (int index) {
-                            setState(() {
-                              _currentPage = index;
-                            });
-                          },
-                        ),
-                        // Tambahkan indikator
-                        Positioned(
-                          bottom: 10,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: SmoothPageIndicator(
-                              controller: _pageController,
-                              count: announcements.length,
-                              effect: ExpandingDotsEffect(
-                                activeDotColor:
-                                    const Color.fromARGB(255, 101, 19, 116),
-                                dotColor: Colors.grey,
-                                dotHeight: 8,
-                                dotWidth: 8,
-                              ),
+                              textAlign: TextAlign.center,
                             ),
+                          )
+                        : Stack(
+                            alignment: Alignment.bottomCenter,
+                            children: [
+                              PageView.builder(
+                                controller: _pageController,
+                                itemCount: announcements.length,
+                                itemBuilder: (context, index) {
+                                  final message = announcements[index];
+
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              AnnouncementDetailPage(
+                                            message: message,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.white,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          message,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color.fromARGB(
+                                                255, 101, 19, 116),
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onPageChanged: (int index) {
+                                  setState(() {
+                                    _currentPage = index;
+                                  });
+                                },
+                              ),
+                              // Tambahkan indikator
+                              Positioned(
+                                bottom: 10,
+                                left: 0,
+                                right: 0,
+                                child: Center(
+                                  child: SmoothPageIndicator(
+                                    controller: _pageController,
+                                    count: announcements.length,
+                                    effect: ExpandingDotsEffect(
+                                      activeDotColor: const Color.fromARGB(
+                                          255, 101, 19, 116),
+                                      dotColor: Colors.grey,
+                                      dotHeight: 8,
+                                      dotWidth: 8,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
+                  // ini fungsi kalo tidak ada pengumuman maka kosong
+                  // Container(
+                  //   height: 150,
+                  //   decoration: BoxDecoration(
+                  //     borderRadius: BorderRadius.circular(12),
+                  //     color: Colors.grey[300],
+                  //   ),
+                  //   child: Stack(
+                  //     alignment: Alignment.bottomCenter,
+                  //     children: [
+                  //       PageView.builder(
+                  //         controller: _pageController,
+                  //         itemCount: announcements.length,
+                  //         itemBuilder: (context, index) {
+                  //           final message = announcements[index];
+
+                  //           return GestureDetector(
+                  //             onTap: () {
+                  //               Navigator.push(
+                  //                 context,
+                  //                 MaterialPageRoute(
+                  //                   builder: (context) =>
+                  //                       AnnouncementDetailPage(
+                  //                     message: message,
+                  //                   ),
+                  //                 ),
+                  //               );
+                  //             },
+                  //             child: Container(
+                  //               padding: const EdgeInsets.all(10),
+                  //               decoration: BoxDecoration(
+                  //                 borderRadius: BorderRadius.circular(12),
+                  //                 color: Colors.white,
+                  //               ),
+                  //               child: Center(
+                  //                 child: Text(
+                  //                   message,
+                  //                   style: const TextStyle(
+                  //                     fontSize: 16,
+                  //                     fontWeight: FontWeight.bold,
+                  //                   ),
+                  //                   textAlign: TextAlign.center,
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //           );
+                  //         },
+                  //         onPageChanged: (int index) {
+                  //           setState(() {
+                  //             _currentPage = index;
+                  //           });
+                  //         },
+                  //       ),
+                  //       // Tambahkan indikator
+                  //       Positioned(
+                  //         bottom: 10,
+                  //         left: 0,
+                  //         right: 0,
+                  //         child: Center(
+                  //           child: SmoothPageIndicator(
+                  //             controller: _pageController,
+                  //             count: announcements.length,
+                  //             effect: ExpandingDotsEffect(
+                  //               activeDotColor:
+                  //                   const Color.fromARGB(255, 101, 19, 116),
+                  //               dotColor: Colors.grey,
+                  //               dotHeight: 8,
+                  //               dotWidth: 8,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+
+//ini fungsi jika mau annoouncement nya menghilang
+                  //    if (announcements.isNotEmpty) ...[
+                  //   const Text(
+                  //     'Announcement',
+                  //     style: TextStyle(
+                  //       fontSize: 18,
+                  //       fontWeight: FontWeight.bold,
+                  //       color: Colors.purple,
+                  //     ),
+                  //   ),
+                  //   const SizedBox(height: 10),
+                  //   // Slider untuk pengumuman
+                  //   Container(
+                  //     height: 150,
+                  //     decoration: BoxDecoration(
+                  //       borderRadius: BorderRadius.circular(12),
+                  //       color: Colors.grey[300],
+                  //     ),
+                  //     child: Stack(
+                  //       alignment: Alignment.bottomCenter,
+                  //       children: [
+                  //         PageView.builder(
+                  //           controller: _pageController,
+                  //           itemCount: announcements.length,
+                  //           itemBuilder: (context, index) {
+                  //             final message = announcements[index];
+
+                  //             return GestureDetector(
+                  //               onTap: () {
+                  //                 Navigator.push(
+                  //                   context,
+                  //                   MaterialPageRoute(
+                  //                     builder: (context) =>
+                  //                         AnnouncementDetailPage(
+                  //                       message: message,
+                  //                     ),
+                  //                   ),
+                  //                 );
+                  //               },
+                  //               child: Container(
+                  //                 padding: const EdgeInsets.all(10),
+                  //                 decoration: BoxDecoration(
+                  //                   borderRadius: BorderRadius.circular(12),
+                  //                   color: Colors.white,
+                  //                 ),
+                  //                 child: Center(
+                  //                   child: Text(
+                  //                     message,
+                  //                     style: const TextStyle(
+                  //                       fontSize: 16,
+                  //                       fontWeight: FontWeight.bold,
+                  //                       color: Colors.purple,
+                  //                     ),
+                  //                     textAlign: TextAlign.center,
+                  //                   ),
+                  //                 ),
+                  //               ),
+                  //             );
+                  //           },
+                  //           onPageChanged: (int index) {
+                  //             setState(() {
+                  //               _currentPage = index;
+                  //             });
+                  //           },
+                  //         ),
+                  //         // Tambahkan indikator
+                  //         Positioned(
+                  //           bottom: 10,
+                  //           left: 0,
+                  //           right: 0,
+                  //           child: Center(
+                  //             child: SmoothPageIndicator(
+                  //               controller: _pageController,
+                  //               count: announcements.length,
+                  //               effect: ExpandingDotsEffect(
+                  //                 activeDotColor: Colors.purple,
+                  //                 dotColor: Colors.white,
+                  //                 dotHeight: 8,
+                  //                 dotWidth: 8,
+                  //               ),
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ],
                   SizedBox(height: 20),
                   // Note Section
                   Padding(
@@ -1091,7 +1262,7 @@ class _HomePageState extends State<HomePage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'Today was Good, good work 👏',
+                                  'Jangan Lupa Absen Hari Ini👏',
                                   style: TextStyle(fontSize: 11),
                                 ),
                                 ElevatedButton(
@@ -1239,6 +1410,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// tampilan dalam announcement
 class AnnouncementDetailPage extends StatelessWidget {
   final String message;
 
