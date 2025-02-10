@@ -12,6 +12,8 @@ import 'package:absen/utils/notification_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TimeOffScreen extends StatefulWidget {
+  const TimeOffScreen({super.key});
+
   @override
   _TimeOffScreenState createState() => _TimeOffScreenState();
 }
@@ -32,7 +34,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
 
   Future<void> getNotif() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+        'https://portal.eksam.cloud/api/v1/other/get-self-notification');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -88,7 +90,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
 
   Future<void> putRead(int id) async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+        'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
     var request = http.MultipartRequest('PUT', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -120,8 +122,8 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
 
   Future<void> getProfile() async {
     {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
 
       var request = http.MultipartRequest('GET', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -157,7 +159,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
   Future<void> getHistoryData() async {
     {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/request-history/get-user-history');
+          'https://portal.eksam.cloud/api/v1/request-history/get-user-history');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
@@ -187,7 +189,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Time Off',
           style: TextStyle(
             color: Colors.black,
@@ -196,11 +198,11 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => HomePage()),
+              MaterialPageRoute(builder: (context) => const HomePage()),
             );
           },
         ),
@@ -214,11 +216,12 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Remaining Leave
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Container(
               width: double.infinity,
               height: 140,
-              padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 243, 147, 4),
                 borderRadius: BorderRadius.circular(9),
@@ -227,7 +230,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Teks di sebelah kiri
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment:
                         MainAxisAlignment.center, // Tengah vertikal
@@ -252,14 +255,14 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                       children: [
                         Text(
                           limit.toString(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 50,
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4.0),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4.0),
                           child: Text(
                             '/',
                             style: TextStyle(
@@ -269,7 +272,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                             ),
                           ),
                         ),
-                        Text(
+                        const Text(
                           '12',
                           style: TextStyle(
                             fontSize: 20,
@@ -283,12 +286,12 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             // Apply for Time Off Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 101, 19, 116),
-                padding: EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // Set Border Radius
                 ),
@@ -296,21 +299,21 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => TimeOff()),
+                  MaterialPageRoute(builder: (context) => const TimeOff()),
                 ); // Handle Apply for Time Off
               },
-              child: Center(
+              child: const Center(
                   child: Text('Izin Untuk Cuti',
                       style: TextStyle(color: Colors.white))),
             ),
 
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
             // Apply for Sick Rest Button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 101, 19, 116),
-                padding: EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // Set Border Radius
                 ),
@@ -318,17 +321,17 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => TimeOffSick()),
+                  MaterialPageRoute(builder: (context) => const TimeOffSick()),
                 );
                 // Handle Apply for Sick Rest
               },
-              child: Center(
+              child: const Center(
                   child: Text('Izin Untuk Sakit',
                       style: TextStyle(color: Colors.white))),
             ),
-            SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Text(
                 'History Time Off',
                 style: TextStyle(
@@ -345,10 +348,11 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                 itemBuilder: (context, index) {
                   final item = historyData[index] as Map<String, dynamic>;
                   return Container(
-                    margin: EdgeInsets.only(bottom: 16),
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 20),
                     decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 236, 81, 109),
+                      color: const Color.fromARGB(255, 236, 81, 109),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -361,7 +365,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                             Text(
                               item['type']['name']?.toString() ??
                                   'Unknown Type', // Hanya menampilkan nama tipe
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 25,
                                 fontWeight: FontWeight.bold,
@@ -369,7 +373,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                             ),
                             Text(
                               '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                               ),
@@ -379,17 +383,17 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                         // Catatan atau deskripsi
                         Text(
                           item['notes']?.toString() ?? 'No reason provided',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 14,
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         // Status pengajuan
                         Align(
                           alignment: Alignment.center,
                           child: Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 8, horizontal: 110),
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -398,7 +402,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                             child: Text(
                               item['status']['name']?.toString() ??
                                   'Unknown Status',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.pink,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -418,7 +422,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'), // Custom icon
               size: 18,
@@ -426,7 +430,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             ),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/timeoff.png'), // Custom icon
               size: 22,
@@ -434,14 +438,14 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             ),
             label: 'Time Off',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.receipt, size: 25),
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               children: [
-                ImageIcon(
+                const ImageIcon(
                   AssetImage('assets/icon/notifikasi.png'),
                   size: 20,
                   color: Colors.white,
@@ -450,7 +454,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                   future: NotificationHelper.hasUnreadNotifications(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data == true) {
-                      return Positioned(
+                      return const Positioned(
                         right: 0,
                         top: 0,
                         child: Icon(
@@ -460,14 +464,14 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                         ),
                       );
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 ),
               ],
             ),
             label: 'Notification',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/profil.png'), // Custom icon
               size: 20,
@@ -501,19 +505,21 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ReimbursementPage()),
+                MaterialPageRoute(
+                    builder: (context) => const ReimbursementPage()),
               );
               break;
             case 3:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
+                MaterialPageRoute(
+                    builder: (context) => const NotificationPage()),
               );
               break;
             case 4:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
               break;
           }
@@ -529,7 +535,8 @@ class TimeOffCard extends StatelessWidget {
   final String date;
   final String status;
 
-  TimeOffCard({
+  const TimeOffCard({
+    super.key,
     required this.title,
     required this.description,
     required this.date,
@@ -539,7 +546,8 @@ class TimeOffCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      color: Colors.pink[400],
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -547,18 +555,18 @@ class TimeOffCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             Text(description),
-            SizedBox(height: 5),
-            Text(date, style: TextStyle(fontSize: 12, color: Colors.grey)),
-            SizedBox(height: 10),
-            Text(status, style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 5),
+            Text(date,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 10),
+            Text(status, style: const TextStyle(color: Colors.white)),
           ],
         ),
       ),
-      color: Colors.pink[400],
     );
   }
 }

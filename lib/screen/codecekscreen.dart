@@ -6,6 +6,8 @@ import 'package:http/http.dart';
 import 'dart:convert';
 
 class Codecekscreen extends StatefulWidget {
+  const Codecekscreen({super.key});
+
   @override
   _CodecekscreenState createState() => _CodecekscreenState();
 }
@@ -19,7 +21,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
   Future<void> _submit() async {
     try {
       Response response = await post(
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/password/code-check'),
+        Uri.parse('https://portal.eksam.cloud/api/v1/auth/password/code-check'),
         body: {
           'code': _emailController.text.toString(),
         },
@@ -39,7 +41,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
         // Fungsi pindah halaman
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
+          MaterialPageRoute(builder: (context) => const ResetPasswordScreen()),
         );
       } else {
         var data = jsonDecode(response.body.toString());
@@ -65,7 +67,8 @@ class _CodecekscreenState extends State<Codecekscreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+              MaterialPageRoute(
+                  builder: (context) => const ForgotPasswordPage()),
             );
           },
         ),
@@ -81,14 +84,14 @@ class _CodecekscreenState extends State<Codecekscreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'Verifikasi',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               'Masukan Code Verifikasi',
               style: TextStyle(
@@ -96,14 +99,14 @@ class _CodecekscreenState extends State<Codecekscreen> {
                 color: Colors.grey[600],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Form(
               key: _formKey,
               child: Column(
                 children: [
                   TextFormField(
                     controller: _emailController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Verifikasi Code',
                       border: OutlineInputBorder(),
                     ),
@@ -114,19 +117,19 @@ class _CodecekscreenState extends State<Codecekscreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   if (errorMessage != null)
                     Text(
                       errorMessage!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                       ),
                     ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [Colors.orange, Colors.pink, Colors.purple],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
@@ -136,12 +139,12 @@ class _CodecekscreenState extends State<Codecekscreen> {
                       onPressed: _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        minimumSize: Size(double.infinity, 50),
+                        minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Submit',
                         style: TextStyle(
                           fontSize: 18.0,

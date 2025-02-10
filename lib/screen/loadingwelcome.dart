@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 import 'welcome_screen.dart'; // Mengimpor halaman welcome
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -10,10 +12,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
       );
     });
   }
@@ -22,12 +24,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
             Colors.orange,
             Colors.pink,
-            const Color.fromARGB(255, 101, 19, 116),
+            Color.fromARGB(255, 101, 19, 116),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

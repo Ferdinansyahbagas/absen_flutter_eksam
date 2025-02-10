@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SuccessPage extends StatefulWidget {
+  const SuccessPage({super.key});
+
   @override
   _SuccessPageState createState() => _SuccessPageState();
 }
@@ -22,11 +24,11 @@ class _SuccessPageState extends State<SuccessPage> {
 
   Future<void> getData() async {
     try {
-    final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/get-time');
-    var request = http.MultipartRequest('GET', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
+      final url = Uri.parse('https://portal.eksam.cloud/api/v1/get-time');
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -53,12 +55,12 @@ class _SuccessPageState extends State<SuccessPage> {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Colors.orange,
               Colors.pink,
-              const Color.fromARGB(255, 101, 19, 116),
+              Color.fromARGB(255, 101, 19, 116),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -68,8 +70,8 @@ class _SuccessPageState extends State<SuccessPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(height: 150),
-              Text(
+              const SizedBox(height: 150),
+              const Text(
                 'Absen Anda Telah',
                 style: TextStyle(
                   fontSize: 32,
@@ -78,7 +80,7 @@ class _SuccessPageState extends State<SuccessPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              Text(
+              const Text(
                 'Berhasil Di Rekam✨​ ',
                 style: TextStyle(
                   fontSize: 32,
@@ -87,7 +89,7 @@ class _SuccessPageState extends State<SuccessPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              Text(
+              const Text(
                 'Bagus, Sekarang Kamu Bisa Bekerja👍​',
                 style: TextStyle(
                   fontSize: 11,
@@ -95,10 +97,10 @@ class _SuccessPageState extends State<SuccessPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 60),
+              const SizedBox(height: 60),
               Text(
                 formattedDate,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -106,32 +108,33 @@ class _SuccessPageState extends State<SuccessPage> {
               ),
               Text(
                 datetime,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 200),
+              const SizedBox(height: 200),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.white, width: 1),
+                    side: const BorderSide(color: Colors.white, width: 1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                 ),
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
+                    MaterialPageRoute(builder: (context) => const HomePage()),
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },
-                child: Text('Kembali Ke Menu'),
+                child: const Text('Kembali Ke Menu'),
               ),
             ],
           ),

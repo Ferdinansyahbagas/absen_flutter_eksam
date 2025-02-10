@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({Key? key}) : super(key: key);
+  const HistoryScreen({super.key});
 
   @override
   _HistoryScreenState createState() => _HistoryScreenState();
@@ -27,7 +27,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void getHistoryData(BuildContext context) async {
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/get-self-all');
+          'https://portal.eksam.cloud/api/v1/attendance/get-self-all');
 
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -70,8 +70,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 // total telat api
   Future<void> getMenit() async {
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-user-info');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
 
       var request = http.MultipartRequest('GET', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -133,7 +133,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (BuildContext context) {
@@ -166,7 +166,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                             const EdgeInsets.only(left: 16.0),
                                         child: TextField(
                                           controller: searchController,
-                                          decoration: InputDecoration(
+                                          decoration: const InputDecoration(
                                             hintText: 'Search',
                                             border: InputBorder.none,
                                           ),
@@ -179,7 +179,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.search,
+                                      icon: const Icon(Icons.search,
                                           color: Colors.orange),
                                       onPressed: () {
                                         setState(() {
@@ -191,7 +191,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -208,7 +208,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 },
                                 itemBuilder: (BuildContext context) =>
                                     <PopupMenuEntry<int>>[
-                                  PopupMenuItem<int>(
+                                  const PopupMenuItem<int>(
                                     value: 10,
                                     child: Text(
                                       'in the last 10 days',
@@ -218,7 +218,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                     ),
                                   ),
-                                  PopupMenuItem<int>(
+                                  const PopupMenuItem<int>(
                                     value: 25,
                                     child: Text(
                                       'in the last 25 days',
@@ -228,7 +228,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                     ),
                                   ),
-                                  PopupMenuItem<int>(
+                                  const PopupMenuItem<int>(
                                     value: 50,
                                     child: Text(
                                       'in the last 50 days',
@@ -238,7 +238,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                     ),
                                   ),
-                                  PopupMenuItem<int>(
+                                  const PopupMenuItem<int>(
                                     value: 100,
                                     child: Text(
                                       'in the last 100 days',
@@ -249,16 +249,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     ),
                                   ),
                                 ],
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
                                       horizontal: 16.0, vertical: 12.0),
                                   child: Row(
                                     children: [
                                       Text(
                                         'Filter',
                                         style: TextStyle(
-                                          color: const Color.fromARGB(
-                                              255, 101, 19, 116),
+                                          color:
+                                              Color.fromARGB(255, 101, 19, 116),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -284,12 +284,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         return Card(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
-                            side: BorderSide(color: Colors.orange),
+                            side: const BorderSide(color: Colors.orange),
                           ),
                           child: ListTile(
                             title: Text(
                               historyItem['date'],
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
                               '${historyItem['starttime']} - ${historyItem['endtime']}',
@@ -298,7 +299,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               onPressed: () {
                                 showModalBottomSheet(
                                   context: context,
-                                  shape: RoundedRectangleBorder(
+                                  shape: const RoundedRectangleBorder(
                                     borderRadius: BorderRadius.vertical(
                                         top: Radius.circular(16.0)),
                                   ),
@@ -316,17 +317,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         children: [
                                           // Tampilkan informasi attendance seperti di gambar
                                           Row(children: [
-                                            Text(
+                                            const Text(
                                               "Date",
                                               style: TextStyle(
                                                   fontSize: 16,
                                                   color: Colors.black),
                                             ),
-                                            SizedBox(
+                                            const SizedBox(
                                                 width: 10), // Jarak horizontal
                                             Text(
                                               historyItem['date'],
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 24,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.orange,
@@ -336,16 +337,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           const SizedBox(height: 15),
                                           Row(
                                             children: [
-                                              Text(
+                                              const Text(
                                                 "Clock In ",
                                                 style: TextStyle(
                                                     fontSize: 14,
                                                     color: Colors.grey),
                                               ),
-                                              SizedBox(width: 50),
+                                              const SizedBox(width: 50),
                                               Text(
                                                 '${historyItem['starttime']} AM',
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                   fontSize: 16,
                                                   color: Colors.black,
                                                 ),
@@ -354,18 +355,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ),
                                           Row(
                                             children: [
-                                              Text(
+                                              const Text(
                                                 "Clock Out ",
                                                 style: TextStyle(
                                                     color: Colors.grey,
                                                     fontSize: 14),
                                               ),
-                                              SizedBox(
+                                              const SizedBox(
                                                   width:
                                                       40), // Jarak horizontal
                                               Text(
                                                 '${historyItem['endtime']} PM',
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
                                               ),
@@ -373,19 +374,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ),
                                           Row(
                                             children: [
-                                              Text(
+                                              const Text(
                                                 "Work Duration",
                                                 style: TextStyle(
                                                     color: Colors.grey,
                                                     fontSize: 14),
                                               ),
-                                              SizedBox(
+                                              const SizedBox(
                                                   width:
                                                       16), // Jarak horizontal
 
                                               Text(
                                                 '${historyItem['duration']} Menit',
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
                                               ),
@@ -393,19 +394,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ),
                                           Row(
                                             children: [
-                                              Text(
+                                              const Text(
                                                 "Location ",
                                                 style: TextStyle(
                                                     color: Colors.grey,
                                                     fontSize: 14),
                                               ),
-                                              SizedBox(
+                                              const SizedBox(
                                                   width:
                                                       48), // Jarak horizontal
 
                                               Text(
                                                 historyItem['location']['name'],
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
                                               ),
@@ -413,19 +414,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ),
                                           Row(
                                             children: [
-                                              Text(
+                                              const Text(
                                                 "Status",
                                                 style: TextStyle(
                                                     color: Colors.grey,
                                                     fontSize: 14),
                                               ),
-                                              SizedBox(
+                                              const SizedBox(
                                                   width:
                                                       66), // Jarak horizontal
 
                                               Text(
                                                 historyItem['status']['name'],
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
                                               ),
@@ -433,18 +434,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ),
                                           Row(
                                             children: [
-                                              Text(
+                                              const Text(
                                                 "Type",
                                                 style: TextStyle(
                                                     color: Colors.grey,
                                                     fontSize: 14),
                                               ),
-                                              SizedBox(
+                                              const SizedBox(
                                                   width:
                                                       75), // Jarak horizontal
                                               Text(
                                                 historyItem['type']['name'],
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
                                               ),
@@ -452,37 +453,37 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ),
                                           Row(
                                             children: [
-                                              Text(
+                                              const Text(
                                                 "Geolocation",
                                                 style: TextStyle(
                                                     color: Colors.grey,
                                                     fontSize: 14),
                                               ),
-                                              SizedBox(
+                                              const SizedBox(
                                                   width:
                                                       30), // Jarak horizontal
 
                                               Text(
                                                 historyItem['geolocation'],
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.black),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 10),
-                                          Text(
+                                          const Text(
                                             "Note",
                                             style: TextStyle(
                                                 color: Colors.grey,
                                                 fontSize: 14),
                                           ),
-                                          SizedBox(
+                                          const SizedBox(
                                               width: 10), // Jarak horizontal
 
                                           Text(
                                             historyItem['notes'],
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                                 fontSize: 16,
                                                 color: Colors.black),
                                           ),
@@ -495,14 +496,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.orange,
-                                side: BorderSide(
-                                    color: const Color.fromARGB(
-                                        255, 101, 19, 116)),
+                                side: const BorderSide(
+                                    color: Color.fromARGB(255, 101, 19, 116)),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8.0),
                                 ),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'Open',
                                 style: TextStyle(
                                   color: Colors.pink,
@@ -679,7 +679,7 @@ class AttendanceDetailModal extends StatelessWidget {
   final String note;
 
   const AttendanceDetailModal({
-    Key? key,
+    super.key,
     required this.date,
     required this.clockIn,
     required this.clockOut,
@@ -687,13 +687,13 @@ class AttendanceDetailModal extends StatelessWidget {
     required this.location,
     required this.status,
     required this.note,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Attendance Details"),
+        title: const Text("Attendance Details"),
         backgroundColor: Colors.orange,
       ),
       body: Padding(
@@ -703,16 +703,16 @@ class AttendanceDetailModal extends StatelessWidget {
           children: [
             Text(
               "Date: $date",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text("Clock In: $clockIn"),
             Text("Clock Out: $clockOut"),
             Text("Work Duration: $workDuration"),
             Text("Location: $location"),
             Text("Status: $status"),
-            SizedBox(height: 16),
-            Text("Note:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            const Text("Note:", style: TextStyle(fontWeight: FontWeight.bold)),
             Text(note),
           ],
         ),

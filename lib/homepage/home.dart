@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/notif.dart'; // Mengimpor halaman notif
-import 'package:absen/jamkelumas/ClockInPage.dart'; // Mengimpor halaman clockin
+import 'package:absen/Jamkelumas/ClockInPage.dart'; // Mengimpor halaman clockin
 import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor halaman Reimbursement
 import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
-import 'package:absen/jamkelumas/clokOutPage.dart'; // Mengimpor halaman clockout
+import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clockout
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
 import 'dart:async'; // Untuk timer
 import 'dart:convert';
@@ -23,7 +23,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  PageController _pageController =
+  final PageController _pageController =
       PageController(); // PageController for PageView
   String? name = ""; // Variabel untuk name pengguna
   String? message; //variabel untuk th messange
@@ -231,7 +231,7 @@ class _HomePageState extends State<HomePage> {
 // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+        'https://portal.eksam.cloud/api/v1/other/get-self-notification');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -287,7 +287,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> putRead(int id) async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+        'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
     var request = http.MultipartRequest('PUT', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -320,7 +320,7 @@ class _HomePageState extends State<HomePage> {
 
   // Fungsi untuk mengambil data dari API townhall
   Future<void> getPengumuman() async {
-    final url = Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-th');
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -352,8 +352,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> getData() async {
     // Ambil profil pengguna
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -375,8 +375,8 @@ class _HomePageState extends State<HomePage> {
 
     // Cek status clock-in
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-in');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -409,7 +409,7 @@ class _HomePageState extends State<HomePage> {
     // Cek status clock-out
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-out');
+          'https://portal.eksam.cloud/api/v1/attendance/is-clock-out');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -430,7 +430,7 @@ class _HomePageState extends State<HomePage> {
     // Cek status lembur masuk
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/is-lembur-in');
+          'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -456,7 +456,7 @@ class _HomePageState extends State<HomePage> {
     // Cek status lembur keluar
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/is-lembur-out');
+          'https://portal.eksam.cloud/api/v1/attendance/is-lembur-out');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -519,7 +519,7 @@ class _HomePageState extends State<HomePage> {
                   colors: [
                     Colors.orange,
                     Colors.pink,
-                    const Color.fromARGB(255, 101, 19, 116)
+                    Color.fromARGB(255, 101, 19, 116)
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomCenter,
@@ -538,7 +538,7 @@ class _HomePageState extends State<HomePage> {
                           final updatedAvatarUrl = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ProfileScreen(),
+                              builder: (context) => const ProfileScreen(),
                             ),
                           );
 
@@ -553,8 +553,8 @@ class _HomePageState extends State<HomePage> {
                           radius: 25,
                           backgroundColor: Colors.grey[200],
                           backgroundImage: avatarUrl != null
-                              ? NetworkImage('avatarUrl')
-                              : AssetImage('assets/image/logo_circle.png')
+                              ? const NetworkImage('avatarUrl')
+                              : const AssetImage('assets/image/logo_circle.png')
                                   as ImageProvider,
                           // child: avatarUrl == null
                           //     ? Icon(Icons.person, color: Colors.grey)
@@ -581,7 +581,7 @@ class _HomePageState extends State<HomePage> {
                                   NotificationHelper.hasUnreadNotifications(),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData && snapshot.data == true) {
-                                  return Positioned(
+                                  return const Positioned(
                                     right: 0,
                                     top: 0,
                                     child: Icon(
@@ -591,7 +591,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   );
                                 }
-                                return SizedBox.shrink();
+                                return const SizedBox.shrink();
                               },
                             ),
                           ],
@@ -600,7 +600,7 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => NotificationPage()),
+                                builder: (context) => const NotificationPage()),
                           );
                         },
                       ),
@@ -610,7 +610,7 @@ class _HomePageState extends State<HomePage> {
                   // menamplakan nama pengguna
                   Text(
                     'Selamat Datang, \n$name',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -663,7 +663,8 @@ class _HomePageState extends State<HomePage> {
                                         final result = await Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => ClockInPage(),
+                                            builder: (context) =>
+                                                const ClockInPage(),
                                           ),
                                         );
                                         if (result == true) {
@@ -720,7 +721,7 @@ class _HomePageState extends State<HomePage> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  ClockInPage()),
+                                                  const ClockInPage()),
                                         );
                                         if (result == true) {
                                           setState(() {
@@ -749,7 +750,7 @@ class _HomePageState extends State<HomePage> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  ClockOutScreen()),
+                                                  const ClockOutScreen()),
                                         );
                                         if (result == true) {
                                           setState(() {
@@ -797,7 +798,7 @@ class _HomePageState extends State<HomePage> {
                       // Menggunakan gambar dari aset dan mengatur ukuran gambar
                       _buildMenuShortcut(
                         label: 'Time Off',
-                        targetPage: TimeOffScreen(),
+                        targetPage: const TimeOffScreen(),
                         bgColor: const Color.fromRGBO(
                             101, 19, 116, 1), // Warna background
                         imagePath:
@@ -813,7 +814,7 @@ class _HomePageState extends State<HomePage> {
                       // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
                       _buildMenuShortcut(
                         label: 'Reimbursement',
-                        targetPage: ReimbursementPage(),
+                        targetPage: const ReimbursementPage(),
                         bgColor: const Color.fromARGB(
                             255, 101, 19, 116), // Warna background
                         iconData: Icons.receipt, // Ikon bawaan Flutter
@@ -827,7 +828,7 @@ class _HomePageState extends State<HomePage> {
                       // Menggunakan gambar dari aset dan mengatur ukuran gambar
                       _buildMenuShortcut(
                         label: 'History',
-                        targetPage: HistoryScreen(),
+                        targetPage: const HistoryScreen(),
                         bgColor: const Color.fromARGB(
                             255, 101, 19, 116), // Warna background
                         imagePath:
@@ -853,8 +854,8 @@ class _HomePageState extends State<HomePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
                             vertical: 30.0, horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -894,8 +895,8 @@ class _HomePageState extends State<HomePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
                             vertical: 30.0, horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -935,8 +936,8 @@ class _HomePageState extends State<HomePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
                             vertical: 30.0, horizontal: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -969,7 +970,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: const Color.fromARGB(255, 101, 19, 116),
+                      color: Color.fromARGB(255, 101, 19, 116),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -981,10 +982,10 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.grey[300],
                     ),
                     child: announcements.isEmpty
-                        ? Center(
+                        ? const Center(
                             child: Text(
                               'Hari ini tidak ada pengumuman',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.purple,
@@ -1025,7 +1026,7 @@ class _HomePageState extends State<HomePage> {
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
-                                            color: const Color.fromARGB(
+                                            color: Color.fromARGB(
                                                 255, 101, 19, 116),
                                           ),
                                           textAlign: TextAlign.center,
@@ -1049,9 +1050,9 @@ class _HomePageState extends State<HomePage> {
                                   child: SmoothPageIndicator(
                                     controller: _pageController,
                                     count: announcements.length,
-                                    effect: ExpandingDotsEffect(
-                                      activeDotColor: const Color.fromARGB(
-                                          255, 101, 19, 116),
+                                    effect: const ExpandingDotsEffect(
+                                      activeDotColor:
+                                          Color.fromARGB(255, 101, 19, 116),
                                       dotColor: Colors.grey,
                                       dotHeight: 8,
                                       dotWidth: 8,
@@ -1225,7 +1226,7 @@ class _HomePageState extends State<HomePage> {
                   //     ),
                   //   ),
                   // ],
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   // Note Section
                   Padding(
                     padding:
@@ -1239,7 +1240,7 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: const Color.fromARGB(255, 101, 19, 116),
+                              color: Color.fromARGB(255, 101, 19, 116),
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -1323,31 +1324,33 @@ class _HomePageState extends State<HomePage> {
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TimeOffScreen()),
+                MaterialPageRoute(builder: (context) => const TimeOffScreen()),
               );
               break;
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ReimbursementPage()),
+                MaterialPageRoute(
+                    builder: (context) => const ReimbursementPage()),
               );
               break;
             case 3:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
+                MaterialPageRoute(
+                    builder: (context) => const NotificationPage()),
               );
               break;
             case 4:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
               break;
           }
         },
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'), // Custom icon
               size: 20,
@@ -1355,7 +1358,7 @@ class _HomePageState extends State<HomePage> {
             ),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/timeoff.png'), // Custom icon
               size: 20,
@@ -1363,14 +1366,14 @@ class _HomePageState extends State<HomePage> {
             ),
             label: 'Time Off',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.receipt, size: 25),
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               children: [
-                ImageIcon(
+                const ImageIcon(
                   AssetImage('assets/icon/notifikasi.png'),
                   size: 20,
                   color: Colors.white,
@@ -1379,7 +1382,7 @@ class _HomePageState extends State<HomePage> {
                   future: NotificationHelper.hasUnreadNotifications(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data == true) {
-                      return Positioned(
+                      return const Positioned(
                         right: 0,
                         top: 0,
                         child: Icon(
@@ -1389,14 +1392,14 @@ class _HomePageState extends State<HomePage> {
                         ),
                       );
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 ),
               ],
             ),
             label: 'Notification',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/profil.png'), // Custom icon
               size: 20,
@@ -1415,9 +1418,9 @@ class AnnouncementDetailPage extends StatelessWidget {
   final String message;
 
   const AnnouncementDetailPage({
-    Key? key,
+    super.key,
     required this.message,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

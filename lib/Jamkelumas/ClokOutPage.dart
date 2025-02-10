@@ -61,7 +61,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
   Future<void> getData() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/attendance/get-self-detail-today');
+        'https://portal.eksam.cloud/api/v1/attendance/get-self-detail-today');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -90,7 +90,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   Future<void> _setWorkTypeLembur() async {
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/is-lembur-in');
+          'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -154,17 +154,17 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Center(
+        return const Center(
           child: CircularProgressIndicator(
-            color: const Color.fromARGB(255, 101, 19, 116),
+            color: Color.fromARGB(255, 101, 19, 116),
           ),
         );
       },
     );
 
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/clock-out');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-out');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
@@ -185,8 +185,8 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       var data = jsonDecode(rp.body.toString());
 
       if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => SuccessPage()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const SuccessPage()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -194,8 +194,8 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
             backgroundColor: Colors.red,
           ),
         );
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => FailurePage()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const FailurePage()));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -204,8 +204,8 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => FailurePage()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const FailurePage()));
     }
   }
 
@@ -236,7 +236,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: const Color.fromRGBO(101, 19, 116, 1))),
+                      color: Color.fromRGBO(101, 19, 116, 1))),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: _selectedWorkType,
@@ -244,13 +244,11 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(
-                          color: const Color.fromRGBO(101, 19, 116, 1),
-                          width: 2)),
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(
-                          color: const Color.fromRGBO(101, 19, 116, 1),
-                          width: 2)),
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
                 ),
                 items: [_selectedWorkType ?? 'No Work Type Selected']
                     .map((String workType) {
@@ -265,7 +263,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: const Color.fromRGBO(101, 19, 116, 1))),
+                      color: Color.fromRGBO(101, 19, 116, 1))),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: _selectedWorkplaceType,
@@ -273,13 +271,11 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(
-                          color: const Color.fromRGBO(101, 19, 116, 1),
-                          width: 2)),
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide: const BorderSide(
-                          color: const Color.fromRGBO(101, 19, 116, 1),
-                          width: 2)),
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
                 ),
                 items: [_selectedWorkplaceType ?? 'No Workplace Type Selected']
                     .map((String workplaceType) {
@@ -325,7 +321,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                           'Upload Photo Anda',
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color.fromRGBO(101, 19, 116, 1),
+                            color: Color.fromRGBO(101, 19, 116, 1),
                           ),
                         ),
                     ],

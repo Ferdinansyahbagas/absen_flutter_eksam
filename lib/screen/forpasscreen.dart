@@ -5,6 +5,8 @@ import 'package:http/http.dart';
 import 'dart:convert';
 
 class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
+
   @override
   _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
@@ -26,7 +28,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     try {
       Response response = await post(
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/password/email'),
+        Uri.parse('https://portal.eksam.cloud/api/v1/auth/password/email'),
         body: {
           'email': _emailController.text.toString(),
         },
@@ -44,7 +46,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         // Fungsi pindah halaman
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => Codecekscreen()),
+          MaterialPageRoute(builder: (context) => const Codecekscreen()),
         );
       } else {
         var data = jsonDecode(response.body.toString());
@@ -70,7 +72,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => LoginScreen()),
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
             );
           },
         ),
@@ -82,95 +84,96 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-      child : Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Forgot Password',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Forgot Password',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Enter your registered email',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
+              const SizedBox(height: 10),
+              Text(
+                'Enter your registered email',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
               ),
-            ),
-            SizedBox(height: 20),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                      errorText: !_isEmailValid
-                          ? 'Email tidak sesuai format yang diharapkan'
-                          : _errorMessage,
-                      errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red, width: 2.0),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red, width: 2.0),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      setState(() {
-                        // Memeriksa apakah email sesuai format
-                        _isEmailValid = RegExp(r'\S+@\S+\.\S+').hasMatch(value);
-                      });
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      gradient: LinearGradient(
-                        colors: [Colors.orange, Colors.pink, Colors.purple],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        minimumSize: Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+              const SizedBox(height: 20),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: const OutlineInputBorder(),
+                        errorText: !_isEmailValid
+                            ? 'Email tidak sesuai format yang diharapkan'
+                            : _errorMessage,
+                        errorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red, width: 2.0),
+                        ),
+                        focusedErrorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red, width: 2.0),
                         ),
                       ),
-                      child: Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          color: Colors.white,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        setState(() {
+                          // Memeriksa apakah email sesuai format
+                          _isEmailValid =
+                              RegExp(r'\S+@\S+\.\S+').hasMatch(value);
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        gradient: const LinearGradient(
+                          colors: [Colors.orange, Colors.pink, Colors.purple],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: const Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

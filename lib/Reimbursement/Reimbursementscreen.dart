@@ -11,6 +11,8 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 
 class ReimbursementPage extends StatefulWidget {
+  const ReimbursementPage({super.key});
+
   @override
   _ReimbursementPageState createState() => _ReimbursementPageState();
 }
@@ -29,7 +31,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
 
   Future<void> getNotif() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+        'https://portal.eksam.cloud/api/v1/other/get-self-notification');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -85,7 +87,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
 
   Future<void> putRead(int id) async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+        'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
     var request = http.MultipartRequest('PUT', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -117,7 +119,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
 
   Future<void> getHistoryData() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/get-self-reimbursement');
+        'https://portal.eksam.cloud/api/v1/other/get-self-reimbursement');
     var request = http.Request('GET', url);
 
     // Ambil token dari shared preferences
@@ -167,7 +169,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Reimbursement',
           style: TextStyle(
             color: Colors.black,
@@ -176,11 +178,11 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 30),
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => HomePage()),
+              MaterialPageRoute(builder: (context) => const HomePage()),
             );
           },
         ),
@@ -192,30 +194,32 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             alignment: Alignment.center,
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ReimbursementForm()),
+                  MaterialPageRoute(
+                      builder: (context) => const ReimbursementForm()),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromRGBO(101, 19, 116, 1),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 'Request Reimbursement',
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
             child: Text(
               'History Reimbursement',
               style: TextStyle(
@@ -227,11 +231,11 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
           ),
           Expanded(
             child: isLoading
-                ? Center(
+                ? const Center(
                     child: CircularProgressIndicator(), // Menunggu data
                   )
                 : historyData.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: Text(
                           'Anda belum request.',
                           style: TextStyle(
@@ -262,8 +266,8 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        items:  [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'),
               size: 18,
@@ -271,7 +275,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
             ),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/timeoff.png'),
               size: 20,
@@ -279,14 +283,14 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
             ),
             label: 'Time Off',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.receipt, size: 27),
             label: 'Reimbursement',
           ),
-         BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Stack(
               children: [
-                ImageIcon(
+                const ImageIcon(
                   AssetImage('assets/icon/notifikasi.png'),
                   size: 20,
                   color: Colors.white,
@@ -295,7 +299,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
                   future: NotificationHelper.hasUnreadNotifications(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data == true) {
-                      return Positioned(
+                      return const Positioned(
                         right: 0,
                         top: 0,
                         child: Icon(
@@ -305,14 +309,14 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
                         ),
                       );
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 ),
               ],
             ),
             label: 'Notification',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/profil.png'),
               size: 20,
@@ -339,7 +343,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TimeOffScreen()),
+                MaterialPageRoute(builder: (context) => const TimeOffScreen()),
               );
               break;
             case 2:
@@ -348,13 +352,14 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
             case 3:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
+                MaterialPageRoute(
+                    builder: (context) => const NotificationPage()),
               );
               break;
             case 4:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
               break;
           }
@@ -383,7 +388,8 @@ class ReimbursementHistoryCard extends StatelessWidget {
   final String statusText;
   final Color statusColor;
 
-  ReimbursementHistoryCard({
+  const ReimbursementHistoryCard({
+    super.key,
     required this.title,
     required this.amount,
     required this.statusText,
@@ -409,16 +415,16 @@ class ReimbursementHistoryCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.orange,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     amount,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.black,
                       fontSize: 16,
                     ),
@@ -426,7 +432,8 @@ class ReimbursementHistoryCard extends StatelessWidget {
                 ],
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),

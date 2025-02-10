@@ -11,6 +11,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TimeOffSick extends StatefulWidget {
+  const TimeOffSick({super.key});
+
   @override
   _TimeOffSickState createState() => _TimeOffSickState();
 }
@@ -19,7 +21,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
   String formatStarttedDate = '';
   String formatEndtedDate = '';
   String Reason = '';
-  String _selectedType = 'Sick';
+  final String _selectedType = 'Sick';
   String? limit;
   String? iduser;
   String? type = '2';
@@ -65,8 +67,8 @@ class _TimeOffSickState extends State<TimeOffSick> {
 
   Future<void> getProfile() async {
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
 
       var request = http.MultipartRequest('GET', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -105,7 +107,6 @@ class _TimeOffSickState extends State<TimeOffSick> {
 
   // Function to submit data to API
   Future<void> _submitData() async {
-   
     if (_image == null) {
       setState(() {
         _isImageRequired = true;
@@ -123,9 +124,9 @@ class _TimeOffSickState extends State<TimeOffSick> {
       context: context,
       barrierDismissible: false, // Prevent dismissing the dialog
       builder: (BuildContext context) {
-        return Center(
+        return const Center(
           child: CircularProgressIndicator(
-            color: const Color.fromARGB(255, 101, 19, 116),
+            color: Color.fromARGB(255, 101, 19, 116),
           ),
         );
       },
@@ -134,7 +135,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
     try {
       await getProfile();
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/request-history/make-request');
+          'https://portal.eksam.cloud/api/v1/request-history/make-request');
 
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -178,19 +179,19 @@ class _TimeOffSickState extends State<TimeOffSick> {
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => SuccessPage2II()),
+          MaterialPageRoute(builder: (context) => const SuccessPage2II()),
         );
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => FailurePage2II()),
+          MaterialPageRoute(builder: (context) => const FailurePage2II()),
         );
       }
     } catch (e) {
       print(e);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => FailurePage2II()),
+        MaterialPageRoute(builder: (context) => const FailurePage2II()),
       );
     }
   }
@@ -201,15 +202,15 @@ class _TimeOffSickState extends State<TimeOffSick> {
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => TimeOffScreen()),
+              MaterialPageRoute(builder: (context) => const TimeOffScreen()),
             ); // Aksi kembali ke halaman sebelumnya
           },
         ),
-        title: Text(
+        title: const Text(
           'Time Off',
           style: TextStyle(
             color: Colors.black,
@@ -226,11 +227,12 @@ class _TimeOffSickState extends State<TimeOffSick> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Remaining Leave
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Container(
                 width: double.infinity,
                 height: 140,
-                padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 30.0, vertical: 25.0),
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 243, 147, 4),
                   borderRadius: BorderRadius.circular(9),
@@ -239,7 +241,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Teks di sebelah kiri
-                    Column(
+                    const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment:
                           MainAxisAlignment.center, // Tengah vertikal
@@ -264,14 +266,14 @@ class _TimeOffSickState extends State<TimeOffSick> {
                         children: [
                           Text(
                             limit.toString(),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 50,
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4.0),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 4.0),
                             child: Text(
                               '/',
                               style: TextStyle(
@@ -281,7 +283,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                               ),
                             ),
                           ),
-                          Text(
+                          const Text(
                             '12',
                             style: TextStyle(
                               fontSize: 20,
@@ -295,12 +297,12 @@ class _TimeOffSickState extends State<TimeOffSick> {
                   ],
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Catatan',
                   labelStyle:
-                      TextStyle(color: const Color.fromARGB(255, 101, 19, 116)),
+                      const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
                       FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
@@ -310,22 +312,22 @@ class _TimeOffSickState extends State<TimeOffSick> {
                             : const Color.fromARGB(255, 101, 19, 116)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                        color: const Color.fromARGB(255, 101, 19, 116),
-                        width: 2),
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 101, 19, 116), width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Colors.red), // Border saat error
+                    borderSide: const BorderSide(
+                        color: Colors.red), // Border saat error
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  errorText: _isReasonEmpty ? 'Tolong Berikan Alasan Anda' : null,
+                  errorText:
+                      _isReasonEmpty ? 'Tolong Berikan Alasan Anda' : null,
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -334,17 +336,17 @@ class _TimeOffSickState extends State<TimeOffSick> {
                   });
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               InkWell(
                 onTap: () => _selectDate(context, true),
                 child: InputDecorator(
                   decoration: InputDecoration(
                     labelText: 'Tanggal Pertama',
-                    labelStyle: TextStyle(
-                        color: const Color.fromARGB(255, 101, 19, 116)),
+                    labelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
                         .always, // Always show label on top
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: _isStartDateEmpty
@@ -352,18 +354,17 @@ class _TimeOffSickState extends State<TimeOffSick> {
                               : const Color.fromARGB(255, 101, 19, 116)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color.fromARGB(255, 101, 19, 116),
-                          width: 2),
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     errorBorder: OutlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Colors.red), // Border saat error
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedErrorBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                           color: Colors.red), // Border saat error dan fokus
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -380,23 +381,23 @@ class _TimeOffSickState extends State<TimeOffSick> {
                             : DateFormat('yyyy-MM-dd')
                                 .format(_selectedStartDate!),
                       ),
-                      Icon(Icons.calendar_today, color: Colors.orange),
+                      const Icon(Icons.calendar_today, color: Colors.orange),
                     ],
                   ),
                 ),
               ),
 
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               InkWell(
                 onTap: () => _selectDate(context, false),
                 child: InputDecorator(
                   decoration: InputDecoration(
                     labelText: 'Tanggal Akhir',
-                    labelStyle: TextStyle(
-                        color: const Color.fromARGB(255, 101, 19, 116)),
+                    labelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
                         .always, // Always show label on top
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: _isEndDateEmpty
@@ -404,18 +405,17 @@ class _TimeOffSickState extends State<TimeOffSick> {
                               : const Color.fromARGB(255, 101, 19, 116)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color.fromARGB(255, 101, 19, 116),
-                          width: 2),
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     errorBorder: OutlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Colors.red), // Border saat error
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedErrorBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                           color: Colors.red), // Border saat error dan fokus
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -432,12 +432,12 @@ class _TimeOffSickState extends State<TimeOffSick> {
                             : DateFormat('yyyy-MM-dd')
                                 .format(_selectedEndDate!),
                       ),
-                      Icon(Icons.calendar_today, color: Colors.orange),
+                      const Icon(Icons.calendar_today, color: Colors.orange),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               // Upload Photo Button
               GestureDetector(
                 onTap: _pickImage, // Langsung panggil kamera
@@ -474,7 +474,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                           'Upload Photo Anda ',
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color.fromRGBO(101, 19, 116, 1),
+                            color: Color.fromRGBO(101, 19, 116, 1),
                           ),
                         ),
                     ],
@@ -529,7 +529,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                     ),
                   ),
                 ),
-              SizedBox(height: 50),
+              const SizedBox(height: 50),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -569,9 +569,9 @@ class _TimeOffSickState extends State<TimeOffSick> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Submit',
                     style: TextStyle(
                       color: Colors.white,
