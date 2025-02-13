@@ -31,7 +31,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> getNotif() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+        'https://portal.eksam.cloud/api/v1/other/get-self-notification');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -50,7 +50,7 @@ class _NotificationPageState extends State<NotificationPage> {
             'title': notif['title']?.toString(),
             'description': notif['description']?.toString(),
             'fileUrl': notif['file'] != null
-                ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
+                ? "https://portal.eksam.cloud/storage/file/${notif['file']}"
                 : null,
             'isRead': notif['is_read'] == 1,
           };
@@ -92,7 +92,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> putRead(int id) async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+        'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
     var request = http.MultipartRequest('PUT', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -127,7 +127,8 @@ class _NotificationPageState extends State<NotificationPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.orange,
-        title: Text('Notification', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Notification', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -140,7 +141,7 @@ class _NotificationPageState extends State<NotificationPage> {
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.orange, Colors.pink, Colors.purple],
             begin: Alignment.topCenter,
@@ -148,11 +149,11 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
         ),
         child: isLoading
-            ? Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator())
             : notifications.isEmpty
-                ? Center(child: Text('Tidak ada notifikasi hari ini'))
+                ? const Center(child: Text('Tidak ada notifikasi hari ini'))
                 : ListView.builder(
-                    padding: EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16.0),
                     itemCount: notifications.length,
                     itemBuilder: (context, index) {
                       var notif = notifications[index];
@@ -171,7 +172,7 @@ class _NotificationPageState extends State<NotificationPage> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'),
               size: 18,
@@ -179,7 +180,7 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/timeoff.png'),
               size: 20,
@@ -187,14 +188,14 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
             label: 'Time Off',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.receipt, size: 27),
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               children: [
-                ImageIcon(
+                const ImageIcon(
                   AssetImage('assets/icon/notifikasi.png'),
                   size: 22,
                   color: Colors.orange,
@@ -203,7 +204,7 @@ class _NotificationPageState extends State<NotificationPage> {
                   future: NotificationHelper.hasUnreadNotifications(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data == true) {
-                      return Positioned(
+                      return const Positioned(
                         right: 0,
                         top: 0,
                         child: Icon(
@@ -213,14 +214,14 @@ class _NotificationPageState extends State<NotificationPage> {
                         ),
                       );
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 ),
               ],
             ),
             label: 'Notification',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/profil.png'),
               size: 20,
@@ -246,13 +247,14 @@ class _NotificationPageState extends State<NotificationPage> {
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TimeOffScreen()),
+                MaterialPageRoute(builder: (context) => const TimeOffScreen()),
               );
               break;
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ReimbursementPage()),
+                MaterialPageRoute(
+                    builder: (context) => const ReimbursementPage()),
               );
               break;
             case 3:
@@ -260,7 +262,7 @@ class _NotificationPageState extends State<NotificationPage> {
             case 4:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
               break;
           }
@@ -278,6 +280,7 @@ class NotificationItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const NotificationItem({
+    super.key,
     required this.title,
     required this.description,
     this.fileUrl,
@@ -288,7 +291,7 @@ class NotificationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
       color: isRead ? Colors.grey[200] : Colors.white,
       child: ListTile(
         title: Text(
@@ -296,12 +299,13 @@ class NotificationItem extends StatelessWidget {
           style: TextStyle(
               fontWeight: isRead ? FontWeight.normal : FontWeight.bold),
         ),
-        subtitle: Text(
+        subtitle: const Text(
           'Click To View',
           style: TextStyle(color: Colors.blue),
         ),
-        trailing:
-            isRead ? null : Icon(Icons.circle, color: Colors.red, size: 10),
+        trailing: isRead
+            ? null
+            : const Icon(Icons.circle, color: Colors.red, size: 10),
         onTap: () {
           onTap();
           Navigator.push(
@@ -326,6 +330,7 @@ class PayslipDetailPage extends StatelessWidget {
   final String? fileUrl;
 
   const PayslipDetailPage({
+    super.key,
     required this.title,
     required this.description,
     this.fileUrl,
@@ -335,42 +340,43 @@ class PayslipDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Notification"),
+        title: const Text("Notification"),
         backgroundColor: Colors.orange,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.circle, color: Colors.red, size: 12),
-                SizedBox(width: 8),
+                const Icon(Icons.circle, color: Colors.red, size: 12),
+                const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               description,
-              style: TextStyle(color: Colors.black54, fontSize: 14),
+              style: const TextStyle(color: Colors.black54, fontSize: 14),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             if (fileUrl != null)
               InkWell(
                 onTap: () {
                   _downloadFile(context, fileUrl!);
                 },
                 child: Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
@@ -383,12 +389,12 @@ class PayslipDetailPage extends StatelessWidget {
                 ),
               )
             else
-              Text(
+              const Text(
                 "No file available.",
                 style:
                     TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
               ),
-            SizedBox(
+            const SizedBox(
                 height: 32), // Spacer tambahan untuk melihat skrol lebih baik
           ],
         ),
@@ -410,7 +416,7 @@ class PayslipDetailPage extends StatelessWidget {
 
     if (!permissionGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Storage permission denied")),
+        const SnackBar(content: Text("Storage permission denied")),
       );
       return;
     }
@@ -437,7 +443,7 @@ class PayslipDetailPage extends StatelessWidget {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error downloading file")),
+        const SnackBar(content: Text("Error downloading file")),
       );
     }
   }

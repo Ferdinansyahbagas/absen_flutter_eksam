@@ -7,6 +7,8 @@ import 'package:http/http.dart';
 import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -44,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void login2() async {
     try {
       Response response = await post(
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/auth/login'),
+        Uri.parse('https://portal.eksam.cloud/api/v1/auth/login'),
         body: {
           'email': _emailController.text.toString(),
           'password': _passwordController.text.toString(),
@@ -65,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Navigate to HomePage
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => const HomePage()),
           (route) => false,
         );
       } else {
@@ -91,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => WelcomeScreen()),
+              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
             );
           },
         ),
@@ -109,14 +111,14 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text(
+                const Text(
                   "Log in",
                   style: TextStyle(
                     fontSize: 32.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
                 Text(
                   "Silakan Login Terlebih Dahulu Sebelum Masuk✨",
                   style: TextStyle(
@@ -124,25 +126,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Colors.grey[600],
                   ),
                 ),
-                SizedBox(height: 32.0),
+                const SizedBox(height: 32.0),
                 // Email Field
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     errorText: _isEmailValid ? null : 'Email tidak valid',
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
                 // Password Field
                 TextField(
                   controller: _passwordController,
                   obscureText: !_showPassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     errorText:
                         _isPasswordValid ? null : 'Password minimal 6 karakter',
                     suffixIcon: IconButton(
@@ -153,18 +155,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
                 // Display error message if any
                 if (_errorMessage != null)
                   Text(
                     _errorMessage!,
-                    style: TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.red),
                   ),
-                SizedBox(height: 32.0),
+                const SizedBox(height: 32.0),
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [Colors.orange, Colors.pink, Colors.purple],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
@@ -174,9 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
-                      minimumSize: Size(double.infinity, 50),
+                      minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Log In',
                       style: TextStyle(
                         fontSize: 18.0,
@@ -185,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
+                const SizedBox(height: 12.0),
                 Align(
                   alignment: Alignment.center,
                   child: InkWell(
@@ -193,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ForgotPasswordPage()),
+                            builder: (context) => const ForgotPasswordPage()),
                       );
                     },
                     child: const Text('Forgot Your Password?'),
@@ -204,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           // Show loading spinner on top of the screen
           if (_isLoading)
-            Center(
+            const Center(
               child: CircularProgressIndicator(),
             ),
         ],

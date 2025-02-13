@@ -43,7 +43,7 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> getStatus() async {
     final url =
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/attendance/get-type');
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-type');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -69,8 +69,8 @@ class _ClockInPageState extends State<ClockInPage> {
   }
 
   Future<void> getLocation() async {
-    final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/attendance/get-location');
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-location');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -97,8 +97,8 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _setWorkTypeLembur() async {
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/is-clock-in');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -148,7 +148,7 @@ class _ClockInPageState extends State<ClockInPage> {
 
       // Fetch holiday data from API
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
+          'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
 
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
@@ -226,9 +226,9 @@ class _ClockInPageState extends State<ClockInPage> {
       context: context,
       barrierDismissible: false, // Prevent dismissing the dialog
       builder: (BuildContext context) {
-        return Center(
+        return const Center(
           child: CircularProgressIndicator(
-            color: const Color.fromARGB(255, 101, 19, 116),
+            color: Color.fromARGB(255, 101, 19, 116),
           ),
         );
       },
@@ -258,8 +258,8 @@ class _ClockInPageState extends State<ClockInPage> {
           "Unknown City"; // If city not available, default to Unknown City
 
       // Example API endpoint
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/attendance/clock-in');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
 
       // Prepare multipart request to send image and data
       var request = http.MultipartRequest('POST', url);
@@ -309,13 +309,13 @@ class _ClockInPageState extends State<ClockInPage> {
         // Successfully submitted
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => SuccessPage()),
+          MaterialPageRoute(builder: (context) => const SuccessPage()),
         );
       } else {
         // Submission failed
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => FailurePage()),
+          MaterialPageRoute(builder: (context) => const FailurePage()),
         );
       }
     } catch (e) {
@@ -323,7 +323,7 @@ class _ClockInPageState extends State<ClockInPage> {
       print("Error: $e");
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => FailurePage()),
+        MaterialPageRoute(builder: (context) => const FailurePage()),
       );
     }
   }
@@ -355,7 +355,7 @@ class _ClockInPageState extends State<ClockInPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: const Color.fromRGBO(101, 19, 116, 1),
+                  color: Color.fromRGBO(101, 19, 116, 1),
                 ),
               ),
               const SizedBox(height: 10),
@@ -365,7 +365,7 @@ class _ClockInPageState extends State<ClockInPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
-                      color: const Color.fromRGBO(101, 19, 116, 1),
+                      color: Color.fromRGBO(101, 19, 116, 1),
                       width: 2,
                     ),
                   ),
@@ -392,7 +392,7 @@ class _ClockInPageState extends State<ClockInPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: const Color.fromRGBO(101, 19, 116, 1),
+                  color: Color.fromRGBO(101, 19, 116, 1),
                 ),
               ),
               const SizedBox(height: 10),
@@ -402,7 +402,7 @@ class _ClockInPageState extends State<ClockInPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
-                      color: const Color.fromRGBO(
+                      color: Color.fromRGBO(
                           101, 19, 116, 1), // Customize border color
                       width: 2, // Customize border width
                     ),
@@ -457,7 +457,7 @@ class _ClockInPageState extends State<ClockInPage> {
                           'Upload Photo Anda',
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color.fromRGBO(101, 19, 116, 1),
+                            color: Color.fromRGBO(101, 19, 116, 1),
                           ),
                         ),
                     ],

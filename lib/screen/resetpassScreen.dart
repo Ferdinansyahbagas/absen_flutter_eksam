@@ -6,6 +6,8 @@ import 'package:http/http.dart';
 import 'dart:convert';
 
 class ResetPasswordScreen extends StatefulWidget {
+  const ResetPasswordScreen({super.key});
+
   @override
   _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
 }
@@ -26,8 +28,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         SharedPreferences localStorage = await SharedPreferences.getInstance();
         var code = localStorage.getString('code');
         Response response = await post(
-          Uri.parse(
-              'https://dev-portal.eksam.cloud/api/v1/auth/password/reset'),
+          Uri.parse('https://portal.eksam.cloud/api/v1/auth/password/reset'),
           body: {
             'code': code,
             'password': _confirmPasswordController.text.toString(),
@@ -44,7 +45,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => LoginScreen()),
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
             (route) => false,
           );
         } else {
@@ -71,7 +72,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => Codecekscreen()),
+              MaterialPageRoute(builder: (context) => const Codecekscreen()),
             );
           },
         ),
@@ -87,14 +88,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'Reset Password',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               'Masukan Password Baru Anda',
               style: TextStyle(
@@ -102,7 +103,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 color: Colors.grey[600],
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Form(
               key: _formKey,
               child: Column(
@@ -113,22 +114,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     decoration: InputDecoration(
                       labelText: 'Reset password Anda',
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                             color: Colors.grey), // Border saat tidak fokus
                         borderRadius: BorderRadius.circular(12),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                             color: Colors.purple), // Border saat fokus
                         borderRadius: BorderRadius.circular(12),
                       ),
                       errorBorder: OutlineInputBorder(
-                        borderSide:
-                            BorderSide(color: Colors.red), // Border saat error
+                        borderSide: const BorderSide(
+                            color: Colors.red), // Border saat error
                         borderRadius: BorderRadius.circular(12),
                       ),
                       focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                             color: Colors.red), // Border saat error dan fokus
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -152,26 +153,26 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: !_isConfirmPasswordVisible,
                     decoration: InputDecoration(
                       labelText: 'Konfirmasi Password Baru Anda',
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey),
+                        borderSide: const BorderSide(color: Colors.grey),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.purple),
+                        borderSide: const BorderSide(color: Colors.purple),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       errorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
+                        borderSide: const BorderSide(color: Colors.red),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       focusedErrorBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.red),
+                        borderSide: const BorderSide(color: Colors.red),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       suffixIcon: IconButton(
@@ -197,19 +198,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   if (_errorMessage != null)
                     Text(
                       _errorMessage!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                       ),
                     ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [Colors.orange, Colors.pink, Colors.purple],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
@@ -219,12 +220,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       onPressed: _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        minimumSize: Size(double.infinity, 50),
+                        minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Submit',
                         style: TextStyle(
                           fontSize: 18.0,

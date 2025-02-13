@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
 
 class SuccessPage2I extends StatelessWidget {
+  const SuccessPage2I({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Colors.orange,
               Colors.pink,
-              const Color.fromARGB(255, 101, 19, 116),
+              Color.fromARGB(255, 101, 19, 116),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -22,8 +24,8 @@ class SuccessPage2I extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(height: 220),
-              Text(
+              const SizedBox(height: 220),
+              const Text(
                 'Berhasil Mengirim',
                 style: TextStyle(
                   fontSize: 32,
@@ -32,7 +34,7 @@ class SuccessPage2I extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              Text(
+              const Text(
                 'Pengajuan',
                 style: TextStyle(
                   fontSize: 32,
@@ -41,7 +43,7 @@ class SuccessPage2I extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              Text(
+              const Text(
                 '✨Nikmati Waktumu👍​',
                 style: TextStyle(
                   fontSize: 11,
@@ -49,26 +51,28 @@ class SuccessPage2I extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 240),
+              const SizedBox(height: 240),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.white, width: 1),
+                    side: const BorderSide(color: Colors.white, width: 1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                 ),
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => TimeOffScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const TimeOffScreen()),
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },
-                child: Text('Kembali Ke Menu'),
+                child: const Text('Kembali Ke Menu'),
               ),
             ],
           ),

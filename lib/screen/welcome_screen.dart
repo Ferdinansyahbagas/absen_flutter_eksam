@@ -33,12 +33,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Colors.orange,
               Colors.pink,
-              const Color.fromARGB(255, 101, 19, 116),
+              Color.fromARGB(255, 101, 19, 116),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -49,8 +49,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 25),
-            Text(
+            const SizedBox(height: 25),
+            const Text(
               'Hi,',
               style: TextStyle(
                 color: Colors.white,
@@ -58,8 +58,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 2),
-            Text(
+            const SizedBox(height: 2),
+            const Text(
               'Selamat Datang',
               style: TextStyle(
                 color: Colors.white,
@@ -67,7 +67,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               'Silakan Login Terlebih Dahulu Sebelum Masuk✨',
               style: TextStyle(
@@ -75,7 +75,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 fontSize: 15,
               ),
             ),
-            SizedBox(height: 200),
+            const SizedBox(height: 200),
             Center(
               child: SizedBox(
                 width: double.infinity,
@@ -85,24 +85,26 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       // Jika token ada, langsung ke HomePage
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => HomePage()),
+                        MaterialPageRoute(
+                            builder: (context) => const HomePage()),
                       );
                     } else {
                       // Jika tidak ada token, ke LoginScreen
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
                       );
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFFFBD73), // Warna tombol
-                    padding: EdgeInsets.symmetric(vertical: 15),
+                    backgroundColor: const Color(0xFFFFBD73), // Warna tombol
+                    padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Log In',
                     style: TextStyle(
                       fontSize: 18,

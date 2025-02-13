@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
 
 class FailurePage2I extends StatelessWidget {
+  const FailurePage2I({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,8 +14,8 @@ class FailurePage2I extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(height: 200),
-              Text(
+              const SizedBox(height: 200),
+              const Text(
                 'Anda Gagal',
                 style: TextStyle(
                   fontSize: 32,
@@ -22,7 +24,7 @@ class FailurePage2I extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              Text(
+              const Text(
                 'Mengirimkan',
                 style: TextStyle(
                   fontSize: 32,
@@ -31,7 +33,7 @@ class FailurePage2I extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              Text(
+              const Text(
                 'Pengajuan ​😑​🙏​',
                 style: TextStyle(
                   fontSize: 32,
@@ -40,7 +42,7 @@ class FailurePage2I extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              Text(
+              const Text(
                 'Coba Lagi',
                 style: TextStyle(
                   fontSize: 11,
@@ -48,25 +50,27 @@ class FailurePage2I extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 200),
+              const SizedBox(height: 200),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.white, width: 1),
+                    side: const BorderSide(color: Colors.white, width: 1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 130, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 130, vertical: 15),
                 ),
                 onPressed: () {
-                 Navigator.pushAndRemoveUntil(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => TimeOffScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const TimeOffScreen()),
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },
-                child: Text('Kembali Ke Menu'),
+                child: const Text('Kembali Ke Menu'),
               ),
             ],
           ),

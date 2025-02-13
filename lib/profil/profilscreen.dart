@@ -23,7 +23,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   String? profileImageUrl;
   String? idCardImageUrl;
   String? cvImageUrl;
@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> getNotif() async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/get-self-notification');
+        'https://portal.eksam.cloud/api/v1/other/get-self-notification');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -143,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> putRead(int id) async {
     final url = Uri.parse(
-        'https://dev-portal.eksam.cloud/api/v1/other/read-notification/$id');
+        'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
     var request = http.MultipartRequest('PUT', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -175,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> getPendidikan() async {
     final url =
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-pendidikan');
+        Uri.parse('https://portal.eksam.cloud/api/v1/other/get-pendidikan');
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
 
@@ -198,8 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _getBank() async {
-    final url =
-        Uri.parse('https://dev-portal.eksam.cloud/api/v1/other/get-bank');
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/get-bank');
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
 
@@ -223,8 +222,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> setProfile() async {
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/set-profile');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/set-profile');
 
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -274,8 +273,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> getProfile() async {
     try {
-      final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/get-profile');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
 
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       final token = localStorage.getString('token');
@@ -288,11 +287,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final data = jsonDecode(response.body);
         setState(() {
           profileImageUrl =
-              "https://dev-portal.eksam.cloud/storage/foto/${data['data']['foto']}";
+              "https://portal.eksam.cloud/storage/foto/${data['data']['foto']}";
           idCardImageUrl =
-              "https://dev-portal.eksam.cloud/storage/ktp/${data['data']['foto_ktp']}";
+              "https://portal.eksam.cloud/storage/ktp/${data['data']['foto_ktp']}";
           cvImageUrl =
-              "https://dev-portal.eksam.cloud/storage/cv/${data['data']['riwayat_hidup']}";
+              "https://portal.eksam.cloud/storage/cv/${data['data']['riwayat_hidup']}";
           name = data['data']['name'].toString();
           email = data['data']['email'].toString();
           phoneNumber = data['data']['no_hp'].toString();
@@ -428,7 +427,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, style: titleStyle),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         GestureDetector(
           onTap: () => _pickImage(imageType), // Memilih gambar
           child: Container(
@@ -439,7 +438,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? Image.network(imageUrl, fit: BoxFit.cover)
                 : imageUrl != null
                     ? Image.file(File(imageUrl), fit: BoxFit.cover)
-                    : Center(
+                    : const Center(
                         child: Icon(Icons.add_a_photo,
                             size: 20, color: Colors.grey),
                       ),
@@ -454,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, style: titleStyle),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         GestureDetector(
           onTap: () => _pickImageId(imageType), // Memilih gambar
           child: Container(
@@ -465,7 +464,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? Image.network(imageUrl)
                 : imageUrl != null
                     ? Image.file(File(imageUrl), fit: BoxFit.cover)
-                    : Center(
+                    : const Center(
                         child: Icon(Icons.add_a_photo,
                             size: 20, color: Colors.grey),
                       ),
@@ -489,13 +488,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Row(
             crossAxisAlignment:
                 CrossAxisAlignment.center, // Menjaga elemen tetap sejajar
@@ -503,14 +502,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Expanded(
                 child: Text(
                   value,
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                   softWrap: true, // Agar teks membungkus
                   overflow: TextOverflow.visible, // Biarkan teks tetap terlihat
                 ),
               ),
               if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
                 IconButton(
-                  icon: Icon(Icons.edit, color: Colors.orange),
+                  icon: const Icon(Icons.edit, color: Colors.orange),
                   onPressed: () {
                     if (onEdit != null) {
                       _showEditDialog(title, value, onEdit);
@@ -538,13 +537,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Row(
             crossAxisAlignment:
                 CrossAxisAlignment.center, // Menjaga elemen sejajar vertikal
@@ -552,7 +551,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Expanded(
                 child: Text(
                   value,
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                   softWrap: true, // Agar teks membungkus
                   overflow: TextOverflow
                       .ellipsis, // Tambahkan elipsis jika teks terlalu panjang
@@ -560,7 +559,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               if (isEditable) // Tampilkan tombol edit hanya jika isEditable true
                 IconButton(
-                  icon: Icon(Icons.edit, color: Colors.orange),
+                  icon: const Icon(Icons.edit, color: Colors.orange),
                   onPressed: () {
                     if (onEdit != null) {
                       _showEditNoHp(title, value, onEdit);
@@ -611,7 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               },
                             )
                           : null,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           color: errorText == null
@@ -644,7 +643,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
@@ -663,7 +662,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.pop(context);
                     }
                   },
-                  child: Text('Save'),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -709,7 +708,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               },
                             )
                           : null,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
                           color: errorText == null
@@ -742,7 +741,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () {
@@ -761,7 +760,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.pop(context);
                     }
                   },
-                  child: Text('Save'),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -774,14 +773,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showChangePasswordDialog() {
     TextEditingController oldPasswordController = TextEditingController();
     TextEditingController newPasswordController = TextEditingController();
-    bool _obscureOldPassword = true;
-    bool _obscureNewPassword = true;
+    bool obscureOldPassword = true;
+    bool obscureNewPassword = true;
     String? oldPasswordError;
     String? newPasswordError;
 
     Future<void> setPass() async {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/karyawan/change-pass-self');
+          'https://portal.eksam.cloud/api/v1/karyawan/change-pass-self');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
@@ -799,7 +798,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Password berhasil diubah
           Navigator.pop(context); // Tutup dialog
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Password successfully updated')),
+            const SnackBar(content: Text('Password successfully updated')),
           );
         } else {
           // Tangani error jika password lama salah
@@ -810,7 +809,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             });
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to update password')),
+              const SnackBar(content: Text('Failed to update password')),
             );
           }
         }
@@ -825,13 +824,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Change Password'),
+              title: const Text('Change Password'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: oldPasswordController,
-                    obscureText: _obscureOldPassword,
+                    obscureText: obscureOldPassword,
                     decoration: InputDecoration(
                       labelText: 'Old Password',
                       border: OutlineInputBorder(
@@ -844,13 +843,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       errorText: oldPasswordError,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureOldPassword
+                          obscureOldPassword
                               ? Icons.visibility_off
                               : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscureOldPassword = !_obscureOldPassword;
+                            obscureOldPassword = !obscureOldPassword;
                           });
                         },
                       ),
@@ -861,10 +860,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       });
                     },
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: newPasswordController,
-                    obscureText: _obscureNewPassword,
+                    obscureText: obscureNewPassword,
                     decoration: InputDecoration(
                       labelText: 'New Password',
                       border: OutlineInputBorder(
@@ -877,13 +876,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       errorText: newPasswordError,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureNewPassword
+                          obscureNewPassword
                               ? Icons.visibility_off
                               : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscureNewPassword = !_obscureNewPassword;
+                            obscureNewPassword = !obscureNewPassword;
                           });
                         },
                       ),
@@ -904,7 +903,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text('Cancel'),
+                      child: const Text('Cancel'),
                     ),
                     TextButton(
                       onPressed: () {
@@ -930,7 +929,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           setPass(); // Panggil fungsi untuk update password
                         }
                       },
-                      child: Text('Submit'),
+                      child: const Text('Submit'),
                     ),
                   ],
                 ),
@@ -949,14 +948,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Navigasi kembali ke WelcomeScreen
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
       (route) => false,
     );
   }
 
-  final TextStyle titleStyle = TextStyle(fontSize: 14, color: Colors.black54);
+  final TextStyle titleStyle =
+      const TextStyle(fontSize: 14, color: Colors.black54);
   final TextStyle valueStyle =
-      TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
+      const TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
 
   @override
   Widget build(BuildContext context) {
@@ -981,7 +981,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       colors: [
                         Colors.orange,
                         Colors.pink,
-                        const Color.fromARGB(255, 101, 19, 116)
+                        Color.fromARGB(255, 101, 19, 116)
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomCenter,
@@ -1000,7 +1000,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ? FileImage(profileImage!)
                                   : (profileImageUrl != null
                                       ? NetworkImage(profileImageUrl!)
-                                      : AssetImage(
+                                      : const AssetImage(
                                           'assets/image/logo_circle.png')),
                               //         as ImageProvider,
                               // backgroundColor: Colors.grey[200],
@@ -1009,21 +1009,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               right: 0,
                               bottom: 0,
                               child: IconButton(
-                                icon: Icon(Icons.camera_alt,
+                                icon: const Icon(Icons.camera_alt,
                                     color: Colors.orange, size: 30),
                                 onPressed: _pickImageFromGallery,
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 10),
-                        Text(
+                        const SizedBox(height: 10),
+                        const Text(
                           'Hello!',
                           style: TextStyle(fontSize: 20),
                         ),
                         Text(
                           name,
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: Colors.white),
@@ -1046,7 +1046,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Password',
                               style: TextStyle(
                                 fontSize: 14,
@@ -1054,22 +1054,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color: Colors.grey,
                               ),
                             ),
-                            SizedBox(height: 5),
+                            const SizedBox(height: 5),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
+                                const Expanded(
                                   child: Text(
                                     'Edit Password',
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                     width:
                                         10), // Menambah jarak tetap antara teks dan ikon
                                 IconButton(
-                                    icon:
-                                        Icon(Icons.edit, color: Colors.orange),
+                                    icon: const Icon(Icons.edit,
+                                        color: Colors.orange),
                                     onPressed: _showChangePasswordDialog),
                               ],
                             ),
@@ -1093,7 +1093,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const Divider(
                         height: 30,
                         thickness: 1,
-                        color: const Color.fromRGBO(101, 19, 116, 1),
+                        color: Color.fromRGBO(101, 19, 116, 1),
                       ),
                       _buildProfileItem(
                         title: 'Alamat KTP',
@@ -1102,15 +1102,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           idCardAddress = newValue; // Update value setelah edit
                         }),
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       _buildImageCardId("Foto KTP", idCardImageUrl, 'ID CARD'),
                       const Divider(
                         height: 30,
                         thickness: 1,
-                        color: const Color.fromRGBO(101, 19, 116, 1),
+                        color: Color.fromRGBO(101, 19, 116, 1),
                       ),
                       _buildImageCard("Foto CV", cvImageUrl, 'CV'),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       _buildProfileItem(
                         title: 'Kontrak Kerja Mulai',
                         value: employmentStart,
@@ -1121,7 +1121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         value: employmentEnd,
                         isEditable: false, // Tidak bisa diedit
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1167,7 +1167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1213,7 +1213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       _buildNohp(
                         title: 'Bank Account Number',
                         value: bankAccount,
@@ -1221,13 +1221,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           bankAccount = newValue; // Update value setelah edit
                         }),
                       ),
-                      SizedBox(height: 14),
+                      const SizedBox(height: 14),
                       _buildNohp(
                         title: 'Batas Cuti',
                         value: Limit,
                         isEditable: false, // Tidak bisa diedit
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       ElevatedButton.icon(
                         onPressed: () => _logout(context),
                         icon: const Icon(Icons.logout),
@@ -1246,7 +1246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/home.png'), // Custom icon
               size: 18,
@@ -1254,7 +1254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/timeoff.png'), // Custom icon
               size: 20,
@@ -1262,14 +1262,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             label: 'Time Off',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.receipt, size: 27),
             label: 'Reimbursement',
           ),
           BottomNavigationBarItem(
             icon: Stack(
               children: [
-                ImageIcon(
+                const ImageIcon(
                   AssetImage('assets/icon/notifikasi.png'),
                   size: 20,
                   color: Colors.white,
@@ -1278,7 +1278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   future: NotificationHelper.hasUnreadNotifications(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data == true) {
-                      return Positioned(
+                      return const Positioned(
                         right: 0,
                         top: 0,
                         child: Icon(
@@ -1288,14 +1288,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       );
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 ),
               ],
             ),
             label: 'Notification',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: ImageIcon(
               AssetImage('assets/icon/profil.png'), // Custom icon
               size: 22,
@@ -1323,19 +1323,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             case 1:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TimeOffScreen()),
+                MaterialPageRoute(builder: (context) => const TimeOffScreen()),
               );
               break;
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ReimbursementPage()),
+                MaterialPageRoute(
+                    builder: (context) => const ReimbursementPage()),
               );
               break;
             case 3:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
+                MaterialPageRoute(
+                    builder: (context) => const NotificationPage()),
               );
               break;
             case 4:

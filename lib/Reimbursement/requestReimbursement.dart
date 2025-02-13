@@ -12,6 +12,8 @@ import 'dart:convert';
 import 'dart:io';
 
 class ReimbursementForm extends StatefulWidget {
+  const ReimbursementForm({super.key});
+
   @override
   _ReimbursementFormState createState() => _ReimbursementFormState();
 }
@@ -75,7 +77,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
 
     try {
       final url = Uri.parse(
-          'https://dev-portal.eksam.cloud/api/v1/other/add-self-reimbursement');
+          'https://portal.eksam.cloud/api/v1/other/add-self-reimbursement');
       var request = http.MultipartRequest('POST', url);
 
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -101,8 +103,8 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
       var data = jsonDecode(rp.body);
 
       if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => SuccessPage3()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const SuccessPage3()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -110,8 +112,8 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
             backgroundColor: Colors.red,
           ),
         );
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => FailurePage3()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const FailurePage3()));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -120,8 +122,8 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
           backgroundColor: Colors.red,
         ),
       );
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => FailurePage3()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const FailurePage3()));
     }
   }
 
@@ -148,15 +150,16 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => ReimbursementPage()),
+              MaterialPageRoute(
+                  builder: (context) => const ReimbursementPage()),
             ); // Action for back button
           },
         ),
-        title: Text(
+        title: const Text(
           'Reimbursement',
           style: TextStyle(color: Colors.black),
         ),
@@ -171,25 +174,28 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  labelStyle: TextStyle(color:  const Color.fromARGB(255, 101, 19, 116)),
+                  labelStyle:
+                      const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
                       FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                        color:
-                            _isDescriptionEmpty ? Colors.red :  const Color.fromARGB(255, 101, 19, 116)),
+                        color: _isDescriptionEmpty
+                            ? Colors.red
+                            : const Color.fromARGB(255, 101, 19, 116)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color:  const Color.fromARGB(255, 101, 19, 116), width: 2),
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 101, 19, 116), width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Colors.red), // Border saat error
+                    borderSide: const BorderSide(
+                        color: Colors.red), // Border saat error
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -203,31 +209,35 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                   });
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
               // Field for total reimbursement
               TextFormField(
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Total Reimbursement',
-                  labelStyle: TextStyle(color:  const Color.fromARGB(255, 101, 19, 116)),
+                  labelStyle:
+                      const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
                   floatingLabelBehavior:
                       FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                        color: _isTotalEmpty ? Colors.red :  const Color.fromARGB(255, 101, 19, 116)),
+                        color: _isTotalEmpty
+                            ? Colors.red
+                            : const Color.fromARGB(255, 101, 19, 116)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color:  const Color.fromARGB(255, 101, 19, 116), width: 2),
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 101, 19, 116), width: 2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Colors.red), // Border saat error
+                    borderSide: const BorderSide(
+                        color: Colors.red), // Border saat error
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                         color: Colors.red), // Border saat error dan fokus
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -242,7 +252,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                   });
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
               // Date picker field
               InkWell(
@@ -250,25 +260,29 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                 child: InputDecorator(
                   decoration: InputDecoration(
                     labelText: 'Tanggal',
-                    labelStyle: TextStyle(color:  const Color.fromARGB(255, 101, 19, 116)),
+                    labelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
                         .always, // Always show label on top
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
-                          color: _isDateEmpty ? Colors.red :  const Color.fromARGB(255, 101, 19, 116)),
+                          color: _isDateEmpty
+                              ? Colors.red
+                              : const Color.fromARGB(255, 101, 19, 116)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color:  const Color.fromARGB(255, 101, 19, 116), width: 2),
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     errorBorder: OutlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Colors.red), // Border saat error
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedErrorBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                           color: Colors.red), // Border saat error dan fokus
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -282,12 +296,12 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                       Text(
                         selectedDate == null ? 'Select Date' : formattedDate,
                       ),
-                      Icon(Icons.calendar_today, color: Colors.orange),
+                      const Icon(Icons.calendar_today, color: Colors.orange),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // Upload Photo Button
               GestureDetector(
                 onTap: _pickImage, // Langsung panggil kamera
@@ -324,7 +338,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                           'Upload Photo Anda',
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color.fromRGBO(101, 19, 116, 1),
+                            color: Color.fromRGBO(101, 19, 116, 1),
                           ),
                         ),
                     ],
@@ -380,19 +394,20 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                   ),
                 ),
 
-              SizedBox(height: 130),
+              const SizedBox(height: 130),
               // Submit button
               ElevatedButton(
-                onPressed: _submitData, // Call the function to submit data
-                child: Text('Request Reimbursement'),
+                onPressed: _submitData,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pink,
                   foregroundColor: Colors.white,
-                  minimumSize: Size(double.infinity, 45), // Full width button
+                  minimumSize:
+                      const Size(double.infinity, 45), // Full width button
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                ),
+                ), // Call the function to submit data
+                child: const Text('Request Reimbursement'),
               ),
             ],
           ),
