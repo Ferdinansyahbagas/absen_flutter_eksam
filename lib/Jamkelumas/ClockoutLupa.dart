@@ -4,28 +4,35 @@ import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:absen/susses&failde/berhasilV1.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ClockOutScreen extends StatefulWidget {
-  const ClockOutScreen({super.key});
+class ClockOutLupaScreen extends StatefulWidget {
+  const ClockOutLupaScreen({super.key});
 
   @override
-  _ClockOutScreenState createState() => _ClockOutScreenState();
+  _ClockOutLupaScreenState createState() => _ClockOutLupaScreenState();
 }
 
-class _ClockOutScreenState extends State<ClockOutScreen> {
+class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   File? _image;
   String note = '';
+  String formattedDate = '';
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
+  bool _isDateEmpty = false;
+  bool _isTimeEmpty = false;
+  String? userStatus; // Tambahan untuk menyimpan user level
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
+  TimeOfDay? _selectedTime; // Variabel untuk menyimpan waktu clock-out
+  DateTime? selectedDate;
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _noteController = TextEditingController();
 
@@ -34,6 +41,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     super.initState();
     _loadSelectedValues();
     getData();
+    getProfil();
     _setWorkTypeLembur();
   }
 
@@ -87,8 +95,70 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     }
   }
 
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStartDate) {
+          selectedDate = picked;
+          formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+          _isDateEmpty = false;
+        }
+      });
+    }
+  }
+
+  // Future<void> _setWorkTypeLembur() async {
+
+  //   try {
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     if (response.statusCode == 200) {
+  //       bool hasClockedIn = data['message'] != 'belum clock-in';
+  //       // Cek status clock-in
+  //       setState(() {
+  //         if (hasClockedIn) {
+  //           // Jika sudah clock-in, hanya munculkan Lembur
+  //           _selectedWorkType = 'Lembur';
+  //         }
+  //         // } else {
+  //         //   // Jika belum clock-in, munculkan opsi Reguler dan Lembur
+  //         //   workTypes = ['Reguler', 'Lembur'];
+  //         //   _selectedWorkType = 'Reguler';
+  //         // }
+  //       });
+  //     } else {
+  //       print("Error mengecek status clock-in: ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     print("Error mengecek status clock-in: $e");
+  //   }
+  // }
+
   Future<void> _setWorkTypeLembur() async {
     try {
+      if (userStatus == '3') {
+        setState(() {
+          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+        });
+        return; // Stop di sini kalau user level 3
+      }
+
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -103,17 +173,13 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
       if (response.statusCode == 200) {
         bool hasClockedIn = data['message'] != 'belum clock-in';
-        // Cek status clock-in
+
         setState(() {
           if (hasClockedIn) {
-            // Jika sudah clock-in, hanya munculkan Lembur
             _selectedWorkType = 'Lembur';
+          } else {
+            _selectedWorkType = 'Reguler';
           }
-          // } else {
-          //   // Jika belum clock-in, munculkan opsi Reguler dan Lembur
-          //   workTypes = ['Reguler', 'Lembur'];
-          //   _selectedWorkType = 'Reguler';
-          // }
         });
       } else {
         print("Error mengecek status clock-in: ${response.statusCode}");
@@ -123,32 +189,65 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     }
   }
 
-  Future<void> _submitData() async {
-    if (_noteController.text.isEmpty) {
+  void _pickTime() async {
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
       setState(() {
-        _isNoteRequired = true;
+        _selectedTime = pickedTime;
+        _isTimeEmpty = false; // Hilangkan error setelah memilih waktu
       });
+    }
+  }
+
+  Future<void> getProfil() async {
+    try {
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      setState(() {
+        userStatus = data['data']['user_level_id'].toString();
+      });
+
+      print("Profil pengguna: ${data['data']}");
+      _setWorkTypeLembur(); // Panggil setelah dapat userStatus
+    } catch (e) {
+      print("Error mengambil profil pengguna: $e");
+    }
+  }
+
+  Future<void> _submitData() async {
+    setState(() {
+      _isDateEmpty = selectedDate == null;
+      _isTimeEmpty = _selectedTime == null;
+      _isImageRequired = _image == null;
+      _isNoteRequired = _noteController.text.isEmpty;
+    });
+
+    if (_isDateEmpty || _isTimeEmpty || _isImageRequired || _isNoteRequired) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill in the note before submitting.'),
+          content: Text('Harap isi semua field sebelum submit.'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    if (_image == null) {
-      setState(() {
-        _isImageRequired = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload a photo before submitting.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    String formattedTime =
+        "${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}";
 
     showDialog(
       context: context,
@@ -163,14 +262,16 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     );
 
     try {
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-out');
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/attendance/clock-out-lupa');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
-      
+
       request.fields['notes'] = _noteController.text;
+      request.fields['jam_clock_out'] = formattedTime; // Kirim waktu clock-out
+      request.fields['date'] = formattedDate;
 
       if (_image != null) {
         request.files.add(await http.MultipartFile.fromPath(
@@ -285,6 +386,126 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                 onChanged: null, // Disabled
               ),
               const SizedBox(height: 20),
+              // Date picker field
+              InkWell(
+                onTap: () => _selectDate(context, true),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Tanggal',
+                    labelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 101, 19, 116)),
+                    floatingLabelBehavior: FloatingLabelBehavior
+                        .always, // Always show label on top
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: _isDateEmpty
+                              ? Colors.red
+                              : const Color.fromARGB(255, 101, 19, 116)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error dan fokus
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorText: _isDateEmpty
+                        ? 'Tanggal Wajib Di isi'
+                        : null, // Error message
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        selectedDate == null ? 'Select Date' : formattedDate,
+                      ),
+                      const Icon(Icons.calendar_today, color: Colors.orange),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Input untuk Clock-Out Time
+              InkWell(
+                onTap: _pickTime,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Clock-Out Time',
+                    labelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 101, 19, 116)),
+                    floatingLabelBehavior:
+                        FloatingLabelBehavior.always, // Label selalu di atas
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: _isTimeEmpty
+                              ? Colors.red
+                              : const Color.fromARGB(255, 101, 19, 116)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.red),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.red),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorText:
+                        _isTimeEmpty ? 'Clock-Out Time Wajib Diisi' : null,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedTime == null
+                            ? 'Select Time'
+                            : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                      ),
+                      const Icon(Icons.access_time,
+                          color: Colors.orange), // Ikon jam
+                    ],
+                  ),
+                ),
+              ),
+
+              // const Text(
+              //   'Clock-Out Time',
+              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              // ),
+              // const SizedBox(height: 10),
+              // InkWell(
+              //   onTap: _pickTime,
+              //   child: Container(
+              //     padding: const EdgeInsets.all(15),
+              //     decoration: BoxDecoration(
+              //       border: Border.all(color: Colors.purple, width: 2),
+              //       borderRadius: BorderRadius.circular(8),
+              //     ),
+              //     child: Text(
+              //       _selectedTime == null
+              //           ? 'Select Time'
+              //           : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+              //       style: const TextStyle(fontSize: 16),
+              //     ),
+              //   ),
+              // ),
+              const SizedBox(height: 20),
+
               // Upload Photo Button
               GestureDetector(
                 onTap: _pickImage, // Langsung panggil kamera
@@ -408,6 +629,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                   }
                 },
               ),
+
               const SizedBox(height: 120),
               Center(
                 child: ElevatedButton(

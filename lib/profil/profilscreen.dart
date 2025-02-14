@@ -1,18 +1,18 @@
-import 'package:absen/homepage/home.dart';
-import 'package:absen/homepage/notif.dart';
-import 'package:absen/screen/loginscreen.dart';
-import 'package:absen/timeoff/TimeoffScreen.dart';
 import 'package:absen/Reimbursement/Reimbursementscreen.dart';
+import 'package:absen/timeoff/TimeoffScreen.dart';
+import 'package:absen/screen/loginscreen.dart';
+import 'package:absen/homepage/notif.dart';
+import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'package:image/image.dart' as img;
-import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 import 'package:http_parser/http_parser.dart';
 import 'package:absen/utils/preferences.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:absen/utils/notification_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -234,6 +234,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       request.fields['alamat_domisili'] = address;
       request.fields['alamat_ktp'] = idCardAddress;
       request.fields['email'] = email;
+      request.fields['name'] = name;
 
       request.fields['pendidikan_id'] = education;
       request.fields['bank_id'] = bank;
@@ -1021,13 +1022,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Hello!',
                           style: TextStyle(fontSize: 20),
                         ),
-                        Text(
-                          name,
-                          style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
+                        // Text(
+                        //   name,
+                        //   style: const TextStyle(
+                        //       fontSize: 24,
+                        //       fontWeight: FontWeight.bold,
+                        //       color: Colors.white),
+                        // ),
                       ],
                     ),
                   ),
@@ -1036,6 +1037,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
+                      _buildProfileItem(
+                        title: 'Name',
+                        value: name,
+                        onEdit: (newValue) => setState(() {
+                          name = newValue; // Update value setelah edit
+                        }),
+                      ),
                       _buildProfileItem(
                         title: 'Email',
                         value: email,

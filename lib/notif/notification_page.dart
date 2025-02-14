@@ -1,141 +1,156 @@
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-// import 'package:timezone/data/latest.dart' as tz;
-// import 'package:timezone/timezone.dart' as tz;
-// import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:flutter/material.dart';
 
-// class NotificationHelper {
-//   static const String unreadKey = "unread_notifications";
-//   static final FlutterLocalNotificationsPlugin
-//       _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+void main() {
+  runApp(MyApp());
+}
 
-//   /// Periksa apakah ada notifikasi yang belum dibaca
-//   static Future<bool> hasUnreadNotifications() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     return prefs.getBool(unreadKey) ?? false; // Default ke false jika null
-//   }
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: AttendanceHistoryScreen(),
+    );
+  }
+}
 
-//   /// Tandai bahwa semua notifikasi sudah dibaca
-//   static Future<void> markAllAsRead() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setBool(unreadKey, false);
-//   }
+class AttendanceHistoryScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Attendance History"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {},
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Total Masuk Kerja
+            InfoCard(
+              title: "Total Masuk Kerja Anda",
+              value: "1 Days",
+              color: Colors.orange,
+            ),
 
-//   /// Tandai bahwa ada notifikasi yang belum dibaca
-//   static Future<void> setUnreadNotifications(bool status) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setBool(unreadKey, status);
-//   }
+            SizedBox(height: 10),
 
-//   static Future<void> initialize() async {
-//     // Inisialisasi database zona waktu
-//     tz.initializeTimeZones();
-//     String currentTimeZone = await FlutterNativeTimezone.getLocalTimezone();
-//     tz.setLocalLocation(tz.getLocation(currentTimeZone));
+            // Total Terlambat
+            InfoCard(
+              title: "Anda Terlambat Kerja Secara Total",
+              value: "0 Days",
+              color: Colors.orange,
+            ),
 
-//     const AndroidInitializationSettings initializationSettingsAndroid =
-//         AndroidInitializationSettings('@mipmap/ic_launcher');
-//     const InitializationSettings initializationSettings =
-//         InitializationSettings(android: initializationSettingsAndroid);
-//     await _flutterLocalNotificationsPlugin.initialize(
-//       initializationSettings,
-//     );
+            SizedBox(height: 20),
 
-//     // Inisialisasi timezone
-//     // tz.initializeTimeZones();
-//     // final String currentTimeZone = await tz.getLocalTimeZone();
-//     // tz.setLocalLocation(tz.getLocation(currentTimeZone));
-//   }
+            // Card yang bisa diklik (Kotak Merah)
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DetailPage()),
+                );
+              },
+              child: Card(
+                color: Colors.white,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Judul Card", // Tulisan pojok atas card
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text("Klik untuk melihat detail"),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
-//   static Future<void> showNotification({
-//     required int id,
-//     required String title,
-//     required String body,
-//   }) async {
-//     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-//         AndroidNotificationDetails(
-//       'default_channel_id',
-//       'Default Channel',
-//       channelDescription: 'Channel untuk notifikasi pengingat',
-//       importance: Importance.high,
-//       priority: Priority.high,
-//     );
+            Spacer(),
 
-//     const NotificationDetails platformChannelSpecifics =
-//         NotificationDetails(android: androidPlatformChannelSpecifics);
+            // Tombol Cek History
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                padding: EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {},
+              child: Text(
+                "Cek History Anda",
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-//     await _flutterLocalNotificationsPlugin.show(
-//       id,
-//       title,
-//       body,
-//       platformChannelSpecifics,
-//     );
-//   }
+// Widget untuk Card Informasi
+class InfoCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color color;
 
-//   static Future<void> scheduleNotification({
-//     required int id,
-//     required String title,
-//     required String body,
-//     required DateTime scheduledTime,
-//   }) async {
-//     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-//         AndroidNotificationDetails(
-//       'scheduled_channel_id',
-//       'Scheduled Channel',
-//       channelDescription: 'Channel untuk notifikasi terjadwal',
-//       importance: Importance.high,
-//       priority: Priority.high,
-//     );
+  InfoCard({required this.title, required this.value, required this.color});
 
-//     const NotificationDetails platformChannelSpecifics =
-//         NotificationDetails(android: androidPlatformChannelSpecifics);
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: color,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+            SizedBox(height: 10),
+            Text(
+              value,
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-//     await _flutterLocalNotificationsPlugin.zonedSchedule(
-//       id,
-//       title,
-//       body,
-//       tz.TZDateTime.from(scheduledTime, tz.local), // Konversi waktu ke TZ
-//       platformChannelSpecifics,
-//       androidAllowWhileIdle: true,
-//       uiLocalNotificationDateInterpretation:
-//           UILocalNotificationDateInterpretation.absoluteTime,
-//       matchDateTimeComponents:
-//           DateTimeComponents.time, // Hanya mencocokkan waktu
-//     );
-//   }
-// }
-
-
-
-
-// // import 'package:shared_preferences/shared_preferences.dart';
-
-// // class NotificationHelper {
-// //   static Future<bool> hasUnreadNotifications() async {
-// //     SharedPreferences prefs = await SharedPreferences.getInstance();
-// //     return prefs.getBool('hasUnreadNotifications') ?? false;
-// //   }
-
-// //   static Future<void> setUnreadNotifications(bool status) async {
-// //     SharedPreferences prefs = await SharedPreferences.getInstance();
-// //     await prefs.setBool('hasUnreadNotifications', status);
-// //   }
-// // }
-
-// // import 'package:shared_preferences/shared_preferences.dart';
-
-// // class NotificationHelper {
-// //   static const String unreadKey = "unread_notifications";
-
-// //   // Mengecek apakah ada notifikasi yang belum dibaca
-// //   static Future<bool> hasUnreadNotifications() async {
-// //     SharedPreferences prefs = await SharedPreferences.getInstance();
-// //     return prefs.getBool(unreadKey) ?? false;
-// //   }
-
-// //   // Menyimpan status notifikasi (dibaca/tidak)
-// //   static Future<void> setUnreadNotifications(bool status) async {
-// //     SharedPreferences prefs = await SharedPreferences.getInstance();
-// //     await prefs.setBool(unreadKey, status);
-// //   }
-// // }
+// Halaman Detail yang muncul saat Card diklik
+class DetailPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Detail Page")),
+      body: Center(child: Text("Ini adalah halaman detail!")),
+    );
+  }
+}

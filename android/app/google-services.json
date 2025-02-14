@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522911996586",
+    "project_id": "notification-apk-absen-eksam",
+    "storage_bucket": "notification-apk-absen-eksam.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522911996586:android:eda0d665cf3e12cc704ed3",
+        "android_client_info": {
+          "package_name": "id.eksam.absensi_eksam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA817FI5cBwRi8LNWsV1th0PBimz5CfZsg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

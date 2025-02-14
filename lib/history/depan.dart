@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/Jamkelumas/ClockoutLupa.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -15,13 +16,82 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String menit = '';
   String Totalday = '';
   String menitTelat = '';
+  bool isClockedIn = false;
+  bool hasClockedOut = false;
 
   @override
   void initState() {
     super.initState();
     getMenit();
+    getData();
     getHistoryData;
   }
+
+  Future<void> getData() async {
+    // Cek status clock-in
+    try {
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      setState(() {
+        hasClockedOut = data['message'] !=
+            'lupa clock out'; // Jika 'lupa clock out', berarti belum clock out
+      });
+    } catch (e) {
+      print("Error mengecek status clock-in: $e");
+    }
+  }
+
+  // Future<void> getData() async {
+  //   try {
+  //     final url =
+  //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     setState(() {
+  //       isClockedIn = data['message'] != 'belum clock-in';
+  //     });
+  //   } catch (e) {
+  //     print("Error mengecek status clock-in: $e");
+  //   }
+
+  //   try {
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/attendance/is-clock-out');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     setState(() {
+  //       hasClockedOut = data['message'] == 'sudah clock-out';
+  //     });
+  //   } catch (e) {
+  //     print("Error mengecek status clock-out: $e");
+  //   }
+  // }
 
   // fungsi untuk ngambil api history
   void getHistoryData(BuildContext context) async {
@@ -565,6 +635,45 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 subtitle: "Total Jam Anda Terlambat Masuk Kerja",
                 subtitleValue: "$menitTelat Minutes",
               ),
+              const SizedBox(height: 20),
+              if (!hasClockedOut)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ClockOutLupaScreen()),
+                    );
+                  },
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      color: Colors.orange,
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Anda Lupa Clock Out Total", // Tulisan pojok atas card
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 150),
               Center(
                 child: ElevatedButton(

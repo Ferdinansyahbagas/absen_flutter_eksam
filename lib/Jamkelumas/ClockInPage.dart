@@ -37,6 +37,7 @@ class _ClockInPageState extends State<ClockInPage> {
     _setWorkTypeLembur();
     getStatus();
     getLocation();
+    getData();
   }
 
   // Check if today is a weekend or holiday from API
@@ -65,6 +66,40 @@ class _ClockInPageState extends State<ClockInPage> {
       }
     } catch (e) {
       print('Error occurred: $e');
+    }
+  }
+
+  Future<void> getData() async {
+    // Get current location
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    double latitude = position.latitude;
+    double longitude = position.longitude;
+    // Ambil profil pengguna
+    try {
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      setState(() {
+        print(data['data']['latitude']);
+        print(data['data']['longtitude']);
+
+        latitude = data['data']['latitude'];
+        longitude = data['data']['longitude'];
+      });
+      print("Profil pengguna: ${data['data']}");
+    } catch (e) {
+      print("Error mengambil profil pengguna: $e");
     }
   }
 
@@ -226,9 +261,9 @@ class _ClockInPageState extends State<ClockInPage> {
       context: context,
       barrierDismissible: false, // Prevent dismissing the dialog
       builder: (BuildContext context) {
-        return const Center(
+        return Center(
           child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 101, 19, 116),
+            color: const Color.fromARGB(255, 101, 19, 116),
           ),
         );
       },
@@ -309,13 +344,13 @@ class _ClockInPageState extends State<ClockInPage> {
         // Successfully submitted
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SuccessPage()),
+          MaterialPageRoute(builder: (context) => SuccessPage()),
         );
       } else {
         // Submission failed
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const FailurePage()),
+          MaterialPageRoute(builder: (context) => FailurePage()),
         );
       }
     } catch (e) {
@@ -323,7 +358,7 @@ class _ClockInPageState extends State<ClockInPage> {
       print("Error: $e");
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const FailurePage()),
+        MaterialPageRoute(builder: (context) => FailurePage()),
       );
     }
   }
@@ -355,7 +390,7 @@ class _ClockInPageState extends State<ClockInPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Color.fromRGBO(101, 19, 116, 1),
+                  color: const Color.fromRGBO(101, 19, 116, 1),
                 ),
               ),
               const SizedBox(height: 10),
@@ -365,7 +400,7 @@ class _ClockInPageState extends State<ClockInPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
-                      color: Color.fromRGBO(101, 19, 116, 1),
+                      color: const Color.fromRGBO(101, 19, 116, 1),
                       width: 2,
                     ),
                   ),
@@ -392,7 +427,7 @@ class _ClockInPageState extends State<ClockInPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Color.fromRGBO(101, 19, 116, 1),
+                  color: const Color.fromRGBO(101, 19, 116, 1),
                 ),
               ),
               const SizedBox(height: 10),
@@ -402,7 +437,7 @@ class _ClockInPageState extends State<ClockInPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
-                      color: Color.fromRGBO(
+                      color: const Color.fromRGBO(
                           101, 19, 116, 1), // Customize border color
                       width: 2, // Customize border width
                     ),
@@ -457,7 +492,7 @@ class _ClockInPageState extends State<ClockInPage> {
                           'Upload Photo Anda',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Color.fromRGBO(101, 19, 116, 1),
+                            color: const Color.fromRGBO(101, 19, 116, 1),
                           ),
                         ),
                     ],
