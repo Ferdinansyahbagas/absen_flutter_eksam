@@ -287,7 +287,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const SuccessPage()));
+            MaterialPageRoute(builder: (context) =>  SuccessPage()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -296,7 +296,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
           ),
         );
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const FailurePage()));
+            MaterialPageRoute(builder: (context) =>  FailurePage()));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -306,7 +306,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
         ),
       );
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const FailurePage()));
+          MaterialPageRoute(builder: (context) =>  FailurePage()));
     }
   }
 
