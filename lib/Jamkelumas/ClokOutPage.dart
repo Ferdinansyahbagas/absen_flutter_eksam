@@ -22,7 +22,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   String note = '';
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
-    String? userStatus; // Tambahan untuk menyimpan user level
+  String? userStatus; // Tambahan untuk menyimpan user level
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
   List<String> WorkTypes = [];
@@ -116,8 +116,9 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
   Future<void> _setWorkTypeLembur() async {
     try {
-         if (userStatus == '3') {
+      if (userStatus == '3') {
         setState(() {
+          WorkTypes = ['Reguler'];
           _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
         });
         return; // Stop di sini kalau user level 3

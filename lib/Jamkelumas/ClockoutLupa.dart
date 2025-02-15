@@ -154,6 +154,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     try {
       if (userStatus == '3') {
         setState(() {
+          WorkTypes = ['Reguler'];
           _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
         });
         return; // Stop di sini kalau user level 3

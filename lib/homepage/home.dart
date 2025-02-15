@@ -486,6 +486,7 @@ class _HomePageState extends State<HomePage> {
       var data = jsonDecode(rp.body.toString());
 
       setState(() {
+        print(hasClockedOut);
         hasClockedOut = data['message'] == 'sudah clock-out';
       });
     } catch (e) {
@@ -718,8 +719,8 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        // if (userStatus == "3") ...[
-                        if (hasClockedOut) ...[
+                        if (userStatus == "3") ...[
+                        // if (hasClockedOut) ...[
                           // Clock In & Clock Out buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -738,7 +739,7 @@ class _HomePageState extends State<HomePage> {
                                         if (result == true) {
                                           setState(() {
                                             hasClockedIn = true;
-                                            // hasClockedOut = false;
+                                            hasClockedOut = false;
                                           });
                                         }
                                       },
@@ -762,7 +763,7 @@ class _HomePageState extends State<HomePage> {
                                         if (result == true) {
                                           setState(() {
                                             hasClockedOut = true;
-                                            // hasClockedIn = false;
+                                            hasClockedIn = false;
                                           });
                                         }
                                       }
@@ -779,11 +780,7 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           // ]
-                        ] else
-                          // if
-                          //(hasClockedOut &&
-                          // (userStatus != "3")
-                          ...[
+                        ] else if (hasClockedOut && userStatus != "3") ...[
                           // Overtime In & Overtime Out buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
