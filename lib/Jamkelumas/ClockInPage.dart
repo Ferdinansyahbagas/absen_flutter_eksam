@@ -23,6 +23,7 @@ class ClockInPage extends StatefulWidget {
 class _ClockInPageState extends State<ClockInPage> {
   String? _selectedWorkType = 'Reguler';
   String? _selectedWorkplaceType = 'WFO';
+  String? userStatus;
   File? _image; // To store the image file
   List<String> workTypes = []; // Dynamically set work types
   bool _isImageRequired = false; // Flag to indicate if image is required
@@ -69,19 +70,51 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-  Future<void> getData() async {
-    // Get current location
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+  // Future<void> getData() async {
+  //   // Get current location
+  //   Position position = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.high);
 
-    double latitude = position.latitude;
-    double longitude = position.longitude;
-    // Ambil profil pengguna
+  //   double latitude = position.latitude;
+  //   double longitude = position.longitude;
+  //   // Ambil profil pengguna
+  //   try {
+  //     final url =
+  //         Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     setState(() {
+  //       print(data['data']['latitude']);
+  //       print(data['data']['longtitude']);
+
+  //       latitude = data['data']['latitude'];
+  //       longitude = data['data']['longitude'];
+  //     });
+  //     print("Profil pengguna: ${data['data']}");
+  //   } catch (e) {
+  //     print("Error mengambil profil pengguna: $e");
+  //   }
+  // }
+
+  Future<void> getData() async {
     try {
+      // Ambil lokasi user
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      double userLatitude = position.latitude;
+      double userLongitude = position.longitude;
+
       final url =
           Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-
       var request = http.MultipartRequest('GET', url);
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
@@ -90,16 +123,37 @@ class _ClockInPageState extends State<ClockInPage> {
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
 
-      setState(() {
-        print(data['data']['latitude']);
-        print(data['data']['longtitude']);
+      if (rp.statusCode == 200) {
+        setState(() {
+          userStatus = data['data']['user_level_id'].toString();
 
-        latitude = data['data']['latitude'];
-        longitude = data['data']['longitude'];
-      });
-      print("Profil pengguna: ${data['data']}");
+          double officeLatitude = data['data']['latitude'];
+          double officeLongitude = data['data']['longitude'];
+
+          // Hitung jarak antara user dan kantor
+          double distance = Geolocator.distanceBetween(
+              userLatitude, userLongitude, officeLatitude, officeLongitude);
+
+          print("Jarak dari kantor: $distance meter");
+          print("Lokasi User: $userLatitude, $userLongitude");
+          print("Lokasi Kantor: $officeLatitude, $officeLongitude");
+          print("Jarak antara User dan Kantor: $distance meter");
+
+          if (distance > 500) {
+            // Jika lebih dari 500 meter, hanya munculkan WFH
+            workplaceTypes = ['WFH'];
+            _selectedWorkplaceType = 'WFH';
+          } else {
+            // Jika kurang dari 500 meter, munculkan semua opsi
+            workplaceTypes = ['WFO', 'WFH'];
+            _selectedWorkplaceType = 'WFO';
+          }
+        });
+      } else {
+        print("Error mengambil profil pengguna: ${rp.statusCode}");
+      }
     } catch (e) {
-      print("Error mengambil profil pengguna: $e");
+      print("Error mengambil data lokasi: $e");
     }
   }
 
@@ -132,6 +186,13 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _setWorkTypeLembur() async {
     try {
+      if (userStatus == '3') {
+        setState(() {
+          workTypes = ['Reguler'];
+          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+        });
+        return; // Stop di sini kalau user level 3
+      }
       final url =
           Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -168,6 +229,13 @@ class _ClockInPageState extends State<ClockInPage> {
   }
 
   Future<void> _setWorkTypesBasedOnDay() async {
+    if (userStatus == '3') {
+      setState(() {
+        workTypes = ['Reguler'];
+        _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+      });
+      return; //
+    }
     try {
       // Get current day
       final int currentDay = DateTime.now().weekday;

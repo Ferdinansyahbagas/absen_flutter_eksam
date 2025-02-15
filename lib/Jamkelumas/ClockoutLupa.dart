@@ -286,8 +286,8 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       var data = jsonDecode(rp.body.toString());
 
       if (response.statusCode == 200) {
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) =>  SuccessPage()));
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => SuccessPage()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -295,8 +295,8 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
             backgroundColor: Colors.red,
           ),
         );
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) =>  FailurePage()));
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => FailurePage()));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -305,8 +305,8 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) =>  FailurePage()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => FailurePage()));
     }
   }
 

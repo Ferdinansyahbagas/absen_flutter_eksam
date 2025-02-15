@@ -3,7 +3,8 @@ import 'package:absen/homepage/home.dart';
 import 'package:absen/screen/forpasscreen.dart';
 import 'package:absen/screen/welcome_screen.dart';
 import 'package:absen/utils/preferences.dart';
-import 'package:http/http.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showPassword = false;
   bool _isEmailValid = true;
   bool _isPasswordValid = true;
-  bool _isLoading = false; // Track loading state
+  bool _isLoading = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -30,14 +31,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _login() {
     setState(() {
-      // Validate email and password
       _isEmailValid = _emailController.text.contains('@');
       _isPasswordValid = _passwordController.text.length >= 6;
 
       if (_isEmailValid && _isPasswordValid) {
-        // Start loading
         _isLoading = true;
-        // Call the login function
         login2();
       }
     });
@@ -45,42 +43,73 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void login2() async {
     try {
-      Response response = await post(
+      final response = await http.post(
         Uri.parse('https://portal.eksam.cloud/api/v1/auth/login'),
         body: {
-          'email': _emailController.text.toString(),
-          'password': _passwordController.text.toString(),
+          'email': _emailController.text,
+          'password': _passwordController.text,
         },
       );
 
       setState(() {
-        _isLoading = false; // Stop loading
+        _isLoading = false;
       });
 
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body.toString());
+        var data = jsonDecode(response.body);
         String token = data['data']['token'];
 
-        // Save token to preferences
+        // Simpan token ke SharedPreferences
         await Preferences.setToken(token);
 
-        // Navigate to HomePage
+        // Simpan token Firebase
+        saveFirebaseToken();
+
+        // Pindah ke halaman Home
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
           (route) => false,
         );
       } else {
-        var data = jsonDecode(response.body.toString());
+        var data = jsonDecode(response.body);
         setState(() {
-          _errorMessage = data['message']; // Set error message
+          _errorMessage = data['message'];
         });
       }
     } catch (e) {
       setState(() {
-        _isLoading = false; // Stop loading
-        _errorMessage = "Terjadi kesalahan. Coba lagi nanti."; // General error
+        _isLoading = false;
+        _errorMessage = "Terjadi kesalahan. Coba lagi nanti.";
       });
+    }
+  }
+
+  void saveFirebaseToken() async {
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    String? userToken = await Preferences.getToken();
+
+    if (fcmToken != null && userToken != null) {
+      try {
+        final response = await http.post(
+          Uri.parse('https://portal.eksam.cloud/api/v1/auth/save-token'),
+          headers: {
+            'Authorization': 'Bearer $userToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'firebase_token': fcmToken}),
+        );
+
+        if (response.statusCode == 200) {
+          print("FCM Token berhasil disimpan!");
+        } else {
+          print("Gagal menyimpan FCM Token: ${response.body}");
+        }
+      } catch (e) {
+        print("Error menyimpan FCM Token: $e");
+      }
+    } else {
+      print("FCM Token atau User Token tidak tersedia");
     }
   }
 
@@ -104,7 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
         elevation: 0,
       ),
       body: Stack(
-        // Use Stack to overlay the loading indicator
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -121,13 +149,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8.0),
                 Text(
                   "Silakan Login Terlebih Dahulu Sebelum Masuk✨",
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16.0, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 32.0),
-                // Email Field
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -138,15 +162,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16.0),
-                // Password Field
                 TextField(
                   controller: _passwordController,
                   obscureText: !_showPassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
-                    errorText:
-                        _isPasswordValid ? null : 'Password minimal 6 karakter',
+                    errorText: _isPasswordValid ? null : 'Password minimal 6 karakter',
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showPassword ? Icons.visibility : Icons.visibility_off,
@@ -156,7 +178,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                // Display error message if any
                 if (_errorMessage != null)
                   Text(
                     _errorMessage!,
@@ -180,10 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: const Text(
                       'Log In',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 18.0, color: Colors.white),
                     ),
                   ),
                 ),
@@ -195,7 +213,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const ForgotPasswordPage()),
+                          builder: (context) => const ForgotPasswordPage(),
+                        ),
                       );
                     },
                     child: const Text('Forgot Your Password?'),
@@ -204,7 +223,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
-          // Show loading spinner on top of the screen
           if (_isLoading)
             const Center(
               child: CircularProgressIndicator(),

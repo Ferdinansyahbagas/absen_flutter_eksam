@@ -13,6 +13,8 @@ import 'package:http/http.dart' as http; // menyambungakan ke API
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
+import 'package:absen/utils/preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
@@ -31,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   String? currentCity; // Menyimpan nama kota
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String? userStatus;
+  String? _token;
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
@@ -62,6 +65,9 @@ class _HomePageState extends State<HomePage> {
     _startClock(); // Memulai timer untuk jam
     // _resetNoteAtFiveAM();
     getNotif();
+    _loadToken();
+    saveFirebaseToken();
+    gettoken(); // Kirim token ke server setelah disimpan
     _pageController.addListener(() {
       _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
       setState(() {
@@ -351,6 +357,59 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loadToken() async {
+    String? token = await Preferences.getToken();
+    setState(() {
+      _token = token;
+    });
+  }
+
+  void saveFirebaseToken() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    String? token = await messaging.getToken(); // Ambil token Firebase
+
+    if (token != null) {
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      await localStorage.setString('firebase_token', token);
+      print("Token Firebase disimpan: $token");
+
+      gettoken(); // Kirim token ke server setelah disimpan
+    }
+  }
+
+  Future<void> gettoken() async {
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
+
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage
+        .getString('firebase_token'); // Ambil token Firebase dari local storage
+
+    if (token == null || token.isEmpty) {
+      print("Token Firebase tidak ditemukan!");
+      return;
+    }
+
+    var request = http.MultipartRequest('POST', url);
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+    request.fields['firebase_token'] = token; // Kirim token Firebase ke API
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        print("Token Firebase berhasil dikirim: $token");
+      } else {
+        print("Error mengirim token Firebase: ${rp.statusCode}");
+        print(rp.body);
+      }
+    } catch (e) {
+      print("Error occurred: $e");
+    }
+  }
+
   // Fungsi untuk mengambil data dari API
   Future<void> getData() async {
     // Ambil profil pengguna
@@ -434,50 +493,52 @@ class _HomePageState extends State<HomePage> {
     }
 
     // Cek status lembur masuk
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
+    if (userStatus != "3") {
+      try {
+        final url = Uri.parse(
+            'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
+        SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+        var request = http.MultipartRequest('GET', url);
+        request.headers['Authorization'] =
+            'Bearer ${localStorage.getString('token')}';
 
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+        var response = await request.send();
+        var rp = await http.Response.fromStream(response);
+        var data = jsonDecode(rp.body.toString());
 
-      setState(() {
-        hasClockedInOvertime = data['message'] != 'belum clock-in';
-        if (hasClockedInOvertime) {
-          showNote = false;
-          isSuccess = false;
-          isholiday = false;
-          isovertime = true;
-        }
-      });
-    } catch (e) {
-      print("Error mengecek status clock-out: $e");
-    }
-    // Cek status lembur keluar
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/is-lembur-out');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
+        setState(() {
+          hasClockedInOvertime = data['message'] != 'belum clock-in';
+          if (hasClockedInOvertime) {
+            showNote = false;
+            isSuccess = false;
+            isholiday = false;
+            isovertime = true;
+          }
+        });
+      } catch (e) {
+        print("Error mengecek status clock-out: $e");
+      }
+      // Cek status lembur keluar
+      try {
+        final url = Uri.parse(
+            'https://portal.eksam.cloud/api/v1/attendance/is-lembur-out');
+        SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+        var request = http.MultipartRequest('GET', url);
+        request.headers['Authorization'] =
+            'Bearer ${localStorage.getString('token')}';
 
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+        var response = await request.send();
+        var rp = await http.Response.fromStream(response);
+        var data = jsonDecode(rp.body.toString());
 
-      setState(() {
-        hasClockedOutOvertime = data['message'] != 'belum clock-out';
-      });
-    } catch (e) {
-      print("Error mengecek status clock-out: $e");
+        setState(() {
+          hasClockedOutOvertime = data['message'] != 'belum clock-out';
+        });
+      } catch (e) {
+        print("Error mengecek status clock-out: $e");
+      }
     }
   }
 
@@ -657,67 +718,72 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (userStatus == "3") ...[
-                          if (!hasClockedOut) ...[
-                            // Clock In & Clock Out buttons
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: hasClockedIn
-                                      ? null
-                                      : () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ClockInPage(),
-                                            ),
-                                          );
-                                          if (result == true) {
-                                            setState(() {
-                                              hasClockedIn = true;
-                                            });
-                                          }
-                                        },
-                                  icon: const Icon(Icons.login),
-                                  label: const Text('Clock In'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: hasClockedIn
-                                        ? Colors.grey
-                                        : Colors.white,
-                                  ),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: hasClockedIn && !hasClockedOut
-                                      ? () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ClockOutScreen(),
-                                            ),
-                                          );
-                                          if (result == true) {
-                                            setState(() {
-                                              hasClockedOut = true;
-                                            });
-                                          }
+                        // if (userStatus == "3") ...[
+                        if (hasClockedOut) ...[
+                          // Clock In & Clock Out buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: hasClockedIn
+                                    ? null
+                                    : () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ClockInPage(),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          setState(() {
+                                            hasClockedIn = true;
+                                            // hasClockedOut = false;
+                                          });
                                         }
-                                      : null,
-                                  icon: const Icon(Icons.logout),
-                                  label: const Text('Clock Out'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        hasClockedIn && !hasClockedOut
-                                            ? Colors.white
-                                            : Colors.grey,
-                                  ),
+                                      },
+                                icon: const Icon(Icons.login),
+                                label: const Text('Clock In'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      hasClockedIn ? Colors.grey : Colors.white,
                                 ),
-                              ],
-                            ),
-                          ]
-                        ] else if (hasClockedOut && userStatus != "3") ...[
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: hasClockedIn && !hasClockedOut
+                                    ? () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ClockOutScreen(),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          setState(() {
+                                            hasClockedOut = true;
+                                            // hasClockedIn = false;
+                                          });
+                                        }
+                                      }
+                                    : null,
+                                icon: const Icon(Icons.logout),
+                                label: const Text('Clock Out'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      hasClockedIn && !hasClockedOut
+                                          ? Colors.white
+                                          : Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                          // ]
+                        ] else
+                          // if
+                          //(hasClockedOut &&
+                          // (userStatus != "3")
+                          ...[
                           // Overtime In & Overtime Out buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -895,7 +961,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   //card untuk lembur
-                  if (isovertime && userStatus != "3")
+                  if (isovertime //&& userStatus != "3"
+                      )
                     Card(
                       color: Colors.redAccent,
                       elevation: 5,

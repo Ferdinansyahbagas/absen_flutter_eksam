@@ -22,6 +22,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   String note = '';
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
+    String? userStatus; // Tambahan untuk menyimpan user level
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
   List<String> WorkTypes = [];
@@ -34,6 +35,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     super.initState();
     _loadSelectedValues();
     getData();
+    getProfil();
     _setWorkTypeLembur();
   }
 
@@ -56,6 +58,31 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
         _image = File(pickedFile.path);
         _isImageRequired = false;
       });
+    }
+  }
+
+  Future<void> getProfil() async {
+    try {
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      setState(() {
+        userStatus = data['data']['user_level_id'].toString();
+      });
+
+      print("Profil pengguna: ${data['data']}");
+      _setWorkTypeLembur(); // Panggil setelah dapat userStatus
+    } catch (e) {
+      print("Error mengambil profil pengguna: $e");
     }
   }
 
@@ -89,6 +116,12 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
   Future<void> _setWorkTypeLembur() async {
     try {
+         if (userStatus == '3') {
+        setState(() {
+          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+        });
+        return; // Stop di sini kalau user level 3
+      }
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -169,7 +202,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
-      
+
       request.fields['notes'] = _noteController.text;
 
       if (_image != null) {

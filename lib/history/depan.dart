@@ -16,8 +16,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String menit = '';
   String Totalday = '';
   String menitTelat = '';
-  bool isClockedIn = false;
-  bool hasClockedOut = false;
+  // bool isClockedIn = false;
+  // bool hasClockedOut = false;
+  bool isLupaClockOut = false; // Tambahkan variabel untuk cek lupa clock out
 
   @override
   void initState() {
@@ -43,8 +44,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       var data = jsonDecode(rp.body.toString());
 
       setState(() {
-        hasClockedOut = data['message'] !=
-            'lupa clock out'; // Jika 'lupa clock out', berarti belum clock out
+        isLupaClockOut = data['lupa']; // Ambil status lupa dari API
       });
     } catch (e) {
       print("Error mengecek status clock-in: $e");
@@ -636,7 +636,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 subtitleValue: "$menitTelat Minutes",
               ),
               const SizedBox(height: 20),
-              if (!hasClockedOut)
+              if (isLupaClockOut)
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
