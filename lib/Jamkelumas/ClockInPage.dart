@@ -139,12 +139,25 @@ class _ClockInPageState extends State<ClockInPage> {
           print("Lokasi Kantor: $officeLatitude, $officeLongitude");
           print("Jarak antara User dan Kantor: $distance meter");
 
+          print("Jarak dari kantor: $distance meter");
+          print("User level: $userStatus");
+
           if (distance > 500) {
-            // Jika lebih dari 500 meter, hanya munculkan WFH
-            workplaceTypes = ['WFH'];
-            _selectedWorkplaceType = 'WFH';
+            if (userStatus == 1 || userStatus == 2) {
+              // Jika user level 1 atau 2 & jarak > 500m, hanya bisa lembur & WFH
+              workTypes = ['Lembur'];
+              _selectedWorkType = 'Lembur';
+              workplaceTypes = ['WFH'];
+              _selectedWorkplaceType = 'WFH';
+            } else {
+              // Jika user level bukan 1/2, tapi jarak > 500m, hanya munculkan WFH
+              workplaceTypes = ['WFH'];
+              _selectedWorkplaceType = 'WFH';
+            }
           } else {
-            // Jika kurang dari 500 meter, munculkan semua opsi
+            // Jika jarak <= 500 meter, semua opsi tersedia
+            workTypes = ['Reguler', 'Lembur'];
+            _selectedWorkType = 'Reguler';
             workplaceTypes = ['WFO', 'WFH'];
             _selectedWorkplaceType = 'WFO';
           }
