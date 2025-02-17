@@ -719,7 +719,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (userStatus == "3") ...[
+                        if (userStatus == "1" || userStatus == "2" || userStatus == "3") ...[
                         // if (hasClockedOut) ...[
                           // Clock In & Clock Out buttons
                           Row(
