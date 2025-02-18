@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:absen/Jamkelumas/ClockoutLupa.dart';
+import 'package:intl/intl.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -16,6 +17,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String menit = '';
   String Totalday = '';
   String menitTelat = '';
+  String? lastClockOutDate;
   // bool isClockedIn = false;
   // bool hasClockedOut = false;
   bool isLupaClockOut = false; // Tambahkan variabel untuk cek lupa clock out
@@ -45,6 +47,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       setState(() {
         isLupaClockOut = data['lupa']; // Ambil status lupa dari API
+        lastClockOutDate = data['date']; // Ambil tanggal dari API
+
+        if (lastClockOutDate != null) {
+          DateTime parsedDate = DateTime.parse(lastClockOutDate!);
+          lastClockOutDate =
+              DateFormat('dd MMM yyyy').format(parsedDate); // Format tanggal
+        }
       });
     } catch (e) {
       print("Error mengecek status clock-in: $e");
@@ -636,42 +645,100 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 subtitleValue: "$menitTelat Minutes",
               ),
               const SizedBox(height: 20),
-              if (isLupaClockOut)
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ClockOutLupaScreen()),
-                    );
-                  },
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Card(
-                      color: Colors.orange,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
+              // if (isLupaClockOut)
+              //   GestureDetector(
+              //     onTap: () {
+              //       Navigator.push(
+              //         context,
+              //         MaterialPageRoute(
+              //             builder: (context) => ClockOutLupaScreen()),
+              //       );
+              //     },
+              //     child: SizedBox(
+              //       width: double.infinity,
+              //       child: Card(
+              //         color: Colors.orange,
+              //         elevation: 4,
+              //         shape: RoundedRectangleBorder(
+              //           borderRadius: BorderRadius.circular(12.0),
+              //         ),
+              //         child: Padding(
+              //           padding: const EdgeInsets.symmetric(
+              //               horizontal: 16.0, vertical: 20.0),
+              //           child: Column(
+              //             crossAxisAlignment: CrossAxisAlignment.center,
+              //             mainAxisAlignment: MainAxisAlignment.center,
+              //             children: [
+              //               Text(
+              //                 "Anda Lupa Clock Out Total", // Tulisan pojok atas card
+              //                 style: TextStyle(
+              //                   fontSize: 16,
+              //                   fontWeight: FontWeight.bold,
+              //                   color: Colors.white,
+              //                 ),
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+              if (isLupaClockOut && lastClockOutDate != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Anda Lupa Clock Out Total", // Tulisan pojok atas card
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Anda belum clock out di tanggal:",
+                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        lastClockOutDate!,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 40, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ClockOutLupaScreen()),
+                          );
+                        },
+                        child: const Text(
+                          "Clock Out Sekarang",
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               const SizedBox(height: 150),
