@@ -47,7 +47,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       setState(() {
         isLupaClockOut = data['lupa']; // Ambil status lupa dari API
-        lastClockOutDate = data['date']; // Ambil tanggal dari API
+        lastClockOutDate = data['data']['date']; // Ambil tanggal dari API
 
         if (lastClockOutDate != null) {
           DateTime parsedDate = DateTime.parse(lastClockOutDate!);
@@ -60,7 +60,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  // Future<void> getData() async {
+  // Future<void> getData() async { 
   //   try {
   //     final url =
   //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
