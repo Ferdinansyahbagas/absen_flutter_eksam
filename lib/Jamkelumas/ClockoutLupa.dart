@@ -40,8 +40,8 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   void initState() {
     super.initState();
     _loadSelectedValues();
-    getData();
     getProfil();
+    getDatalupa();
     _setWorkTypeLembur();
   }
 
@@ -67,33 +67,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     }
   }
 
-  Future<void> getData() async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/attendance/get-self-detail-today');
-    var request = http.MultipartRequest('GET', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
-
-    try {
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-
-      if (rp.statusCode == 200) {
-        var data = jsonDecode(rp.body.toString());
-        print(data);
-        setState(() {
-          _selectedWorkType = data['data']['type']['name'];
-          _selectedWorkplaceType = data['data']['location']['name'];
-        });
-      } else {
-        print('Error fetching history data: ${rp.statusCode}');
-        print(rp.body);
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
@@ -228,6 +201,34 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       print("Error mengambil profil pengguna: $e");
     }
   }
+
+  Future<void> getDatalupa() async {
+    try {
+      final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] = 'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (response.statusCode == 200) {
+        setState(() {
+          WorkTypes = List<String>.from(data['data']['attendance_type_id']);
+          WorkplaceTypes = List<String>.from(data['data']['attendance_location_id']);
+          _selectedWorkType = WorkTypes.isNotEmpty ? WorkTypes.first : null;
+          _selectedWorkplaceType = WorkplaceTypes.isNotEmpty ? WorkplaceTypes.first : null;
+        });
+      } else {
+        print("Error fetching data: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error occurred: $e");
+    }
+  }
+
 
   Future<void> _submitData() async {
     setState(() {

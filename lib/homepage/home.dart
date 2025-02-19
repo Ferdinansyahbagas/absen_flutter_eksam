@@ -494,7 +494,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     // Cek status lembur masuk
-    if (userStatus != "3") {
+    if (userStatus == "1" || userStatus == "2"
+        // userStatus != "3"
+        ) {
       try {
         final url = Uri.parse(
             'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
@@ -719,8 +721,11 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (userStatus == "1" || userStatus == "2" || userStatus == "3") ...[
-                        // if (hasClockedOut) ...[
+                        // if (
+                        //     userStatus == "1" ||
+                        //     userStatus == "2" ||
+                        //     userStatus == "3") ...[
+                        //   // if (hasClockedOut) ...[
                           // Clock In & Clock Out buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -780,7 +785,10 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           // ]
-                        ] else if (hasClockedOut && userStatus != "3") ...[
+                        // ] else
+                         if (hasClockedOut &&
+                            (userStatus == "1" ||
+                            userStatus == "2")) ...[
                           // Overtime In & Overtime Out buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,

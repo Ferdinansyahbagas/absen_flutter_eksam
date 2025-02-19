@@ -18,6 +18,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String Totalday = '';
   String menitTelat = '';
   String? lastClockOutDate;
+  List<dynamic> lupaClockOutList = [];
   // bool isClockedIn = false;
   // bool hasClockedOut = false;
   bool isLupaClockOut = false; // Tambahkan variabel untuk cek lupa clock out
@@ -47,60 +48,113 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       setState(() {
         isLupaClockOut = data['lupa']; // Ambil status lupa dari API
-        lastClockOutDate = data['data']['date']; // Ambil tanggal dari API
+        // lastClockOutDate = data['data']['date']; // Ambil tanggal dari API
 
-        if (lastClockOutDate != null) {
-          DateTime parsedDate = DateTime.parse(lastClockOutDate!);
-          lastClockOutDate =
-              DateFormat('dd MMM yyyy').format(parsedDate); // Format tanggal
-        }
+        // if (lastClockOutDate != null) {
+        //   DateTime parsedDate = DateTime.parse(lastClockOutDate!);
+        //   lastClockOutDate =
+        //       DateFormat('dd MMM yyyy').format(parsedDate); // Format tanggal
+        // }
+        lupaClockOutList = data['data'] is List ? data['data'] : [];
       });
     } catch (e) {
       print("Error mengecek status clock-in: $e");
     }
   }
 
-  // Future<void> getData() async { 
-  //   try {
-  //     final url =
-  //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  void _showLupaClockOutModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 0.6,
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Lupa Clock Out",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                Expanded(
+                  child: lupaClockOutList.isNotEmpty
+                      ? ListView.builder(
+                          itemCount: lupaClockOutList.length,
+                          itemBuilder: (context, index) {
+                            var item = lupaClockOutList[index];
+                            String formattedDate = DateFormat('yyyy-MM-dd')
+                                .format(DateTime.parse(item['date']));
+                            return Card(
+                              margin: EdgeInsets.symmetric(vertical: 5),
+                              child: ListTile(
+                                title: Text("Belum Clock Out"),
+                                subtitle: Text(formattedDate),
+                                trailing: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ClockOutLupaScreen()));
+                                  },
+                                  child: Text("Clock Out"),
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Center(child: Text("Tidak ada data lupa clock out")),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
+// total telat api
+  Future<void> getMenit() async {
+    try {
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
 
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
 
-  //     setState(() {
-  //       isClockedIn = data['message'] != 'belum clock-in';
-  //     });
-  //   } catch (e) {
-  //     print("Error mengecek status clock-in: $e");
-  //   }
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
-  //   try {
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/attendance/is-clock-out');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+      if (response.statusCode == 200) {
+        print("Successfully retrieved data");
+        print(data);
+        print(data['data']['menit'].toString());
+        print(data['data']['hari'].toString());
 
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
+        setState(() {
+          menit = data['data']['menit'].toString();
+          day = data['data']['hari'].toString();
+          menitTelat = data['data']['menit_telat'].toString();
+          Totalday = data['data']['telat'].toString();
+        });
 
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     setState(() {
-  //       hasClockedOut = data['message'] == 'sudah clock-out';
-  //     });
-  //   } catch (e) {
-  //     print("Error mengecek status clock-out: $e");
-  //   }
-  // }
+        print("test");
+        print(menit);
+      } else {
+        print("Error fetching data");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
 
   // fungsi untuk ngambil api history
   void getHistoryData(BuildContext context) async {
@@ -138,44 +192,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         }
 
         _onCheckHistoryPressed(context, historyData);
-      } else {
-        print("Error fetching data");
-      }
-    } catch (e) {
-      print("Error: $e");
-    }
-  }
-
-// total telat api
-  Future<void> getMenit() async {
-    try {
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
-
-      var request = http.MultipartRequest('GET', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      if (response.statusCode == 200) {
-        print("Successfully retrieved data");
-        print(data);
-        print(data['data']['menit'].toString());
-        print(data['data']['hari'].toString());
-
-        setState(() {
-          menit = data['data']['menit'].toString();
-          day = data['data']['hari'].toString();
-          menitTelat = data['data']['menit_telat'].toString();
-          Totalday = data['data']['telat'].toString();
-        });
-
-        print("test");
-        print(menit);
       } else {
         print("Error fetching data");
       }
@@ -645,102 +661,70 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 subtitleValue: "$menitTelat Minutes",
               ),
               const SizedBox(height: 20),
-              // if (isLupaClockOut)
-              //   GestureDetector(
-              //     onTap: () {
-              //       Navigator.push(
-              //         context,
-              //         MaterialPageRoute(
-              //             builder: (context) => ClockOutLupaScreen()),
-              //       );
-              //     },
-              //     child: SizedBox(
-              //       width: double.infinity,
-              //       child: Card(
-              //         color: Colors.orange,
-              //         elevation: 4,
-              //         shape: RoundedRectangleBorder(
-              //           borderRadius: BorderRadius.circular(12.0),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                onPressed: _showLupaClockOutModal,
+                child: Text("Lupa Clock Out",
+                    style: TextStyle(color: Colors.white)),
+              ),
+              // if (isLupaClockOut && lastClockOutDate != null)
+              //   Container(
+              //     width: double.infinity,
+              //     padding: const EdgeInsets.all(16.0),
+              //     decoration: BoxDecoration(
+              //       color: Colors.white,
+              //       borderRadius: BorderRadius.circular(12.0),
+              //       boxShadow: [
+              //         BoxShadow(
+              //           color: Colors.grey.withOpacity(0.3),
+              //           spreadRadius: 2,
+              //           blurRadius: 5,
+              //           offset: const Offset(0, 3),
               //         ),
-              //         child: Padding(
-              //           padding: const EdgeInsets.symmetric(
-              //               horizontal: 16.0, vertical: 20.0),
-              //           child: Column(
-              //             crossAxisAlignment: CrossAxisAlignment.center,
-              //             mainAxisAlignment: MainAxisAlignment.center,
-              //             children: [
-              //               Text(
-              //                 "Anda Lupa Clock Out Total", // Tulisan pojok atas card
-              //                 style: TextStyle(
-              //                   fontSize: 16,
-              //                   fontWeight: FontWeight.bold,
-              //                   color: Colors.white,
-              //                 ),
-              //               ),
-              //             ],
+              //       ],
+              //     ),
+              //     child: Column(
+              //       crossAxisAlignment: CrossAxisAlignment.center,
+              //       children: [
+              //         Text(
+              //           "Anda belum clock out di tanggal:",
+              //           style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              //           textAlign: TextAlign.center,
+              //         ),
+              //         const SizedBox(height: 10),
+              //         Text(
+              //           lastClockOutDate!,
+              //           style: const TextStyle(
+              //             fontSize: 22,
+              //             fontWeight: FontWeight.bold,
+              //             color: Colors.black,
               //           ),
               //         ),
-              //       ),
+              //         const SizedBox(height: 20),
+              //         ElevatedButton(
+              //           style: ElevatedButton.styleFrom(
+              //             backgroundColor: Colors.orange,
+              //             padding: const EdgeInsets.symmetric(
+              //                 horizontal: 40, vertical: 12),
+              //             shape: RoundedRectangleBorder(
+              //               borderRadius: BorderRadius.circular(8),
+              //             ),
+              //           ),
+              //           onPressed: () {
+              //             Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => ClockOutLupaScreen()),
+              //             );
+              //           },
+              //           child: const Text(
+              //             "Clock Out Sekarang",
+              //             style: TextStyle(fontSize: 16, color: Colors.white),
+              //           ),
+              //         ),
+              //       ],
               //     ),
               //   ),
-              if (isLupaClockOut && lastClockOutDate != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Anda belum clock out di tanggal:",
-                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        lastClockOutDate!,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ClockOutLupaScreen()),
-                          );
-                        },
-                        child: const Text(
-                          "Clock Out Sekarang",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               const SizedBox(height: 150),
               Center(
                 child: ElevatedButton(
