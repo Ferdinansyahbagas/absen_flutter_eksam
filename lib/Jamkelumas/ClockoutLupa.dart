@@ -307,7 +307,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
       request.fields['notes'] = _noteController.text;
       request.fields['jam_clock_out'] = formattedTime; // Kirim waktu clock-out
-      request.fields['date'] = formattedDate;
+      request.fields['clock_out_date'] = formattedDate;
 
       if (_image != null) {
         request.files.add(await http.MultipartFile.fromPath(
