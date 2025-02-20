@@ -67,7 +67,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     }
   }
 
-
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -204,11 +203,13 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
   Future<void> getDatalupa() async {
     try {
-      final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-detail');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] = 'Bearer ${localStorage.getString('token')}';
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -216,10 +217,12 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
       if (response.statusCode == 200) {
         setState(() {
-          WorkTypes = List<String>.from(data['data']['attendance_type_id']);
-          WorkplaceTypes = List<String>.from(data['data']['attendance_location_id']);
-          _selectedWorkType = WorkTypes.isNotEmpty ? WorkTypes.first : null;
-          _selectedWorkplaceType = WorkplaceTypes.isNotEmpty ? WorkplaceTypes.first : null;
+          print(data[data]['attendance_type_id']);
+          print(data[data]['attendance_location_id']);
+
+          _selectedWorkType = data['data']['attendance_type_id'].toString();
+          _selectedWorkplaceType =
+              data['data']['attendance_location_id'].toString();
         });
       } else {
         print("Error fetching data: ${response.statusCode}");
@@ -228,7 +231,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       print("Error occurred: $e");
     }
   }
-
 
   Future<void> _submitData() async {
     setState(() {

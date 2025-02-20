@@ -35,7 +35,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     // Cek status clock-in
     try {
       final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-lupa');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -55,7 +55,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         //   lastClockOutDate =
         //       DateFormat('dd MMM yyyy').format(parsedDate); // Format tanggal
         // }
-        lupaClockOutList = data['data'] is List ? data['data'] : [];
+        lupaClockOutList = data['data'] ?? [];
       });
     } catch (e) {
       print("Error mengecek status clock-in: $e");
@@ -661,12 +661,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 subtitleValue: "$menitTelat Minutes",
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                onPressed: _showLupaClockOutModal,
-                child: Text("Lupa Clock Out",
-                    style: TextStyle(color: Colors.white)),
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 80.0, vertical: 18.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  onPressed: _showLupaClockOutModal,
+                  child: const Text(
+                    'Lupa Clock Out',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
               ),
+              // ElevatedButton(
+              //   style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              //   onPressed: _showLupaClockOutModal,
+              //   child: Text("Lupa Clock Out",
+              //       style: TextStyle(color: Colors.white)),
+              // ),
               // if (isLupaClockOut && lastClockOutDate != null)
               //   Container(
               //     width: double.infinity,

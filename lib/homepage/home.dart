@@ -725,70 +725,68 @@ class _HomePageState extends State<HomePage> {
                         //     userStatus == "1" ||
                         //     userStatus == "2" ||
                         //     userStatus == "3") ...[
-                        //   // if (hasClockedOut) ...[
-                          // Clock In & Clock Out buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed: hasClockedIn
-                                    ? null
-                                    : () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const ClockInPage(),
-                                          ),
-                                        );
-                                        if (result == true) {
-                                          setState(() {
-                                            hasClockedIn = true;
-                                            hasClockedOut = false;
-                                          });
-                                        }
-                                      },
-                                icon: const Icon(Icons.login),
-                                label: const Text('Clock In'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      hasClockedIn ? Colors.grey : Colors.white,
-                                ),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: hasClockedIn && !hasClockedOut
-                                    ? () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const ClockOutScreen(),
-                                          ),
-                                        );
-                                        if (result == true) {
-                                          setState(() {
-                                            hasClockedOut = true;
-                                            hasClockedIn = false;
-                                          });
-                                        }
+                        // if (hasClockedOut) ...[
+                        // Clock In & Clock Out buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: hasClockedIn
+                                  ? null
+                                  : () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ClockInPage(),
+                                        ),
+                                      );
+                                      if (result == true) {
+                                        setState(() {
+                                          hasClockedIn = true;
+                                          hasClockedOut = false;
+                                        });
                                       }
-                                    : null,
-                                icon: const Icon(Icons.logout),
-                                label: const Text('Clock Out'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      hasClockedIn && !hasClockedOut
-                                          ? Colors.white
-                                          : Colors.grey,
-                                ),
+                                    },
+                              icon: const Icon(Icons.login),
+                              label: const Text('Clock In'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    hasClockedIn ? Colors.grey : Colors.white,
                               ),
-                            ],
-                          ),
-                          // ]
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: hasClockedIn && !hasClockedOut
+                                  ? () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ClockOutScreen(),
+                                        ),
+                                      );
+                                      if (result == true) {
+                                        setState(() {
+                                          hasClockedOut = true;
+                                          hasClockedIn = false;
+                                        });
+                                      }
+                                    }
+                                  : null,
+                              icon: const Icon(Icons.logout),
+                              label: const Text('Clock Out'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: hasClockedIn && !hasClockedOut
+                                    ? Colors.white
+                                    : Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // ]
                         // ] else
-                         if (hasClockedOut &&
-                            (userStatus == "1" ||
-                            userStatus == "2")) ...[
+                        if (hasClockedOut &&
+                            (userStatus == "1" || userStatus == "2")) ...[
                           // Overtime In & Overtime Out buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
