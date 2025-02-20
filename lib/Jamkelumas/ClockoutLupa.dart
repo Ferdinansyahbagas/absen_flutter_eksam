@@ -201,10 +201,41 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     }
   }
 
+  // Future<void> getDatalupa() async {
+  //   try {
+  //     final url =
+  //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     if (response.statusCode == 200) {
+  //       setState(() {
+  //         print(data[data]['attendance_type_id']);
+  //         print(data[data]['attendance_location_id']);
+
+  //         _selectedWorkType = data['data']['attendance_type_id'].toString();
+  //         _selectedWorkplaceType =
+  //             data['data']['attendance_location_id'].toString();
+  //       });
+  //     } else {
+  //       print("Error fetching data: ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     print("Error occurred: $e");
+  //   }
+  // }
+
   Future<void> getDatalupa() async {
     try {
       final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-detail');
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
@@ -213,22 +244,23 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
+
+      print("Response Body: ${rp.body}"); // Debugging: Lihat isi respons
+
       var data = jsonDecode(rp.body.toString());
 
-      if (response.statusCode == 200) {
+      if (data != null && data['data'] != null) {
         setState(() {
-          print(data[data]['attendance_type_id']);
-          print(data[data]['attendance_location_id']);
-
-          _selectedWorkType = data['data']['attendance_type_id'].toString();
+          _selectedWorkType =
+              data['data']['attendance_type_id']?.toString() ?? 'Unknown';
           _selectedWorkplaceType =
-              data['data']['attendance_location_id'].toString();
+              data['data']['attendance_location_id']?.toString() ?? 'Unknown';
         });
       } else {
-        print("Error fetching data: ${response.statusCode}");
+        print("Data tidak ditemukan dalam respons API");
       }
     } catch (e) {
-      print("Error occurred: $e");
+      print("Error mengecek status clock-in: $e");
     }
   }
 

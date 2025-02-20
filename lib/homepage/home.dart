@@ -893,6 +893,7 @@ class _HomePageState extends State<HomePage> {
                                         if (result == true) {
                                           setState(() {
                                             hasClockedOutOvertime = true;
+                                            hasClockedInOvertime = false;
                                           });
                                         }
                                       }
