@@ -721,12 +721,70 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (
-                            // userStatus == "1" ||
-                            //   userStatus == "2" ||
-                            userStatus == "3") ...[
-                          // if (hasClockedOut) ...[
-                          // Clock In & Clock Out buttons
+                        // if (
+                        //     // userStatus == "1" ||
+                        //     //   userStatus == "2" ||
+                        //     userStatus == "3") ...[
+                        //   // if (hasClockedOut) ...[
+                        //   // Clock In & Clock Out buttons
+                        //   Row(
+                        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //     children: [
+                        //       ElevatedButton.icon(
+                        //         onPressed: hasClockedIn
+                        //             ? null
+                        //             : () async {
+                        //                 final result = await Navigator.push(
+                        //                   context,
+                        //                   MaterialPageRoute(
+                        //                     builder: (context) =>
+                        //                         const ClockInPage(),
+                        //                   ),
+                        //                 );
+                        //                 if (result == true) {
+                        //                   setState(() {
+                        //                     hasClockedIn = true;
+                        //                     hasClockedOut = false;
+                        //                   });
+                        //                 }
+                        //               },
+                        //         icon: const Icon(Icons.login),
+                        //         label: const Text('Clock In'),
+                        //         style: ElevatedButton.styleFrom(
+                        //           backgroundColor:
+                        //               hasClockedIn ? Colors.grey : Colors.white,
+                        //         ),
+                        //       ),
+                        //       ElevatedButton.icon(
+                        //         onPressed: hasClockedIn && !hasClockedOut
+                        //             ? () async {
+                        //                 final result = await Navigator.push(
+                        //                   context,
+                        //                   MaterialPageRoute(
+                        //                     builder: (context) =>
+                        //                         const ClockOutScreen(),
+                        //                   ),
+                        //                 );
+                        //                 if (result == true) {
+                        //                   setState(() {
+                        //                     hasClockedOut = true;
+                        //                   });
+                        //                 }
+                        //               }
+                        //             : null,
+                        //         icon: const Icon(Icons.logout),
+                        //         label: const Text('Clock Out'),
+                        //         style: ElevatedButton.styleFrom(
+                        //           backgroundColor:
+                        //               hasClockedIn && !hasClockedOut
+                        //                   ? Colors.white
+                        //                   : Colors.grey,
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ]
+                        if (userStatus == "3") ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -770,6 +828,17 @@ class _HomePageState extends State<HomePage> {
                                             hasClockedOut = true;
                                             hasClockedIn = false;
                                           });
+
+                                          // Reset tombol setelah 1 detik
+                                          Future.delayed(
+                                              const Duration(seconds: 1), () {
+                                            if (mounted) {
+                                              setState(() {
+                                                hasClockedIn = false;
+                                                hasClockedOut = false;
+                                              });
+                                            }
+                                          });
                                         }
                                       }
                                     : null,
@@ -784,7 +853,6 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ],
                           ),
-                          // ]
                         ] else if
                             // hasClockedOut &&
                             (userStatus == "1" || userStatus == "2") ...[
@@ -848,8 +916,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
-                          ],
-                          if (hasClockedOut && !hasClockedOutOvertime) ...[
+                          ] else ...[
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
