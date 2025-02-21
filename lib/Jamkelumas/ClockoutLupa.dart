@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:absen/homepage/home.dart';
+import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:absen/susses&failde/berhasilV1.dart';
 import 'dart:io';
@@ -22,6 +22,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   File? _image;
   String note = '';
   String formattedDate = '';
+  String formattedTime = '';
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
   bool _isNoteRequired = false;
@@ -42,7 +43,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     _loadSelectedValues();
     getProfil();
     getDatalupa();
-    _setWorkTypeLembur();
+    // _setWorkTypeLembur();
   }
 
   Future<void> _loadSelectedValues() async {
@@ -85,6 +86,30 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     }
   }
 
+  void _pickTime() async {
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        _selectedTime = pickedTime;
+        DateTime now = DateTime.now();
+        DateTime fullDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          pickedTime.hour,
+          pickedTime.minute,
+          0,
+        );
+        formattedTime = DateFormat('HH:mm:ss').format(fullDateTime);
+        _isTimeEmpty = false;
+      });
+    }
+  }
+
   // Future<void> _setWorkTypeLembur() async {
 
   //   try {
@@ -122,59 +147,45 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   //   }
   // }
 
-  Future<void> _setWorkTypeLembur() async {
-    try {
-      if (userStatus == '3') {
-        setState(() {
-          WorkTypes = ['Reguler'];
-          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-        });
-        return; // Stop di sini kalau user level 3
-      }
+  // Future<void> _setWorkTypeLembur() async {
+  //   try {
+  //     if (userStatus == '3') {
+  //       setState(() {
+  //         WorkTypes = ['Reguler'];
+  //         _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+  //       });
+  //       return; // Stop di sini kalau user level 3
+  //     }
 
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
 
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
 
-      if (response.statusCode == 200) {
-        bool hasClockedIn = data['message'] != 'belum clock-in';
+  //     if (response.statusCode == 200) {
+  //       bool hasClockedIn = data['message'] != 'belum clock-in';
 
-        setState(() {
-          if (hasClockedIn) {
-            _selectedWorkType = 'Lembur';
-          } else {
-            _selectedWorkType = 'Reguler';
-          }
-        });
-      } else {
-        print("Error mengecek status clock-in: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error mengecek status clock-in: $e");
-    }
-  }
-
-  void _pickTime() async {
-    TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (pickedTime != null) {
-      setState(() {
-        _selectedTime = pickedTime;
-        _isTimeEmpty = false; // Hilangkan error setelah memilih waktu
-      });
-    }
-  }
+  //       setState(() {
+  //         if (hasClockedIn) {
+  //           _selectedWorkType = 'Lembur';
+  //         } else {
+  //           _selectedWorkType = 'Reguler';
+  //         }
+  //       });
+  //     } else {
+  //       print("Error mengecek status clock-in: ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     print("Error mengecek status clock-in: $e");
+  //   }
+  // }
 
   Future<void> getProfil() async {
     try {
@@ -195,7 +206,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       });
 
       print("Profil pengguna: ${data['data']}");
-      _setWorkTypeLembur(); // Panggil setelah dapat userStatus
     } catch (e) {
       print("Error mengambil profil pengguna: $e");
     }
@@ -305,6 +315,8 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
 
+      print(formattedTime);
+
       request.fields['notes'] = _noteController.text;
       request.fields['jam_clock_out'] = formattedTime; // Kirim waktu clock-out
       request.fields['clock_out_date'] = formattedDate;
@@ -357,7 +369,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
             );
           },
         ),
@@ -508,12 +520,9 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _selectedTime == null
-                            ? 'Select Time'
-                            : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                        formattedTime.isEmpty ? 'Select Time' : formattedTime,
                       ),
-                      const Icon(Icons.access_time,
-                          color: Colors.orange), // Ikon jam
+                      const Icon(Icons.access_time, color: Colors.orange),
                     ],
                   ),
                 ),

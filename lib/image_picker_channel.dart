@@ -1,118 +1,159 @@
-import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
+// mport 'package:flutter/material.dart';  
+// import 'package:absen/homepage/home.dart';  
+// import 'dart:io';  
+// import 'package:intl/intl.dart'; // Untuk format tanggal  
+// import 'package:image_picker/image_picker.dart';  
 
-class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+// class ClockOutLupaScreen extends StatefulWidget {  
+//   const ClockOutLupaScreen({super.key});  
 
-  @override
-  _HistoryScreenState createState() => _HistoryScreenState();
-}
+//   @override  
+//   _ClockOutLupaScreenState createState() => _ClockOutLupaScreenState();  
+// }  
 
-class _HistoryScreenState extends State<HistoryScreen> {
-  bool isLupaClockOut = false;
-  List<dynamic> lupaClockOutList = [];
+// class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {  
+//   File? _image;  
+//   String formattedDate = '';  
+//   bool _isDateEmpty = false;  
+//   bool _isTimeEmpty = false;  
+//   DateTime? selectedDate;  
+//   TimeOfDay? _selectedTime;  
+//   String formattedTime = '';  
+//   final ImagePicker _picker = ImagePicker();  
 
-  @override
-  void initState() {
-    super.initState();
-    getData();
-  }
+//   @override  
+//   void initState() {  
+//     super.initState();  
+//   }  
 
-  Future<void> getData() async {
-    try {
-      final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] = 'Bearer ${localStorage.getString('token')}';
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+//   Future<void> _pickImage() async {  
+//     final XFile? pickedFile =  
+//         await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);  
+//     if (pickedFile != null) {  
+//       setState(() {  
+//         _image = File(pickedFile.path);  
+//       });  
+//     }  
+//   }  
 
-      setState(() {
-        isLupaClockOut = data['lupa'];
-        lupaClockOutList = data['data'] ?? [];
-      });
-    } catch (e) {
-      print("Error mengecek status clock-in: $e");
-    }
-  }
+//   Future<void> _selectDate(BuildContext context) async {  
+//     final DateTime? picked = await showDatePicker(  
+//       context: context,  
+//       initialDate: DateTime.now(),  
+//       firstDate: DateTime(2000),  
+//       lastDate: DateTime(2101),  
+//     );  
+//     if (picked != null) {  
+//       setState(() {  
+//         selectedDate = picked;  
+//         formattedDate = DateFormat('yyyy-MM-dd').format(picked);  
+//         _isDateEmpty = false;  
+//       });  
+//     }  
+//   }  
 
-  void _showLupaClockOutModal() {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-      ),
-      isScrollControlled: true,
-      builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.6,
-          child: Container(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Lupa Clock Out", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 10),
-                Expanded(
-                  child: lupaClockOutList.isNotEmpty
-                      ? ListView.builder(
-                          itemCount: lupaClockOutList.length,
-                          itemBuilder: (context, index) {
-                            var item = lupaClockOutList[index];
-                            String formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
-                            return Card(
-                              margin: EdgeInsets.symmetric(vertical: 5),
-                              child: ListTile(
-                                title: Text("Belum Clock Out"),
-                                subtitle: Text(formattedDate),
-                                trailing: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(context, '/clockoutlupa');
-                                  },
-                                  child: Text("Clock Out"),
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : Center(child: Text("Tidak ada data lupa clock out")),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+//   void _pickTime() async {  
+//     TimeOfDay? pickedTime = await showTimePicker(  
+//       context: context,  
+//       initialTime: TimeOfDay.now(),  
+//     );  
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Attendance History', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              onPressed: _showLupaClockOutModal,
-              child: Text("Lupa Clock Out", style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//     if (pickedTime != null) {  
+//       setState(() {  
+//         _selectedTime = pickedTime;  
+//         DateTime now = DateTime.now();  
+//         DateTime fullDateTime = DateTime(  
+//           now.year, now.month, now.day,  
+//           pickedTime.hour, pickedTime.minute, 0,  
+//         );  
+//         formattedTime = DateFormat('HH:mm:ss').format(fullDateTime);  
+//         _isTimeEmpty = false;  
+//       });  
+//     }  
+//   }  
+
+//   @override  
+//   Widget build(BuildContext context) {  
+//     return Scaffold(  
+//       resizeToAvoidBottomInset: true,  
+//       appBar: AppBar(  
+//         title: const Text('Clock Out'),  
+//         leading: IconButton(  
+//           icon: const Icon(Icons.arrow_back),  
+//           onPressed: () {  
+//             Navigator.pushReplacement(  
+//               context,  
+//               MaterialPageRoute(builder: (context) => const HomePage()),  
+//             );  
+//           },  
+//         ),  
+//       ),  
+//       body: SingleChildScrollView(  
+//         child: Padding(  
+//           padding: const EdgeInsets.all(16.0),  
+//           child: Column(  
+//             crossAxisAlignment: CrossAxisAlignment.start,  
+//             children: [  
+//               const SizedBox(height: 20),  
+//               InkWell(  
+//                 onTap: () => _selectDate(context),  
+//                 child: InputDecorator(  
+//                   decoration: InputDecoration(  
+//                     labelText: 'Tanggal',  
+//                     labelStyle: const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),  
+//                     border: const OutlineInputBorder(),  
+//                     enabledBorder: OutlineInputBorder(  
+//                       borderSide: BorderSide(  
+//                           color: _isDateEmpty  
+//                               ? Colors.red  
+//                               : const Color.fromARGB(255, 101, 19, 116)),  
+//                     ),  
+//                     errorText: _isDateEmpty ? 'Tanggal Wajib Di isi' : null,  
+//                   ),  
+//                   child: Row(  
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,  
+//                     children: [  
+//                       Text(  
+//                         selectedDate == null ? 'Select Date' : formattedDate,  
+//                       ),  
+//                       const Icon(Icons.calendar_today, color: Colors.orange),  
+//                     ],  
+//                   ),  
+//                 ),  
+//               ),  
+//               const SizedBox(height: 20),  
+//               InkWell(  
+//                 onTap: _pickTime,  
+//                 child: InputDecorator(  
+//                   decoration: InputDecoration(  
+//                     labelText: 'Clock-Out Time',  
+//                     labelStyle: const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),  
+//                     border: const OutlineInputBorder(),  
+//                     enabledBorder: OutlineInputBorder(  
+//                       borderSide: BorderSide(  
+//                           color: _isTimeEmpty  
+//                               ? Colors.red  
+//                               : const Color.fromARGB(255, 101, 19, 116)),  
+//                     ),  
+//                     errorText: _isTimeEmpty ? 'Clock-Out Time Wajib Diisi' : null,  
+//                   ),  
+//                   child: Row(  
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,  
+//                     children: [  
+//                       Text(  
+//                         formattedTime.isEmpty  
+//                             ? 'Select Time'  
+//                             : formattedTime,  
+//                       ),  
+//                       const Icon(Icons.access_time, color: Colors.orange),  
+//                     ],  
+//                   ),  
+//                 ),  
+//               ),  
+//             ],  
+//           ),  
+//         ),  
+//       ),  
+//     );  
+//   }  
+// }

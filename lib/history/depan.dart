@@ -660,24 +660,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 subtitle: "Total Jam Anda Terlambat Masuk Kerja",
                 subtitleValue: "$menitTelat Minutes",
               ),
-              const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 80.0, vertical: 18.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  onPressed: _showLupaClockOutModal,
-                  child: const Text(
-                    'Lupa Clock Out',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                ),
-              ),
+              // const SizedBox(height: 20),
+              // Center(
+              //   child: ElevatedButton(
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: const Color.fromARGB(255, 101, 19, 116),
+              //       padding: const EdgeInsets.symmetric(
+              //           horizontal: 80.0, vertical: 18.0),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(8.0),
+              //       ),
+              //     ),
+              //     onPressed: _showLupaClockOutModal,
+              //     child: const Text(
+              //       'Lupa Clock Out',
+              //       style: TextStyle(fontSize: 16, color: Colors.white),
+              //     ),
+              //   ),
+              // ),
               // ElevatedButton(
               //   style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               //   onPressed: _showLupaClockOutModal,
@@ -743,23 +743,64 @@ class _HistoryScreenState extends State<HistoryScreen> {
               //     ),
               //   ),
               const SizedBox(height: 150),
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 101, 19, 116),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 80.0, vertical: 18.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color.fromARGB(255, 101, 19, 116),
+                        padding: const EdgeInsets.symmetric(vertical: 18.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                      onPressed: _showLupaClockOutModal,
+                      child: const Text(
+                        'Lupa Clock Out',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
                     ),
                   ),
-                  onPressed: () => getHistoryData(context),
-                  child: const Text(
-                    'Cek History Anda',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  const SizedBox(width: 16), // Jarak antar tombol
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color.fromARGB(255, 101, 19, 116),
+                        padding: const EdgeInsets.symmetric(vertical: 18.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                      onPressed: () => getHistoryData(context),
+                      child: const Text(
+                        'Cek History Anda',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
+              // Center(
+              //   child: ElevatedButton(
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: const Color.fromARGB(255, 101, 19, 116),
+              //       padding: const EdgeInsets.symmetric(
+              //           horizontal: 80.0, vertical: 18.0),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(8.0),
+              //       ),
+              //     ),
+              //     onPressed: () => getHistoryData(context),
+              //     child: const Text(
+              //       'Cek History Anda',
+              //       style: TextStyle(fontSize: 16, color: Colors.white),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

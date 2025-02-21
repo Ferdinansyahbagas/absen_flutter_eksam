@@ -788,7 +788,7 @@ class _HomePageState extends State<HomePage> {
                         ] else if
                             // hasClockedOut &&
                             (userStatus == "1" || userStatus == "2") ...[
-                          if (!hasClockedOut)
+                          if (!hasClockedOut) ...[
                             // Overtime In & Overtime Out buttons
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -848,72 +848,78 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed: hasClockedInOvertime
-                                    ? null
-                                    : () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ClockInPage()),
-                                        );
-                                        if (result == true) {
-                                          setState(() {
-                                            hasClockedInOvertime = true;
-                                          });
-                                        }
-                                      },
-                                icon: const Icon(Icons.login),
-                                label: const Text(
-                                  'Overtime In',
-                                  style: TextStyle(
-                                    fontSize: 12,
+                          ],
+                          if (hasClockedOut && !hasClockedOutOvertime) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: hasClockedInOvertime
+                                      ? null
+                                      : () async {
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const ClockInPage()),
+                                          );
+                                          if (result == true) {
+                                            setState(() {
+                                              hasClockedInOvertime = true;
+                                              hasClockedOutOvertime = false;
+                                            });
+                                          }
+                                        },
+                                  icon: const Icon(Icons.login),
+                                  label: const Text(
+                                    'Overtime In',
+                                    // 'Clock In',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: hasClockedInOvertime
+                                        ? Colors.grey
+                                        : Colors.white,
                                   ),
                                 ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: hasClockedInOvertime
-                                      ? Colors.grey
-                                      : Colors.white,
-                                ),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: hasClockedInOvertime &&
-                                        !hasClockedOutOvertime
-                                    ? () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ClockOutScreen()),
-                                        );
-                                        if (result == true) {
-                                          setState(() {
-                                            hasClockedOutOvertime = true;
-                                            hasClockedInOvertime = false;
-                                          });
-                                        }
-                                      }
-                                    : null,
-                                icon: const Icon(Icons.logout),
-                                label: const Text(
-                                  'Overtime Out',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: hasClockedInOvertime &&
+                                ElevatedButton.icon(
+                                  onPressed: hasClockedInOvertime &&
                                           !hasClockedOutOvertime
-                                      ? Colors.white
-                                      : Colors.grey,
+                                      ? () async {
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const ClockOutScreen()),
+                                          );
+                                          if (result == true) {
+                                            setState(() {
+                                              hasClockedOutOvertime = true;
+                                              hasClockedInOvertime = false;
+                                            });
+                                          }
+                                        }
+                                      : null,
+                                  icon: const Icon(Icons.logout),
+                                  label: const Text(
+                                    'Overtime Out',
+                                    // 'Clock out',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: hasClockedInOvertime &&
+                                            !hasClockedOutOvertime
+                                        ? Colors.white
+                                        : Colors.grey,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                          ]
                         ],
                       ],
                     ),
