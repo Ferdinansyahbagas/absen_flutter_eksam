@@ -89,6 +89,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const SizedBox(height: 200),
               const Text(
                 'Forgot Password',
                 style: TextStyle(

@@ -220,12 +220,12 @@ class _ClockInPageState extends State<ClockInPage> {
             // Jika sudah clock-in, hanya munculkan Lembur
             workTypes = ['Lembur'];
             _selectedWorkType = 'Lembur';
+          
+          } else {
+            // Jika belum clock-in, munculkan opsi Reguler dan Lembur
+            workTypes = ['Reguler', 'Lembur'];
+            _selectedWorkType = 'Reguler';
           }
-          // } else {
-          //   // Jika belum clock-in, munculkan opsi Reguler dan Lembur
-          //   workTypes = ['Reguler', 'Lembur'];
-          //   _selectedWorkType = 'Reguler';
-          // }
         });
       } else {
         print("Error mengecek status clock-in: ${response.statusCode}");
