@@ -1,159 +1,136 @@
-// mport 'package:flutter/material.dart';  
-// import 'package:absen/homepage/home.dart';  
-// import 'dart:io';  
-// import 'package:intl/intl.dart'; // Untuk format tanggal  
-// import 'package:image_picker/image_picker.dart';  
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-// class ClockOutLupaScreen extends StatefulWidget {  
-//   const ClockOutLupaScreen({super.key});  
+class ClockInPage extends StatefulWidget {
+  const ClockInPage({super.key});
 
-//   @override  
-//   _ClockOutLupaScreenState createState() => _ClockOutLupaScreenState();  
-// }  
+  @override
+  _ClockInPageState createState() => _ClockInPageState();
+}
 
-// class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {  
-//   File? _image;  
-//   String formattedDate = '';  
-//   bool _isDateEmpty = false;  
-//   bool _isTimeEmpty = false;  
-//   DateTime? selectedDate;  
-//   TimeOfDay? _selectedTime;  
-//   String formattedTime = '';  
-//   final ImagePicker _picker = ImagePicker();  
+class _ClockInPageState extends State<ClockInPage> {
+  String? _selectedWorkType = 'Reguler';
+  String? _selectedWorkplaceType = 'WFO';
+  String? batasWfh;
+  bool isPending = false; // Untuk status tombol setelah submit WFH
 
-//   @override  
-//   void initState() {  
-//     super.initState();  
-//   }  
+  @override
+  void initState() {
+    super.initState();
+    _fetchBatasWFH();
+    _checkWFHStatus();
+  }
 
-//   Future<void> _pickImage() async {  
-//     final XFile? pickedFile =  
-//         await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);  
-//     if (pickedFile != null) {  
-//       setState(() {  
-//         _image = File(pickedFile.path);  
-//       });  
-//     }  
-//   }  
+  Future<void> _fetchBatasWFH() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+    var response = await http.get(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'});
+    
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      setState(() {
+        batasWfh = data['data']['batas_wfh'].toString();
+      });
+    }
+  }
 
-//   Future<void> _selectDate(BuildContext context) async {  
-//     final DateTime? picked = await showDatePicker(  
-//       context: context,  
-//       initialDate: DateTime.now(),  
-//       firstDate: DateTime(2000),  
-//       lastDate: DateTime(2101),  
-//     );  
-//     if (picked != null) {  
-//       setState(() {  
-//         selectedDate = picked;  
-//         formattedDate = DateFormat('yyyy-MM-dd').format(picked);  
-//         _isDateEmpty = false;  
-//       });  
-//     }  
-//   }  
+  Future<void> _checkWFHStatus() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
+    var response = await http.get(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'});
+    
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      setState(() {
+        isPending = data['is_wfh']; // Ubah tombol jika sudah mengajukan WFH
+      });
+    }
+  }
 
-//   void _pickTime() async {  
-//     TimeOfDay? pickedTime = await showTimePicker(  
-//       context: context,  
-//       initialTime: TimeOfDay.now(),  
-//     );  
+  Future<void> _submitWFH() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+    var response = await http.post(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'}, body: {'type': '1', 'location': '2'});
+    
+    if (response.statusCode == 200) {
+      setState(() {
+        isPending = true;
+      });
+    }
+  }
 
-//     if (pickedTime != null) {  
-//       setState(() {  
-//         _selectedTime = pickedTime;  
-//         DateTime now = DateTime.now();  
-//         DateTime fullDateTime = DateTime(  
-//           now.year, now.month, now.day,  
-//           pickedTime.hour, pickedTime.minute, 0,  
-//         );  
-//         formattedTime = DateFormat('HH:mm:ss').format(fullDateTime);  
-//         _isTimeEmpty = false;  
-//       });  
-//     }  
-//   }  
+  Future<void> _cancelWFH() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/cancel-wfh');
+    var response = await http.delete(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'});
+    
+    if (response.statusCode == 200) {
+      setState(() {
+        isPending = false;
+      });
+    }
+  }
 
-//   @override  
-//   Widget build(BuildContext context) {  
-//     return Scaffold(  
-//       resizeToAvoidBottomInset: true,  
-//       appBar: AppBar(  
-//         title: const Text('Clock Out'),  
-//         leading: IconButton(  
-//           icon: const Icon(Icons.arrow_back),  
-//           onPressed: () {  
-//             Navigator.pushReplacement(  
-//               context,  
-//               MaterialPageRoute(builder: (context) => const HomePage()),  
-//             );  
-//           },  
-//         ),  
-//       ),  
-//       body: SingleChildScrollView(  
-//         child: Padding(  
-//           padding: const EdgeInsets.all(16.0),  
-//           child: Column(  
-//             crossAxisAlignment: CrossAxisAlignment.start,  
-//             children: [  
-//               const SizedBox(height: 20),  
-//               InkWell(  
-//                 onTap: () => _selectDate(context),  
-//                 child: InputDecorator(  
-//                   decoration: InputDecoration(  
-//                     labelText: 'Tanggal',  
-//                     labelStyle: const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),  
-//                     border: const OutlineInputBorder(),  
-//                     enabledBorder: OutlineInputBorder(  
-//                       borderSide: BorderSide(  
-//                           color: _isDateEmpty  
-//                               ? Colors.red  
-//                               : const Color.fromARGB(255, 101, 19, 116)),  
-//                     ),  
-//                     errorText: _isDateEmpty ? 'Tanggal Wajib Di isi' : null,  
-//                   ),  
-//                   child: Row(  
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,  
-//                     children: [  
-//                       Text(  
-//                         selectedDate == null ? 'Select Date' : formattedDate,  
-//                       ),  
-//                       const Icon(Icons.calendar_today, color: Colors.orange),  
-//                     ],  
-//                   ),  
-//                 ),  
-//               ),  
-//               const SizedBox(height: 20),  
-//               InkWell(  
-//                 onTap: _pickTime,  
-//                 child: InputDecorator(  
-//                   decoration: InputDecoration(  
-//                     labelText: 'Clock-Out Time',  
-//                     labelStyle: const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),  
-//                     border: const OutlineInputBorder(),  
-//                     enabledBorder: OutlineInputBorder(  
-//                       borderSide: BorderSide(  
-//                           color: _isTimeEmpty  
-//                               ? Colors.red  
-//                               : const Color.fromARGB(255, 101, 19, 116)),  
-//                     ),  
-//                     errorText: _isTimeEmpty ? 'Clock-Out Time Wajib Diisi' : null,  
-//                   ),  
-//                   child: Row(  
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,  
-//                     children: [  
-//                       Text(  
-//                         formattedTime.isEmpty  
-//                             ? 'Select Time'  
-//                             : formattedTime,  
-//                       ),  
-//                       const Icon(Icons.access_time, color: Colors.orange),  
-//                     ],  
-//                   ),  
-//                 ),  
-//               ),  
-//             ],  
-//           ),  
-//         ),  
-//       ),  
-//     );  
-//   }  
-// }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Clock In')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Jenis Pekerjaan'),
+            DropdownButtonFormField<String>(
+              value: _selectedWorkType,
+              items: ['Reguler', 'Lembur'].map((String value) {
+                return DropdownMenuItem<String>(value: value, child: Text(value));
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedWorkType = newValue;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
+            const Text('Jenis Tempat Kerja'),
+            DropdownButtonFormField<String>(
+              value: _selectedWorkplaceType,
+              items: ['WFO', 'WFH'].map((String value) {
+                return DropdownMenuItem<String>(value: value, child: Text(value));
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedWorkplaceType = newValue;
+                });
+              },
+            ),
+            if (_selectedWorkType == 'Reguler' && _selectedWorkplaceType == 'WFH')
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text('Batas WFH anda tersisa: $batasWfh'),
+              ),
+            const SizedBox(height: 20),
+            Center(
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: isPending ? null : _submitWFH,
+                    child: Text(isPending ? 'Pending' : 'Clock In'),
+                  ),
+                  if (isPending)
+                    TextButton(
+                      onPressed: _cancelWFH,
+                      child: const Text('Batalkan'),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

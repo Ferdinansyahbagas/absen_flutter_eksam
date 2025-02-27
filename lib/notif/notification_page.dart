@@ -1,86 +1,451 @@
-import 'package:flutter/material.dart';
+import 'package:absen/susses&failde/berhasilV1.dart';
+import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:absen/homepage/home.dart';
-import 'package:absen/screen/forpasscreen.dart';
-import 'package:absen/screen/welcome_screen.dart';
-import 'package:absen/utils/preferences.dart';
-import 'package:http/http.dart';
+import 'package:flutter/material.dart';
+import 'dart:io';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ClockInPage extends StatefulWidget {
+  const ClockInPage({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _ClockInPageState createState() => _ClockInPageState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  String? _errorMessage;
-  bool _showPassword = false;
-  bool _isEmailValid = true;
-  bool _isPasswordValid = true;
-  bool _isLoading = false; // Track loading state
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+class _ClockInPageState extends State<ClockInPage> {
+  String? _selectedWorkType = 'Reguler';
+  String? _selectedWorkplaceType = 'WFO';
+  String? userStatus;
+  String? bataswfh;
+  File? _image; // To store the image file
+  List<String> workTypes = []; // Dynamically set work types
+  bool _isImageRequired = false; // Flag to indicate if image is required
+  bool _isHoliday = false; // Flag for holiday status
+  final ImagePicker _picker = ImagePicker();
+  List<String> workplaceTypes = [];
 
-  void _togglePasswordVisibility() {
-    setState(() {
-      _showPassword = !_showPassword;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _setWorkTypesBasedOnDay();
+    _setWorkTypeLembur();
+    getStatus();
+    getLocation();
+    getData();
+    getcancelwfh();
+    getcekwfh();
   }
 
-  void _login() {
-    setState(() {
-      // Validate email and password
-      _isEmailValid = _emailController.text.contains('@');
-      _isPasswordValid = _passwordController.text.length >= 6;
+  // Check if today is a weekend or holiday from API
 
-      if (_isEmailValid && _isPasswordValid) {
-        // Start loading
-        _isLoading = true;
-        // Call the login function
-        login2();
-      }
-    });
-  }
+  Future<void> getStatus() async {
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-type');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
 
-  void login2() async {
     try {
-      Response response = await post(
-        Uri.parse('https://portal.eksam.cloud/api/v1/auth/login'),
-        body: {
-          'email': _emailController.text.toString(),
-          'password': _passwordController.text.toString(),
-        },
-      );
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
-      setState(() {
-        _isLoading = false; // Stop loading
-      });
+      if (rp.statusCode == 200) {
+        setState(() {
+          workTypes =
+              List<String>.from(data['data'].map((item) => item['name']));
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> getcekwfh() async {
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {});
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> getcancelwfh() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/{id}');
+    var request = http.MultipartRequest('DELETE', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {});
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> getData() async {
+    try {
+      // Ambil lokasi user
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      double userLatitude = position.latitude;
+      double userLongitude = position.longitude;
+
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          userStatus = data['data']['user_level_id'].toString();
+          bataswfh = data['data']['batas_wfh'];
+
+          double officeLatitude =
+              double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
+          double officeLongitude =
+              double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
+
+          // _compareDistance(officeLongitude, officeLatitude);
+
+          // Hitung jarak antara user dan kantor
+          double distance = Geolocator.distanceBetween(
+              userLatitude, userLongitude, officeLatitude, officeLongitude);
+
+          print("Jarak dari kantor: $distance meter");
+          print("Lokasi User: $userLatitude, $userLongitude");
+          print("Lokasi Kantor: $officeLatitude, $officeLongitude");
+          print("Jarak antara User dan Kantor: $distance meter");
+
+          print("Jarak dari kantor: $distance meter");
+          print("User level: $userStatus");
+
+          if (distance > 500) {
+            // Jika lebih dari 500 meter, hanya munculkan WFH
+            workplaceTypes = ['WFH'];
+            _selectedWorkplaceType = 'WFH';
+          } else {
+            // Jika kurang dari 500 meter, munculkan semua opsi
+            workplaceTypes = ['WFO', 'WFH'];
+            _selectedWorkplaceType = 'WFO';
+          }
+        });
+      } else {
+        print("Error mengambil profil pengguna: ${rp.statusCode}");
+      }
+    } catch (e) {
+      print("Error mengambil data lokasi: $e");
+    }
+  }
+
+  Future<void> getLocation() async {
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-location');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          workplaceTypes =
+              List<String>.from(data['data'].map((item) => item['name']));
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> _setWorkTypeLembur() async {
+    try {
+      if (userStatus == '3') {
+        setState(() {
+          workTypes = ['Reguler'];
+          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+        });
+        return; // Stop di sini kalau user level 3
+      }
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body.toString());
-        String token = data['data']['token'];
-
-        // Save token to preferences
-        await Preferences.setToken(token);
-
-        // Navigate to HomePage
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-          (route) => false,
-        );
-      } else {
-        var data = jsonDecode(response.body.toString());
+        bool hasClockedIn = data['message'] != 'belum clock-in';
+        // Cek status clock-in
         setState(() {
-          _errorMessage = data['message']; // Set error message
+          if (hasClockedIn) {
+            // Jika sudah clock-in, hanya munculkan Lembur
+            workTypes = ['Lembur'];
+            _selectedWorkType = 'Lembur';
+          }
+          // } else {
+          //   // Jika belum clock-in, munculkan opsi Reguler dan Lembur
+          //   workTypes = ['Reguler', 'Lembur'];
+          //   _selectedWorkType = 'Reguler';
+          // }
+        });
+      } else {
+        print("Error mengecek status clock-in: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error mengecek status clock-in: $e");
+    }
+  }
+
+  Future<void> _setWorkTypesBasedOnDay() async {
+    if (userStatus == '3') {
+      setState(() {
+        workTypes = ['Reguler'];
+        _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+      });
+      return; //
+    }
+    try {
+      // Get current day
+      final int currentDay = DateTime.now().weekday;
+      // Check if today is a weekend
+      if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
+        setState(() {
+          _isHoliday = true;
+          workTypes = ['Lembur'];
+          _selectedWorkType = 'Lembur';
+        });
+        return;
+      }
+
+      // Fetch holiday data from API
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
+
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      print(data);
+      if (response.statusCode == 200) {
+        setState(() {
+          _isHoliday = data['data']['libur'];
+          // _isHoliday = data['data']['attendance_status_id'];
+        });
+
+        // Check if today is in the holiday list
+        if (_isHoliday) {
+          setState(() {
+            workTypes = ['Lembur'];
+            _selectedWorkType = 'Lembur';
+          });
+        } else {
+          setState(() {
+            _isHoliday = false;
+            workTypes = ['Reguler', 'Lembur'];
+            _selectedWorkType = 'Reguler';
+          });
+        }
+      } else {
+        // Handle API error
+        print('Failed to fetch holidays: ${response.statusCode}');
+        setState(() {
+          workTypes = ['Reguler', 'Lembur']; // Default options
         });
       }
     } catch (e) {
+      print('Error checking holidays: $e');
       setState(() {
-        _isLoading = false; // Stop loading
-        _errorMessage = "Terjadi kesalahan. Coba lagi nanti."; // General error
+        workTypes = ['Reguler', 'Lembur']; // Default options
       });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _isImageRequired = false;
+      });
+    }
+  }
+
+  // Function to submit data to API
+  Future<void> _submitData() async {
+    if (_image == null) {
+      // Show error if no image is uploaded
+      setState(() {
+        _isImageRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a photo before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return; // Stop submission if no image
+    }
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: const Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
+    try {
+      // Get current location
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      double latitude = position.latitude;
+      double longitude = position.longitude;
+
+      // Convert coordinates to address
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(latitude, longitude);
+      Placemark place = placemarks[0]; // Get the first placemark
+
+      String city = place.locality ??
+          "Unknown City"; // If city not available, default to Unknown City
+
+      // Example API endpoint
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+
+      // Prepare multipart request to send image and data
+      var request = http.MultipartRequest('POST', url);
+
+      // Save selected work type and workplace type to SharedPreferences
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      await localStorage.setString('workType', _selectedWorkType!);
+      await localStorage.setString('workplaceType', _selectedWorkplaceType!);
+
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+      String type = '1';
+      String location = '1';
+      if (_selectedWorkType == "Lembur") {
+        type = '2';
+      } else {
+        type = '1';
+      }
+      if (_selectedWorkplaceType == "WFH") {
+        location = '2';
+      } else {
+        location = '1';
+      }
+      request.fields['type'] = type;
+      request.fields['status'] = '1';
+      request.fields['location'] = location;
+      request.fields['geolocation'] = city.toString(); // Send city name
+      // request.fields['latitude'] = city.toString();
+      // request.fields['longitude'] = city.toString();
+
+      // Add image file
+      if (_image != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'foto', // Field name for image in the API
+          _image!.path,
+          contentType: MediaType('image', 'jpg'), // Set content type
+        ));
+      }
+
+      // Send the request and get the response
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+      var status = data['status'];
+      if (status == 'success') {
+        // Successfully submitted
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => SuccessPage()),
+        );
+      } else {
+        // Submission failed
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => FailurePage()),
+        );
+      }
+    } catch (e) {
+      // Handle error and navigate to failure page
+      print("Error: $e");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => FailurePage()),
+      );
     }
   }
 
@@ -88,129 +453,210 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text('Clock In'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-            );
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            ); // Handle back button press
           },
         ),
-        title: const Text(
-          'Log In',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        elevation: 0,
       ),
-      body: Stack(
-        // Use Stack to overlay the loading indicator
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Text(
-                  "Log in",
-                  style: TextStyle(
-                    fontSize: 32.0,
-                    fontWeight: FontWeight.bold,
-                  ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Work Type Dropdown
+              const Text(
+                'Jenis Pekerjaan',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: const Color.fromRGBO(101, 19, 116, 1),
                 ),
-                const SizedBox(height: 8.0),
-                Text(
-                  "Silakan Login Terlebih Dahulu Sebelum Masuk✨",
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 32.0),
-                // Email Field
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: const OutlineInputBorder(),
-                    errorText: _isEmailValid ? null : 'Email tidak valid',
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 16.0),
-                // Password Field
-                TextField(
-                  controller: _passwordController,
-                  obscureText: !_showPassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: const OutlineInputBorder(),
-                    errorText:
-                        _isPasswordValid ? null : 'Password minimal 6 karakter',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _showPassword ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: _togglePasswordVisibility,
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: _selectedWorkType,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: const Color.fromRGBO(101, 19, 116, 1),
+                      width: 2,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16.0),
-                // Display error message if any
-                if (_errorMessage != null)
-                  Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: Colors.red),
+                items: workTypes.map((String workType) {
+                  return DropdownMenuItem<String>(
+                    value: workType,
+                    child: Text(workType),
+                  );
+                }).toList(),
+                onChanged: !_isHoliday
+                    ? (String? newValue) {
+                        setState(() {
+                          _selectedWorkType = newValue;
+                        });
+                      }
+                    : null, // Disable dropdown if it's a holiday
+              ),
+              const SizedBox(height: 20),
+
+              // Workplace Type Dropdown
+              const Text(
+                'Jenis Tempat Kerja',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: const Color.fromRGBO(101, 19, 116, 1),
+                ),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: _selectedWorkplaceType,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: const Color.fromRGBO(
+                          101, 19, 116, 1), // Customize border color
+                      width: 2, // Customize border width
+                    ),
                   ),
-                const SizedBox(height: 32.0),
-                Container(
+                ),
+                items: workplaceTypes.map((String workplaceType) {
+                  return DropdownMenuItem<String>(
+                    value: workplaceType,
+                    child: Text(workplaceType),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedWorkplaceType = newValue;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              // Upload Photo Button with Conditional Styling
+              GestureDetector(
+                onTap: _pickImage, // Langsung panggil kamera
+                child: Container(
+                  height: 130,
+                  width: 150,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    gradient: const LinearGradient(
-                      colors: [Colors.orange, Colors.pink, Colors.purple],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
+                    border: Border.all(
+                      color: _isImageRequired
+                          ? Colors.red
+                          : (_image == null
+                              ? const Color.fromRGBO(101, 19, 116, 1)
+                              : Colors.orange), // Red if image is required
+                      width: 2,
                     ),
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                  child: ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: const Text(
-                      'Log In',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        color: Colors.white,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.camera_alt,
+                        size: 35,
+                        color: _isImageRequired
+                            ? Colors.red
+                            : (_image == null
+                                ? const Color.fromRGBO(101, 19, 116, 1)
+                                : Colors
+                                    .orange), // Red icon if image is required
                       ),
-                    ),
+                      const SizedBox(height: 3),
+                      if (_image == null && !_isImageRequired)
+                        const Text(
+                          'Upload Photo Anda',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: const Color.fromRGBO(101, 19, 116, 1),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12.0),
+              ),
+              const SizedBox(height: 10),
+
+// Preview Photo Button
+              if (_image != null)
                 Align(
-                  alignment: Alignment.center,
+                  alignment: Alignment.centerLeft, // Atur posisi teks di kiri
                   child: InkWell(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ForgotPasswordPage()),
+                      // Show dialog to preview the photo
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (kIsWeb)
+                                  // Jika platform adalah Web
+                                  Image.network(
+                                    _image!.path,
+                                    fit: BoxFit.cover,
+                                  )
+                                else
+                                  // Jika platform bukan Web (mobile)
+                                  Image.file(
+                                    _image!,
+                                    fit: BoxFit.cover,
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       );
                     },
-                    child: const Text('Forgot Your Password?'),
+                    child: const Text(
+                      'Lihat Photo',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.orange, // Warna teks seperti hyperlink
+                        decoration: TextDecoration
+                            .underline, // Garis bawah untuk efek hyperlink
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
+              const SizedBox(height: 160),
+              // Submit Button
+              Center(
+                child: ElevatedButton(
+                  onPressed: _submitData, // Call the function to submit data
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    iconColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 120,
+                      vertical: 15,
+                    ),
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
-          // Show loading spinner on top of the screen
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-        ],
+        ),
       ),
     );
   }
 }
+//clock in back up

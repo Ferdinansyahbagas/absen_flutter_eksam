@@ -490,40 +490,43 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
           // Handle bottom navigation bar tap
           // Navigate to the appropriate screen
           switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-              break;
-            case 1:
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => TimeOffScreen()),
-              // );
-              break;
-            case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ReimbursementPage()),
-              );
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const NotificationPage()),
-              );
-              break;
-            case 4:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-              break;
-          }
-        },
+          case 0:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+        (route) => false, // Menghapus semua halaman sebelumnya
+      );
+      break;
+    case 1:
+      // Navigator.pushAndRemoveUntil(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => const TimeOffScreen()),
+      //   (route) => false,
+      // );
+      break;
+    case 2:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const ReimbursementPage()),
+        (route) => false,
+      );
+      break;
+    case 3:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const NotificationPage()),
+        (route) => false,
+      );
+      break;
+    case 4:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        (route) => false,
+      );
+      break;
+  }
+},
       ),
     );
   }

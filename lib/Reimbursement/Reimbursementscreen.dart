@@ -334,36 +334,75 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
         onTap: (index) {
           // Handle bottom navigation bar tap
           switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-              break;
-            case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TimeOffScreen()),
-              );
-              break;
-            case 2:
-              // This is the current screen, so no action needed
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const NotificationPage()),
-              );
-              break;
-            case 4:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-              break;
-          }
-        },
+              case 0:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+        (route) => false, // Menghapus semua halaman sebelumnya
+      );
+      break;
+    case 1:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const TimeOffScreen()),
+        (route) => false,
+      );
+      break;
+    case 2:
+      // Navigator.pushAndRemoveUntil(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => const ReimbursementPage()),
+      //   (route) => false,
+      // );
+                    // This is the current screen, so no action needed
+
+      break;
+    case 3:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const NotificationPage()),
+        (route) => false,
+      );
+      break;
+    case 4:
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        (route) => false,
+      );
+      break;
+  }
+},
+        //     case 0:
+        //       Navigator.pushReplacement(
+        //         context,
+        //         MaterialPageRoute(builder: (context) => const HomePage()),
+        //       );
+        //       break;
+        //     case 1:
+        //       Navigator.push(
+        //         context,
+        //         MaterialPageRoute(builder: (context) => const TimeOffScreen()),
+        //       );
+        //       break;
+        //     case 2:
+        //       // This is the current screen, so no action needed
+        //       break;
+        //     case 3:
+        //       Navigator.push(
+        //         context,
+        //         MaterialPageRoute(
+        //             builder: (context) => const NotificationPage()),
+        //       );
+        //       break;
+        //     case 4:
+        //       Navigator.push(
+        //         context,
+        //         MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        //       );
+        //       break;
+        //   }
+        // },
       ),
     );
   }
@@ -407,21 +446,23 @@ class ReimbursementHistoryCard extends StatelessWidget {
         elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.orange,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.orange,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   Text(
                     amount,
                     style: const TextStyle(
@@ -429,22 +470,22 @@ class ReimbursementHistoryCard extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
-                ],
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  statusText,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
