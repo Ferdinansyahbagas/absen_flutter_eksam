@@ -59,6 +59,8 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
       return;
     }
 
+    // Show loading dialog
+
     if (!_formKey.currentState!.validate()) return;
 
     if (_image == null) {
@@ -75,6 +77,17 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
       return; // Stop submission if no image
     }
 
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: const Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
     try {
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/add-self-reimbursement');
