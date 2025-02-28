@@ -33,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   String? currentCity; // Menyimpan nama kota
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String? userStatus;
+  String? wfhId; // Simpan ID WFH jika ada
   String? _token;
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
@@ -51,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   bool isLate = false; // Status untuk card terlambat
   bool isholiday = false; //status untuk card libur
   bool isovertime = false; //status untuk card lembur
+  bool isWFHRequested = false; //status mengajukan WFH
   bool hasUnreadNotifications =
       false; //Status untuk melihat notifikasi sudah di baca atau belum
   List<dynamic> notifications = []; //variabel noifiaksi
@@ -64,6 +66,8 @@ class _HomePageState extends State<HomePage> {
     getPengumuman();
     _startClock(); // Memulai timer untuk jam
     // _resetNoteAtFiveAM();
+    getcancelwfh();
+    getcekwfh();
     getNotif();
     _loadToken();
     saveFirebaseToken();
@@ -410,6 +414,68 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future getcekwfh() async {
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    var headers = {
+      'Authorization': 'Bearer ${localStorage.getString('token')}'
+    };
+
+    try {
+      var response = await http.get(url, headers: headers);
+      var data = jsonDecode(response.body.toString());
+      print("Response API is-wfh: $data");
+      if (response.statusCode == 200) {
+        setState(() {
+          isWFHRequested = true;
+          wfhId =
+              data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
+        });
+      } else {
+        setState(() {
+          isWFHRequested = false;
+          wfhId = null;
+        });
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> getcancelwfh() async {
+    if (wfhId == null) return; // Pastikan ada ID WFH
+
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    var headers = {
+      'Authorization': 'Bearer ${localStorage.getString('token')}'
+    };
+
+    try {
+      var response = await http.delete(url, headers: headers);
+      var data = jsonDecode(response.body.toString());
+      print("Response API cancel-wfh: $data");
+      if (response.statusCode == 200) {
+        setState(() {
+          isWFHRequested = false;
+          wfhId = null;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('WFH berhasil dibatalkan'),
+              backgroundColor: Colors.green),
+        );
+      } else {
+        print('Gagal membatalkan WFH: ${data['message']}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
   // Fungsi untuk mengambil data dari API
   Future<void> getData() async {
     // Ambil profil pengguna
@@ -427,7 +493,7 @@ class _HomePageState extends State<HomePage> {
       var data = jsonDecode(rp.body.toString());
       setState(() {
         name = data['data']['name'];
-        // userId = data['data']['id'];
+        wfhId = data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
         userStatus = data['data']['user_level_id'].toString();
 
         // avatarUrl =
@@ -987,7 +1053,33 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                           ]
-                        ],
+                        ] else if (isWFHRequested &&
+                            (userStatus == "1" || userStatus == "2")) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed:
+                                    null, // Tombol Pending selalu disabled
+                                icon: const Icon(Icons.hourglass_empty),
+                                label: const Text('Pending'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: getcancelwfh,
+                                icon: const Icon(Icons.cancel),
+                                label: const Text('Batalkan WFH'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          )
+                        ]
                       ],
                     ),
                   ),

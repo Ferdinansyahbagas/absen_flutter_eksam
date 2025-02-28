@@ -428,11 +428,11 @@ class _ClockInPageState extends State<ClockInPage> {
         _selectedWorkplaceType == "WFH" &&
         (userStatus == "1" || userStatus == "2")) {
       // Jika user memilih Reguler WFH, buat pengajuan dulu
-      // SharedPreferences localStorage = await SharedPreferences.getInstance();
-      // localStorage.setBool(
-      //     'isWFHRequested', true); // Tandai bahwa user sudah mengajukan WFH
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      await saveWFHStatus(true, wfhId); // untuk menyimpan pwngajuan wfh
+      localStorage.setBool(
+          'isWFHRequested', true); // Tandai bahwa user sudah mengajukan WFH
+      // SharedPreferences localStorage = await SharedPreferences.getInstance();
+      // await saveWFHStatus(true, wfhId); // untuk menyimpan pwngajuan wfh
 
       setState(() {
         isWFHRequested = true;
@@ -803,129 +803,94 @@ class _ClockInPageState extends State<ClockInPage> {
               //       ),
               //   ],
               // )
-              Column(children: [
-                //     if (isWFHRequested)
-                //       Column(
-                //         children: [
-                //           ElevatedButton(
-                //             onPressed: null, // Tombol Pending (disabled)
-                //             style: ElevatedButton.styleFrom(
-                //                 backgroundColor: Colors.grey),
-                //             child: const Text('Pending',
-                //                 style: TextStyle(color: Colors.white)),
-                //           ),
-                //           const SizedBox(height: 10),
-                //           ElevatedButton(
-                //             onPressed: () {
-                //               getcancelwfh();
-                //             },
-                //             style: ElevatedButton.styleFrom(
-                //                 backgroundColor: Colors.red),
-                //             child: const Text('Batalkan WFH',
-                //                 style: TextStyle(color: Colors.white)),
-                //           ),
-                //         ],
-                //       )
-                //     else
-                //       ElevatedButton(
-                //         onPressed: _submitData,
-                //         style: ElevatedButton.styleFrom(
-                //             backgroundColor: Colors.orange),
-                //         child: Text(
-                //             _selectedWorkType == "Reguler" &&
-                //                     _selectedWorkplaceType == "WFH"
-                //                 ? 'Ajukan WFH'
-                //                 : 'Clock In',
-                //             style: TextStyle(color: Colors.white)),
-                //       ),
-                //   ],
-                if (isWFHRequested &&
-                    (userStatus == "1" || userStatus == "2")) ...[
-                  ElevatedButton(
-                    onPressed: null, // Tombol Pending selalu disabled
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      iconColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 120,
-                        vertical: 15,
-                      ),
-                    ),
-                    child: const Text(
-                      'Pading',
-                      style: TextStyle(fontSize: 15, color: Colors.white),
+
+              // if (isWFHRequested &&
+              //     (userStatus == "1" || userStatus == "2")) ...[
+              //   ElevatedButton(
+              //     onPressed: null, // Tombol Pending selalu disabled
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: Colors.grey,
+              //       iconColor: Colors.white,
+              //       padding: const EdgeInsets.symmetric(
+              //         horizontal: 120,
+              //         vertical: 15,
+              //       ),
+              //     ),
+              //     child: const Text(
+              //       'Pading',
+              //       style: TextStyle(fontSize: 15, color: Colors.white),
+              //     ),
+              //   ),
+              //   SizedBox(height: 10),
+              //   ElevatedButton(
+              //     onPressed: getcancelwfh,
+              //     style: ElevatedButton.styleFrom(
+              //       backgroundColor: Colors.red,
+              //       iconColor: Colors.white,
+              //       padding: const EdgeInsets.symmetric(
+              //         horizontal: 120,
+              //         vertical: 15,
+              //       ),
+              //     ),
+              //     child: const Text(
+              //       'Batalkan WFH',
+              //       style: TextStyle(fontSize: 15, color: Colors.white),
+              //     ),
+              //   ),
+              // ] else ...[
+              if (_selectedWorkplaceType == "WFH" &&
+                  _selectedWorkType == "Reguler" &&
+                  (userStatus == "1" || userStatus == "2")) ...[
+                ElevatedButton(
+                  onPressed: _submitData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    iconColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 120,
+                      vertical: 15,
                     ),
                   ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: getcancelwfh,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      iconColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 120,
-                        vertical: 15,
-                      ),
-                    ),
-                    child: const Text(
-                      'Batalkan WFH',
-                      style: TextStyle(fontSize: 15, color: Colors.white),
+                  child: const Text(
+                    'ajukan wfh',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                ),
+              ] else if (userStatus == "1" || userStatus == "2") ...[
+                ElevatedButton(
+                  onPressed: _submitData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    iconColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 120,
+                      vertical: 15,
                     ),
                   ),
-                ] else ...[
-                  if (_selectedWorkplaceType == "WFH" &&
-                      _selectedWorkType == "Reguler" &&
-                      (userStatus == "1" || userStatus == "2")) ...[
-                    ElevatedButton(
-                      onPressed: _submitData,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        iconColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'ajukan wfh',
-                        style: TextStyle(fontSize: 15, color: Colors.white),
-                      ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                ),
+              ] else if (userStatus == "3") ...[
+                ElevatedButton(
+                  onPressed: _submitData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    iconColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 120,
+                      vertical: 15,
                     ),
-                  ] else if (userStatus == "1" || userStatus == "2") ...[
-                    ElevatedButton(
-                      onPressed: _submitData,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        iconColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(fontSize: 15, color: Colors.white),
-                      ),
-                    ),
-                  ] else if (userStatus == "3") ...[
-                    ElevatedButton(
-                      onPressed: _submitData,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        iconColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(fontSize: 15, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ]
-              ])
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                ),
+              ],
+              //   ]
+              // ])
             ],
           ),
         ),
