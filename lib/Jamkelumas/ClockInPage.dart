@@ -44,6 +44,23 @@ class _ClockInPageState extends State<ClockInPage> {
     getData();
     getcancelwfh();
     getcekwfh();
+    loadWFHStatus(); // Ambil status WFH saat halaman dimuat
+  }
+
+  // Simpan status WFH ke SharedPreferences
+  Future<void> saveWFHStatus(bool status, String? id) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    await localStorage.setBool('isWFHRequested', status);
+    await localStorage.setString('wfhId', id ?? '');
+  }
+
+  // Ambil status WFH dari SharedPreferences
+  Future<void> loadWFHStatus() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    setState(() {
+      isWFHRequested = localStorage.getBool('isWFHRequested') ?? false;
+      wfhId = localStorage.getString('wfhId');
+    });
   }
 
   // Check if today is a weekend or holiday from API
@@ -117,11 +134,13 @@ class _ClockInPageState extends State<ClockInPage> {
           wfhId =
               data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
         });
+        await saveWFHStatus(true, wfhId); // untuk menyimpan pwngajuan wfh
       } else {
         setState(() {
           isWFHRequested = false;
           wfhId = null;
         });
+        await saveWFHStatus(false, null); // untuk menyimpan pwngajuan wfh
       }
     } catch (e) {
       print('Error occurred: $e');
@@ -147,6 +166,8 @@ class _ClockInPageState extends State<ClockInPage> {
           isWFHRequested = false;
           wfhId = null;
         });
+        await saveWFHStatus(false, null); // untuk menyimpan pwngajuan wfh
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('WFH berhasil dibatalkan'),
@@ -182,8 +203,7 @@ class _ClockInPageState extends State<ClockInPage> {
       if (rp.statusCode == 200) {
         setState(() {
           userStatus = data['data']['user_level_id'].toString();
-          bataswfh = (data['data']['batas_wfh'] ?? "0")
-              .toString(); // Pastikan tidak null
+          bataswfh = (data['data']['batas_wfh'] ?? "0").toString();
           wfhId =
               data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
 
@@ -392,34 +412,57 @@ class _ClockInPageState extends State<ClockInPage> {
       return; // Stop submission if no image
     }
     // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog
-      builder: (BuildContext context) {
-        return Center(
-          child: CircularProgressIndicator(
-            color: const Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
+    // showDialog(
+    //   context: context,
+    //   barrierDismissible: false, // Prevent dismissing the dialog
+    //   builder: (BuildContext context) {
+    //     return Center(
+    //       child: CircularProgressIndicator(
+    //         color: const Color.fromARGB(255, 101, 19, 116),
+    //       ),
+    //     );
+    //   },
+    // );
 
-    if (_selectedWorkType == "Reguler" && _selectedWorkplaceType == "WFH") {
+    if (_selectedWorkType == "Reguler" &&
+        _selectedWorkplaceType == "WFH" &&
+        (userStatus == "1" || userStatus == "2")) {
       // Jika user memilih Reguler WFH, buat pengajuan dulu
+      // SharedPreferences localStorage = await SharedPreferences.getInstance();
+      // localStorage.setBool(
+      //     'isWFHRequested', true); // Tandai bahwa user sudah mengajukan WFH
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      localStorage.setBool(
-          'isWFHRequested', true); // Tandai bahwa user sudah mengajukan WFH
+      await saveWFHStatus(true, wfhId); // untuk menyimpan pwngajuan wfh
+
       setState(() {
         isWFHRequested = true;
       });
 
       // Munculkan pesan sukses
+
+      await Future.delayed(Duration(seconds: 3)); // Simulasi loading sebentar
+      Navigator.pop(context); // Tutup loading
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Pengajuan WFH berhasil dikirim!'),
-            backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Pengajuan WFH berhasil dikirim!'),
+          backgroundColor: Colors.green,
+        ),
       );
     } else {
+      // Show loading dialog (loading tetap sampai respons API selesai)
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent dismissing the dialog
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: const Color.fromARGB(255, 101, 19, 116),
+            ),
+          );
+        },
+      );
+
       try {
         // Get current location
         Position position = await Geolocator.getCurrentPosition(
@@ -614,6 +657,7 @@ class _ClockInPageState extends State<ClockInPage> {
               //   const SizedBox(height: 10),
               // ],
               if (_selectedWorkplaceType == "WFH" &&
+                  _selectedWorkType == "Reguler" &&
                   (userStatus == "1" || userStatus == "2")) ...[
                 Text(
                   "Sisa WFH Anda: ${bataswfh ?? '0'} hari",
@@ -795,7 +839,8 @@ class _ClockInPageState extends State<ClockInPage> {
                 //             style: TextStyle(color: Colors.white)),
                 //       ),
                 //   ],
-                if (isWFHRequested) ...[
+                if (isWFHRequested &&
+                    (userStatus == "1" || userStatus == "2")) ...[
                   ElevatedButton(
                     onPressed: null, // Tombol Pending selalu disabled
                     style: ElevatedButton.styleFrom(
@@ -828,9 +873,9 @@ class _ClockInPageState extends State<ClockInPage> {
                     ),
                   ),
                 ] else ...[
-                  if (isWFHRequested ||
-                      userStatus == '1' ||
-                      userStatus == '2') ...[
+                  if (_selectedWorkplaceType == "WFH" &&
+                      _selectedWorkType == "Reguler" &&
+                      (userStatus == "1" || userStatus == "2")) ...[
                     ElevatedButton(
                       onPressed: _submitData,
                       style: ElevatedButton.styleFrom(
@@ -846,7 +891,23 @@ class _ClockInPageState extends State<ClockInPage> {
                         style: TextStyle(fontSize: 15, color: Colors.white),
                       ),
                     ),
-                  ] else ...[
+                  ] else if (userStatus == "1" || userStatus == "2") ...[
+                    ElevatedButton(
+                      onPressed: _submitData,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        iconColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 120,
+                          vertical: 15,
+                        ),
+                      ),
+                      child: const Text(
+                        'Submit',
+                        style: TextStyle(fontSize: 15, color: Colors.white),
+                      ),
+                    ),
+                  ] else if (userStatus == "3") ...[
                     ElevatedButton(
                       onPressed: _submitData,
                       style: ElevatedButton.styleFrom(
