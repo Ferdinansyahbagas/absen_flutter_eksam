@@ -414,7 +414,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future getcekwfh() async {
+  Future<void> getcekwfh() async {
     final url =
         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
     SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -426,22 +426,51 @@ class _HomePageState extends State<HomePage> {
       var response = await http.get(url, headers: headers);
       var data = jsonDecode(response.body.toString());
       print("Response API is-wfh: $data");
-      if (response.statusCode == 200) {
-        setState(() {
+
+      setState(() {
+        if (response.statusCode == 200 &&
+            data['message'] == 'User mengajukan WFH') {
           isWFHRequested = true;
           wfhId =
               data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
-        });
-      } else {
-        setState(() {
+        } else {
           isWFHRequested = false;
           wfhId = null;
-        });
-      }
+        }
+      });
     } catch (e) {
       print('Error occurred: $e');
     }
   }
+
+  // Future getcekwfh() async {
+  //   final url =
+  //       Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   var headers = {
+  //     'Authorization': 'Bearer ${localStorage.getString('token')}'
+  //   };
+
+  //   try {
+  //     var response = await http.get(url, headers: headers);
+  //     var data = jsonDecode(response.body.toString());
+  //     print("Response API is-wfh: $data");
+  //     if (response.statusCode == 200) {
+  //       setState(() {
+  //         isWFHRequested = true;
+  //         wfhId =
+  //             data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
+  //       });
+  //     } else {
+  //       setState(() {
+  //         isWFHRequested = false;
+  //         wfhId = null;
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //   }
+  // }
 
   Future<void> getcancelwfh() async {
     if (wfhId == null) return; // Pastikan ada ID WFH
@@ -922,164 +951,333 @@ class _HomePageState extends State<HomePage> {
                         ] else if
                             // hasClockedOut &&
                             (userStatus == "1" || userStatus == "2") ...[
-                          if (!hasClockedOut) ...[
-                            // Overtime In & Overtime Out buttons
+                          if (isWFHRequested) ...[
+                            // Jika user level 1 atau 2 telah request WFH
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 ElevatedButton.icon(
-                                  onPressed: hasClockedIn
-                                      ? null
-                                      : () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ClockInPage(),
-                                            ),
-                                          );
-                                          if (result == true) {
-                                            setState(() {
-                                              hasClockedIn = true;
-                                              hasClockedOut = false;
-                                            });
-                                          }
-                                        },
-                                  icon: const Icon(Icons.login),
-                                  label: const Text('Clock In'),
+                                  onPressed:
+                                      null, // Tombol Pending selalu disabled
+                                  icon: const Icon(Icons.hourglass_empty),
+                                  label: const Text('Pending'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: hasClockedIn
-                                        ? Colors.grey
-                                        : Colors.white,
+                                    backgroundColor: Colors.grey,
+                                    foregroundColor: Colors.white,
                                   ),
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed: hasClockedIn && !hasClockedOut
-                                      ? () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ClockOutScreen(),
-                                            ),
-                                          );
-                                          if (result == true) {
-                                            setState(() {
-                                              hasClockedOut = true;
-                                              hasClockedIn = false;
-                                            });
-                                          }
-                                        }
-                                      : null,
-                                  icon: const Icon(Icons.logout),
-                                  label: const Text('Clock Out'),
+                                  onPressed:
+                                      getcancelwfh, // Fungsi untuk membatalkan WFH
+                                  icon: const Icon(Icons.cancel),
+                                  label: const Text('Batalkan'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        hasClockedIn && !hasClockedOut
-                                            ? Colors.white
-                                            : Colors.grey,
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
                                   ),
                                 ),
                               ],
-                            ),
+                            )
                           ] else ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            // Jika belum request WFH, cek apakah sudah clock out
+                            Column(
                               children: [
-                                ElevatedButton.icon(
-                                  onPressed: hasClockedInOvertime
-                                      ? null
-                                      : () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const ClockInPage()),
-                                          );
-                                          if (result == true) {
-                                            setState(() {
-                                              hasClockedInOvertime = true;
-                                              hasClockedOutOvertime = false;
-                                            });
-                                          }
-                                        },
-                                  icon: const Icon(Icons.login),
-                                  label: const Text(
-                                    'Overtime In',
-                                    // 'Clock In',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
+                                // Tampilkan Clock In & Out jika belum Clock Out
+                                if (!hasClockedOut)
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: hasClockedIn
+                                            ? null
+                                            : () async {
+                                                final result =
+                                                    await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const ClockInPage(),
+                                                  ),
+                                                );
+                                                if (result == true) {
+                                                  setState(() {
+                                                    hasClockedIn = true;
+                                                    hasClockedOut = false;
+                                                  });
+                                                }
+                                              },
+                                        icon: const Icon(Icons.login),
+                                        label: const Text('Clock In'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: hasClockedIn
+                                              ? Colors.grey
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed:
+                                            hasClockedIn && !hasClockedOut
+                                                ? () async {
+                                                    final result =
+                                                        await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const ClockOutScreen(),
+                                                      ),
+                                                    );
+                                                    if (result == true) {
+                                                      setState(() {
+                                                        hasClockedOut = true;
+                                                        hasClockedIn = false;
+                                                      });
+                                                    }
+                                                  }
+                                                : null,
+                                        icon: const Icon(Icons.logout),
+                                        label: const Text('Clock Out'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              hasClockedIn && !hasClockedOut
+                                                  ? Colors.white
+                                                  : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: hasClockedInOvertime
-                                        ? Colors.grey
-                                        : Colors.white,
+                                // const SizedBox(height: 10), // Jarak antar tombol
+                                // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
+                                if (hasClockedOut)
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: hasClockedInOvertime
+                                            ? null
+                                            : () async {
+                                                final result =
+                                                    await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const ClockInPage(),
+                                                  ),
+                                                );
+                                                if (result == true) {
+                                                  setState(() {
+                                                    hasClockedInOvertime = true;
+                                                    hasClockedOutOvertime =
+                                                        false;
+                                                  });
+                                                }
+                                              },
+                                        icon: const Icon(Icons.timer),
+                                        label: const Text('Overtime In'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: hasClockedInOvertime
+                                              ? Colors.grey
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: hasClockedInOvertime &&
+                                                !hasClockedOutOvertime
+                                            ? () async {
+                                                final result =
+                                                    await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const ClockOutScreen(),
+                                                  ),
+                                                );
+                                                if (result == true) {
+                                                  setState(() {
+                                                    hasClockedOutOvertime =
+                                                        true;
+                                                    hasClockedInOvertime =
+                                                        false;
+                                                  });
+                                                }
+                                              }
+                                            : null,
+                                        icon: const Icon(Icons.timer_off),
+                                        label: const Text('Overtime Out'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              hasClockedInOvertime &&
+                                                      !hasClockedOutOvertime
+                                                  ? Colors.white
+                                                  : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: hasClockedInOvertime &&
-                                          !hasClockedOutOvertime
-                                      ? () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const ClockOutScreen()),
-                                          );
-                                          if (result == true) {
-                                            setState(() {
-                                              hasClockedOutOvertime = true;
-                                              hasClockedInOvertime = false;
-                                            });
-                                          }
-                                        }
-                                      : null,
-                                  icon: const Icon(Icons.logout),
-                                  label: const Text(
-                                    'Overtime Out',
-                                    // 'Clock out',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: hasClockedInOvertime &&
-                                            !hasClockedOutOvertime
-                                        ? Colors.white
-                                        : Colors.grey,
-                                  ),
-                                ),
                               ],
-                            ),
+                            )
                           ]
-                        ] else if (isWFHRequested &&
-                            (userStatus == "1" || userStatus == "2")) ...[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed:
-                                    null, // Tombol Pending selalu disabled
-                                icon: const Icon(Icons.hourglass_empty),
-                                label: const Text('Pending'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.grey,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: getcancelwfh,
-                                icon: const Icon(Icons.cancel),
-                                label: const Text('Batalkan WFH'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
-                          )
                         ]
+                        //     (userStatus == "1" || userStatus == "2") ...[
+                        //   if (!hasClockedOut) ...[
+                        //     // Overtime In & Overtime Out buttons
+                        //     Row(
+                        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //       children: [
+                        //         ElevatedButton.icon(
+                        //           onPressed: hasClockedIn
+                        //               ? null
+                        //               : () async {
+                        //                   final result = await Navigator.push(
+                        //                     context,
+                        //                     MaterialPageRoute(
+                        //                       builder: (context) =>
+                        //                           const ClockInPage(),
+                        //                     ),
+                        //                   );
+                        //                   if (result == true) {
+                        //                     setState(() {
+                        //                       hasClockedIn = true;
+                        //                       hasClockedOut = false;
+                        //                     });
+                        //                   }
+                        //                 },
+                        //           icon: const Icon(Icons.login),
+                        //           label: const Text('Clock In'),
+                        //           style: ElevatedButton.styleFrom(
+                        //             backgroundColor: hasClockedIn
+                        //                 ? Colors.grey
+                        //                 : Colors.white,
+                        //           ),
+                        //         ),
+                        //         ElevatedButton.icon(
+                        //           onPressed: hasClockedIn && !hasClockedOut
+                        //               ? () async {
+                        //                   final result = await Navigator.push(
+                        //                     context,
+                        //                     MaterialPageRoute(
+                        //                       builder: (context) =>
+                        //                           const ClockOutScreen(),
+                        //                     ),
+                        //                   );
+                        //                   if (result == true) {
+                        //                     setState(() {
+                        //                       hasClockedOut = true;
+                        //                       hasClockedIn = false;
+                        //                     });
+                        //                   }
+                        //                 }
+                        //               : null,
+                        //           icon: const Icon(Icons.logout),
+                        //           label: const Text('Clock Out'),
+                        //           style: ElevatedButton.styleFrom(
+                        //             backgroundColor:
+                        //                 hasClockedIn && !hasClockedOut
+                        //                     ? Colors.white
+                        //                     : Colors.grey,
+                        //           ),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ] else ...[
+                        //     Row(
+                        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //       children: [
+                        //         ElevatedButton.icon(
+                        //           onPressed: hasClockedInOvertime
+                        //               ? null
+                        //               : () async {
+                        //                   final result = await Navigator.push(
+                        //                     context,
+                        //                     MaterialPageRoute(
+                        //                         builder: (context) =>
+                        //                             const ClockInPage()),
+                        //                   );
+                        //                   if (result == true) {
+                        //                     setState(() {
+                        //                       hasClockedInOvertime = true;
+                        //                       hasClockedOutOvertime = false;
+                        //                     });
+                        //                   }
+                        //                 },
+                        //           icon: const Icon(Icons.login),
+                        //           label: const Text(
+                        //             'Overtime In',
+                        //             // 'Clock In',
+                        //             style: TextStyle(
+                        //               fontSize: 12,
+                        //             ),
+                        //           ),
+                        //           style: ElevatedButton.styleFrom(
+                        //             backgroundColor: hasClockedInOvertime
+                        //                 ? Colors.grey
+                        //                 : Colors.white,
+                        //           ),
+                        //         ),
+                        //         ElevatedButton.icon(
+                        //           onPressed: hasClockedInOvertime &&
+                        //                   !hasClockedOutOvertime
+                        //               ? () async {
+                        //                   final result = await Navigator.push(
+                        //                     context,
+                        //                     MaterialPageRoute(
+                        //                         builder: (context) =>
+                        //                             const ClockOutScreen()),
+                        //                   );
+                        //                   if (result == true) {
+                        //                     setState(() {
+                        //                       hasClockedOutOvertime = true;
+                        //                       hasClockedInOvertime = false;
+                        //                     });
+                        //                   }
+                        //                 }
+                        //               : null,
+                        //           icon: const Icon(Icons.logout),
+                        //           label: const Text(
+                        //             'Overtime Out',
+                        //             // 'Clock out',
+                        //             style: TextStyle(
+                        //               fontSize: 12,
+                        //             ),
+                        //           ),
+                        //           style: ElevatedButton.styleFrom(
+                        //             backgroundColor: hasClockedInOvertime &&
+                        //                     !hasClockedOutOvertime
+                        //                 ? Colors.white
+                        //                 : Colors.grey,
+                        //           ),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ]
+                        // ] else if (isWFHRequested &&
+                        //     (userStatus == "1" || userStatus == "2")) ...[
+                        //   Row(
+                        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //     children: [
+                        //       ElevatedButton.icon(
+                        //         onPressed:
+                        //             null, // Tombol Pending selalu disabled
+                        //         icon: const Icon(Icons.hourglass_empty),
+                        //         label: const Text('Pending'),
+                        //         style: ElevatedButton.styleFrom(
+                        //           backgroundColor: Colors.grey,
+                        //           foregroundColor: Colors.white,
+                        //         ),
+                        //       ),
+                        //       ElevatedButton.icon(
+                        //         onPressed: getcancelwfh,
+                        //         icon: const Icon(Icons.cancel),
+                        //         label: const Text('Batalkan WFH'),
+                        //         style: ElevatedButton.styleFrom(
+                        //           backgroundColor: Colors.red,
+                        //           foregroundColor: Colors.white,
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   )
+                        // ]
                       ],
                     ),
                   ),

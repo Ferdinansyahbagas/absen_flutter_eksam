@@ -37,7 +37,7 @@ class _ClockInPageState extends State<ClockInPage> {
   @override
   void initState() {
     super.initState();
-    _setWorkTypesBasedOnDay();
+    // _setWorkTypesBasedOnDay();
     _setWorkTypeLembur();
     getStatus();
     getLocation();
@@ -315,75 +315,75 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-  Future<void> _setWorkTypesBasedOnDay() async {
-    if (userStatus == '3') {
-      setState(() {
-        workTypes = ['Reguler'];
-        _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-      });
-      return; //
-    }
-    try {
-      // Get current day
-      final int currentDay = DateTime.now().weekday;
-      // Check if today is a weekend
-      if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
-        setState(() {
-          _isHoliday = true;
-          workTypes = ['Lembur'];
-          _selectedWorkType = 'Lembur';
-        });
-        return;
-      }
+  // Future<void> _setWorkTypesBasedOnDay() async {
+  //   if (userStatus == '3') {
+  //     setState(() {
+  //       workTypes = ['Reguler'];
+  //       _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+  //     });
+  //     return; //
+  //   }
+  //   try {
+  //     // Get current day
+  //     final int currentDay = DateTime.now().weekday;
+  //     // Check if today is a weekend
+  //     if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
+  //       setState(() {
+  //         _isHoliday = true;
+  //         workTypes = ['Lembur'];
+  //         _selectedWorkType = 'Lembur';
+  //       });
+  //       return;
+  //     }
 
-      // Fetch holiday data from API
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
+  //     // Fetch holiday data from API
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
 
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
 
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
 
-      print(data);
-      if (response.statusCode == 200) {
-        setState(() {
-          _isHoliday = data['data']['libur'];
-          // _isHoliday = data['data']['attendance_status_id'];
-        });
+  //     print(data);
+  //     if (response.statusCode == 200) {
+  //       setState(() {
+  //         _isHoliday = data['data']['libur'];
+  //         // _isHoliday = data['data']['attendance_status_id'];
+  //       });
 
-        // Check if today is in the holiday list
-        if (_isHoliday) {
-          setState(() {
-            workTypes = ['Lembur'];
-            _selectedWorkType = 'Lembur';
-          });
-        } else {
-          setState(() {
-            _isHoliday = false;
-            workTypes = ['Reguler', 'Lembur'];
-            _selectedWorkType = 'Reguler';
-          });
-        }
-      } else {
-        // Handle API error
-        print('Failed to fetch holidays: ${response.statusCode}');
-        setState(() {
-          workTypes = ['Reguler', 'Lembur']; // Default options
-        });
-      }
-    } catch (e) {
-      print('Error checking holidays: $e');
-      setState(() {
-        workTypes = ['Reguler', 'Lembur']; // Default options
-      });
-    }
-  }
+  //       // Check if today is in the holiday list
+  //       if (_isHoliday) {
+  //         setState(() {
+  //           workTypes = ['Lembur'];
+  //           _selectedWorkType = 'Lembur';
+  //         });
+  //       } else {
+  //         setState(() {
+  //           _isHoliday = false;
+  //           workTypes = ['Reguler', 'Lembur'];
+  //           _selectedWorkType = 'Reguler';
+  //         });
+  //       }
+  //     } else {
+  //       // Handle API error
+  //       print('Failed to fetch holidays: ${response.statusCode}');
+  //       setState(() {
+  //         workTypes = ['Reguler', 'Lembur']; // Default options
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Error checking holidays: $e');
+  //     setState(() {
+  //       workTypes = ['Reguler', 'Lembur']; // Default options
+  //     });
+  //   }
+  // }
 
   Future<void> _pickImage() async {
     final XFile? pickedFile =
@@ -397,6 +397,160 @@ class _ClockInPageState extends State<ClockInPage> {
   }
 
   // Function to submit data to API
+  // Future<void> _submitData() async {
+  //   if (_image == null) {
+  //     // Show error if no image is uploaded
+  //     setState(() {
+  //       _isImageRequired = true;
+  //     });
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Please upload a photo before submitting.'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return; // Stop submission if no image
+  //   }
+  //   // Show loading dialog
+  //   // showDialog(
+  //   //   context: context,
+  //   //   barrierDismissible: false, // Prevent dismissing the dialog
+  //   //   builder: (BuildContext context) {
+  //   //     return Center(
+  //   //       child: CircularProgressIndicator(
+  //   //         color: const Color.fromARGB(255, 101, 19, 116),
+  //   //       ),
+  //   //     );
+  //   //   },
+  //   // );
+
+  //   if (_selectedWorkType == "Reguler" &&
+  //       _selectedWorkplaceType == "WFH" &&
+  //       (userStatus == "1" || userStatus == "2")) {
+  //     // Jika user memilih Reguler WFH, buat pengajuan dulu
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     localStorage.setBool(
+  //         'isWFHRequested', true); // Tandai bahwa user sudah mengajukan WFH
+  //     // SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     // await saveWFHStatus(true, wfhId); // untuk menyimpan pwngajuan wfh
+
+  //     setState(() {
+  //       isWFHRequested = true;
+  //     });
+
+  //     // Munculkan pesan sukses
+
+  //     await Future.delayed(Duration(seconds: 3)); // Simulasi loading sebentar
+  //     Navigator.pop(context); // Tutup loading
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Pengajuan WFH berhasil dikirim!'),
+  //         backgroundColor: Colors.green,
+  //       ),
+  //     );
+  //   } else {
+  //     // Show loading dialog (loading tetap sampai respons API selesai)
+  //     showDialog(
+  //       context: context,
+  //       barrierDismissible: false, // Prevent dismissing the dialog
+  //       builder: (BuildContext context) {
+  //         return Center(
+  //           child: CircularProgressIndicator(
+  //             color: const Color.fromARGB(255, 101, 19, 116),
+  //           ),
+  //         );
+  //       },
+  //     );
+
+  //     try {
+  //       // Get current location
+  //       Position position = await Geolocator.getCurrentPosition(
+  //           desiredAccuracy: LocationAccuracy.high);
+
+  //       double latitude = position.latitude;
+  //       double longitude = position.longitude;
+
+  //       // Convert coordinates to address
+  //       List<Placemark> placemarks =
+  //           await placemarkFromCoordinates(latitude, longitude);
+  //       Placemark place = placemarks[0]; // Get the first placemark
+
+  //       String city = place.locality ??
+  //           "Unknown City"; // If city not available, default to Unknown City
+
+  //       // Example API endpoint
+  //       final url =
+  //           Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+
+  //       // Prepare multipart request to send image and data
+  //       var request = http.MultipartRequest('POST', url);
+
+  //       // Save selected work type and workplace type to SharedPreferences
+  //       SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //       await localStorage.setString('workType', _selectedWorkType!);
+  //       await localStorage.setString('workplaceType', _selectedWorkplaceType!);
+
+  //       request.headers['Authorization'] =
+  //           'Bearer ${localStorage.getString('token')}';
+  //       String type = '1';
+  //       String location = '1';
+  //       if (_selectedWorkType == "Lembur") {
+  //         type = '2';
+  //       } else {
+  //         type = '1';
+  //       }
+  //       if (_selectedWorkplaceType == "WFH") {
+  //         location = '2';
+  //       } else {
+  //         location = '1';
+  //       }
+  //       request.fields['type'] = type;
+  //       request.fields['status'] = '1';
+  //       request.fields['location'] = location;
+  //       request.fields['geolocation'] = city.toString(); // Send city name
+  //       // request.fields['latitude'] = city.toString();
+  //       // request.fields['longitude'] = city.toString();
+
+  //       // Add image file
+  //       if (_image != null) {
+  //         request.files.add(await http.MultipartFile.fromPath(
+  //           'foto', // Field name for image in the API
+  //           _image!.path,
+  //           contentType: MediaType('image', 'jpg'), // Set content type
+  //         ));
+  //       }
+
+  //       // Send the request and get the response
+  //       var response = await request.send();
+  //       var rp = await http.Response.fromStream(response);
+  //       var data = jsonDecode(rp.body.toString());
+  //       print(data);
+  //       var status = data['status'];
+  //       if (status == 'success') {
+  //         // Successfully submitted
+  //         Navigator.pushReplacement(
+  //           context,
+  //           MaterialPageRoute(builder: (context) => SuccessPage()),
+  //         );
+  //       } else {
+  //         // Submission failed
+  //         Navigator.pushReplacement(
+  //           context,
+  //           MaterialPageRoute(builder: (context) => FailurePage()),
+  //         );
+  //       }
+  //     } catch (e) {
+  //       // Handle error and navigate to failure page
+  //       print("Error: $e");
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => FailurePage()),
+  //       );
+  //     }
+  //   }
+  // }
+
   Future<void> _submitData() async {
     if (_image == null) {
       // Show error if no image is uploaded
@@ -409,145 +563,126 @@ class _ClockInPageState extends State<ClockInPage> {
           backgroundColor: Colors.red,
         ),
       );
-      return; // Stop submission if no image
+      return;
     }
+
     // Show loading dialog
-    // showDialog(
-    //   context: context,
-    //   barrierDismissible: false, // Prevent dismissing the dialog
-    //   builder: (BuildContext context) {
-    //     return Center(
-    //       child: CircularProgressIndicator(
-    //         color: const Color.fromARGB(255, 101, 19, 116),
-    //       ),
-    //     );
-    //   },
-    // );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
 
-    if (_selectedWorkType == "Reguler" &&
-        _selectedWorkplaceType == "WFH" &&
-        (userStatus == "1" || userStatus == "2")) {
-      // Jika user memilih Reguler WFH, buat pengajuan dulu
+    try {
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      localStorage.setBool(
-          'isWFHRequested', true); // Tandai bahwa user sudah mengajukan WFH
-      // SharedPreferences localStorage = await SharedPreferences.getInstance();
-      // await saveWFHStatus(true, wfhId); // untuk menyimpan pwngajuan wfh
+      String token = localStorage.getString('token') ?? '';
 
-      setState(() {
-        isWFHRequested = true;
-      });
+      // Get current location
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
 
-      // Munculkan pesan sukses
+      double latitude = position.latitude;
+      double longitude = position.longitude;
 
-      await Future.delayed(Duration(seconds: 3)); // Simulasi loading sebentar
-      Navigator.pop(context); // Tutup loading
+      // Convert coordinates to address
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(latitude, longitude);
+      Placemark place = placemarks[0];
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pengajuan WFH berhasil dikirim!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      // Show loading dialog (loading tetap sampai respons API selesai)
-      showDialog(
-        context: context,
-        barrierDismissible: false, // Prevent dismissing the dialog
-        builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: const Color.fromARGB(255, 101, 19, 116),
-            ),
-          );
-        },
-      );
+      String city = place.locality ?? "Unknown City";
 
-      try {
-        // Get current location
-        Position position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high);
+      // Tentukan tipe kerja dan lokasi
+      String type = (_selectedWorkType == "Lembur") ? '2' : '1';
+      String location = (_selectedWorkplaceType == "WFH") ? '2' : '1';
+      bool isWFHRequest = (_selectedWorkType == "Reguler" &&
+          _selectedWorkplaceType == "WFH" &&
+          (userStatus == "1" || userStatus == "2"));
 
-        double latitude = position.latitude;
-        double longitude = position.longitude;
+      // Siapkan request ke API clock-in
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+      var request = http.MultipartRequest('POST', url);
 
-        // Convert coordinates to address
-        List<Placemark> placemarks =
-            await placemarkFromCoordinates(latitude, longitude);
-        Placemark place = placemarks[0]; // Get the first placemark
+      request.headers['Authorization'] = 'Bearer $token';
+      request.fields['type'] = type;
+      request.fields['status'] = '1';
+      request.fields['location'] = location;
+      request.fields['geolocation'] = city;
+      request.fields['latitude'] = latitude.toString();
+      request.fields['longitude'] = longitude.toString();
 
-        String city = place.locality ??
-            "Unknown City"; // If city not available, default to Unknown City
+      // Jika WFH, tambahkan parameter is_wfh
+      if (isWFHRequest) {
+        request.fields['is_wfh'] = '1';
+      }
 
-        // Example API endpoint
-        final url =
-            Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+      // Tambahkan foto
+      if (_image != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'foto',
+          _image!.path,
+          contentType: MediaType('image', 'jpg'),
+        ));
+      }
 
-        // Prepare multipart request to send image and data
-        var request = http.MultipartRequest('POST', url);
+      // Kirim request ke API
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
-        // Save selected work type and workplace type to SharedPreferences
-        SharedPreferences localStorage = await SharedPreferences.getInstance();
-        await localStorage.setString('workType', _selectedWorkType!);
-        await localStorage.setString('workplaceType', _selectedWorkplaceType!);
+      print(data);
+      var status = data['status'];
 
-        request.headers['Authorization'] =
-            'Bearer ${localStorage.getString('token')}';
-        String type = '1';
-        String location = '1';
-        if (_selectedWorkType == "Lembur") {
-          type = '2';
-        } else {
-          type = '1';
-        }
-        if (_selectedWorkplaceType == "WFH") {
-          location = '2';
-        } else {
-          location = '1';
-        }
-        request.fields['type'] = type;
-        request.fields['status'] = '1';
-        request.fields['location'] = location;
-        request.fields['geolocation'] = city.toString(); // Send city name
-        // request.fields['latitude'] = city.toString();
-        // request.fields['longitude'] = city.toString();
-
-        // Add image file
-        if (_image != null) {
-          request.files.add(await http.MultipartFile.fromPath(
-            'foto', // Field name for image in the API
-            _image!.path,
-            contentType: MediaType('image', 'jpg'), // Set content type
-          ));
+      if (status == 'success') {
+        // Jika pengajuan WFH berhasil, tandai di local storage
+        if (isWFHRequest) {
+          localStorage.setBool('isWFHRequested', true);
         }
 
-        // Send the request and get the response
-        var response = await request.send();
-        var rp = await http.Response.fromStream(response);
-        var data = jsonDecode(rp.body.toString());
-        print(data);
-        var status = data['status'];
-        if (status == 'success') {
-          // Successfully submitted
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => SuccessPage()),
-          );
-        } else {
-          // Submission failed
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => FailurePage()),
-          );
-        }
-      } catch (e) {
-        // Handle error and navigate to failure page
-        print("Error: $e");
+        Navigator.pop(context); // Tutup loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pengajuan berhasil dikirim!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => SuccessPage()),
+        );
+      } else {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal mengajukan!'),
+            backgroundColor: Colors.red,
+          ),
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => FailurePage()),
         );
       }
+    } catch (e) {
+      print("Error: $e");
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Terjadi kesalahan, coba lagi!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => FailurePage()),
+      );
     }
   }
 
