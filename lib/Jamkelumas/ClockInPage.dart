@@ -551,140 +551,269 @@ class _ClockInPageState extends State<ClockInPage> {
   //   }
   // }
 
+  // Future<void> _submitData() async {
+  //   if (_image == null) {
+  //     // Show error if no image is uploaded
+  //     setState(() {
+  //       _isImageRequired = true;
+  //     });
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Please upload a photo before submitting.'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   // Show loading dialog
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return const Center(
+  //         child: CircularProgressIndicator(
+  //           color: Color.fromARGB(255, 101, 19, 116),
+  //         ),
+  //       );
+  //     },
+  //   );
+
+  //   try {
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     String token = localStorage.getString('token') ?? '';
+
+  //     // Get current location
+  //     Position position = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.high);
+
+  //     double latitude = position.latitude;
+  //     double longitude = position.longitude;
+
+  //     // Convert coordinates to address
+  //     List<Placemark> placemarks =
+  //         await placemarkFromCoordinates(latitude, longitude);
+  //     Placemark place = placemarks[0];
+
+  //     String city = place.locality ?? "Unknown City";
+
+  //     // Tentukan tipe kerja dan lokasi
+  //     String type = (_selectedWorkType == "Lembur") ? '2' : '1';
+  //     String location = (_selectedWorkplaceType == "WFH") ? '2' : '1';
+  //     bool isWFHRequest = (_selectedWorkType == "Reguler" &&
+  //         _selectedWorkplaceType == "WFH" &&
+  //         (userStatus == "1" || userStatus == "2"));
+
+  //     // Siapkan request ke API clock-in
+  //     final url =
+  //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+  //     var request = http.MultipartRequest('POST', url);
+
+  //     request.headers['Authorization'] = 'Bearer $token';
+  //     request.fields['type'] = type;
+  //     request.fields['status'] = '1';
+  //     request.fields['location'] = location;
+  //     request.fields['geolocation'] = city;
+  //     request.fields['latitude'] = latitude.toString();
+  //     request.fields['longitude'] = longitude.toString();
+
+  //     // Jika WFH, tambahkan parameter is_wfh
+  //     if (isWFHRequest) {
+  //       request.fields['is_wfh'] = '1';
+  //     }
+
+  //     // Tambahkan foto
+  //     if (_image != null) {
+  //       request.files.add(await http.MultipartFile.fromPath(
+  //         'foto',
+  //         _image!.path,
+  //         contentType: MediaType('image', 'jpg'),
+  //       ));
+  //     }
+
+  //     // Kirim request ke API
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     print(data);
+  //     var status = data['status'];
+
+  //     if (status == 'success') {
+  //       // Jika pengajuan WFH berhasil, tandai di local storage
+  //       if (isWFHRequest) {
+  //         localStorage.setBool('isWFHRequested', true);
+  //       }
+
+  //       Navigator.pop(context); // Tutup loading
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //           content: Text('Pengajuan berhasil dikirim!'),
+  //           backgroundColor: Colors.green,
+  //         ),
+  //       );
+
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => SuccessPage()),
+  //       );
+  //     } else {
+  //       Navigator.pop(context);
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //           content: Text('Gagal mengajukan!'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => FailurePage()),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print("Error: $e");
+  //     Navigator.pop(context);
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Terjadi kesalahan, coba lagi!'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => FailurePage()),
+  //     );
+  //   }
+  // }
+
   Future<void> _submitData() async {
-    if (_image == null) {
-      // Show error if no image is uploaded
-      setState(() {
-        _isImageRequired = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload a photo before submitting.'),
-          backgroundColor: Colors.red,
+  if (_image == null) {
+    // Show error if no image is uploaded
+    setState(() {
+      _isImageRequired = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please upload a photo before submitting.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  // Show loading dialog
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 101, 19, 116),
         ),
       );
-      return;
+    },
+  );
+
+  try {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String token = localStorage.getString('token') ?? '';
+
+    // Get current location
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    double latitude = position.latitude;
+    double longitude = position.longitude;
+
+    // Convert coordinates to address
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(latitude, longitude);
+    Placemark place = placemarks[0];
+
+    String city = place.locality ?? "Unknown City";
+
+    // Tentukan tipe kerja dan lokasi
+    String type = (_selectedWorkType == "Lembur") ? '2' : '1';
+    String location = (_selectedWorkplaceType == "WFH") ? '2' : '1';
+    bool isWFHRequest = (_selectedWorkType == "Reguler" &&
+        _selectedWorkplaceType == "WFH" &&
+        (userStatus == "1" || userStatus == "2"));
+
+    // Siapkan request ke API clock-in
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+    var request = http.MultipartRequest('POST', url);
+
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields['type'] = type;
+    request.fields['status'] = '1';
+    request.fields['location'] = location;
+    request.fields['geolocation'] = city;
+    request.fields['latitude'] = latitude.toString();
+    request.fields['longitude'] = longitude.toString();
+
+    // Jika WFH, tambahkan parameter is_wfh
+    if (isWFHRequest) {
+      request.fields['is_wfh'] = '1';
     }
 
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
+    // Tambahkan foto
+    if (_image != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'foto',
+        _image!.path,
+        contentType: MediaType('image', 'jpg'),
+      ));
+    }
 
-    try {
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      String token = localStorage.getString('token') ?? '';
+    // Kirim request ke API
+    var response = await request.send();
+    var rp = await http.Response.fromStream(response);
+    var data = jsonDecode(rp.body.toString());
+    
+    print(data);
+    var status = data['status'];
 
-      // Get current location
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+    Navigator.pop(context); // Tutup loading dialog
 
-      double latitude = position.latitude;
-      double longitude = position.longitude;
-
-      // Convert coordinates to address
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(latitude, longitude);
-      Placemark place = placemarks[0];
-
-      String city = place.locality ?? "Unknown City";
-
-      // Tentukan tipe kerja dan lokasi
-      String type = (_selectedWorkType == "Lembur") ? '2' : '1';
-      String location = (_selectedWorkplaceType == "WFH") ? '2' : '1';
-      bool isWFHRequest = (_selectedWorkType == "Reguler" &&
-          _selectedWorkplaceType == "WFH" &&
-          (userStatus == "1" || userStatus == "2"));
-
-      // Siapkan request ke API clock-in
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
-      var request = http.MultipartRequest('POST', url);
-
-      request.headers['Authorization'] = 'Bearer $token';
-      request.fields['type'] = type;
-      request.fields['status'] = '1';
-      request.fields['location'] = location;
-      request.fields['geolocation'] = city;
-      request.fields['latitude'] = latitude.toString();
-      request.fields['longitude'] = longitude.toString();
-
-      // Jika WFH, tambahkan parameter is_wfh
+    if (status == 'success') {
+      // Jika pengajuan WFH berhasil, tandai di local storage
       if (isWFHRequest) {
-        request.fields['is_wfh'] = '1';
-      }
+        localStorage.setBool('isWFHRequested', true);
 
-      // Tambahkan foto
-      if (_image != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'foto',
-          _image!.path,
-          contentType: MediaType('image', 'jpg'),
-        ));
-      }
-
-      // Kirim request ke API
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      print(data);
-      var status = data['status'];
-
-      if (status == 'success') {
-        // Jika pengajuan WFH berhasil, tandai di local storage
-        if (isWFHRequest) {
-          localStorage.setBool('isWFHRequested', true);
-        }
-
-        Navigator.pop(context); // Tutup loading
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Pengajuan berhasil dikirim!'),
+            content: Text('Pengajuan WFH berhasil dikirim!'),
             backgroundColor: Colors.green,
           ),
         );
 
+        // Kembali ke halaman Home
+        Navigator.popUntil(context, (route) => route.isFirst);
+      } else {
+        // Jika clock-in biasa berhasil, ke halaman success
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => SuccessPage()),
         );
-      } else {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal mengajukan!'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => FailurePage()),
-        );
       }
-    } catch (e) {
-      print("Error: $e");
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Terjadi kesalahan, coba lagi!'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } else {
+      // Jika gagal, ke halaman failure
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => FailurePage()),
       );
     }
+  } catch (e) {
+    print("Error: $e");
+    Navigator.pop(context);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => FailurePage()),
+    );
   }
+}
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -707,6 +836,21 @@ class _ClockInPageState extends State<ClockInPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_selectedWorkplaceType == "WFH" &&
+                  _selectedWorkType == "Reguler" &&
+                  (userStatus == "1" || userStatus == "2")) ...[
+                Center(
+                  child: Text(
+                    "Anda Sekarang Dalam Mode Pengajuan WFH",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+                  ),
+                )
+              ],
+              const SizedBox(height: 20),
               // Work Type Dropdown
               const Text(
                 'Jenis Pekerjaan',
@@ -973,57 +1117,65 @@ class _ClockInPageState extends State<ClockInPage> {
               //     ),
               //   ),
               // ] else ...[
+
               if (_selectedWorkplaceType == "WFH" &&
                   _selectedWorkType == "Reguler" &&
                   (userStatus == "1" || userStatus == "2")) ...[
-                ElevatedButton(
-                  onPressed: _submitData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    iconColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 120,
-                      vertical: 15,
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitData,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      iconColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Ajukan WFH',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
                     ),
                   ),
-                  child: const Text(
-                    'ajukan wfh',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                ),
+                )
               ] else if (userStatus == "1" || userStatus == "2") ...[
-                ElevatedButton(
-                  onPressed: _submitData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    iconColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 120,
-                      vertical: 15,
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitData,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      iconColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Submit',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
                     ),
                   ),
-                  child: const Text(
-                    'Submit',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                ),
+                )
               ] else if (userStatus == "3") ...[
-                ElevatedButton(
-                  onPressed: _submitData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    iconColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 120,
-                      vertical: 15,
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitData,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      iconColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Submit',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
                     ),
                   ),
-                  child: const Text(
-                    'Submit',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                ),
+                )
               ],
+
               //   ]
               // ])
             ],

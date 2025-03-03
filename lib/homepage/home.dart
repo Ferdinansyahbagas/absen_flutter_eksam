@@ -472,8 +472,41 @@ class _HomePageState extends State<HomePage> {
   //   }
   // }
 
-  Future<void> getcancelwfh() async {
-    if (wfhId == null) return; // Pastikan ada ID WFH
+  // Future<void> getcancelwfh() async {
+  //   if (wfhId == null) return; // Pastikan ada ID WFH
+
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   var headers = {
+  //     'Authorization': 'Bearer ${localStorage.getString('token')}'
+  //   };
+
+  //   try {
+  //     var response = await http.delete(url, headers: headers);
+  //     var data = jsonDecode(response.body.toString());
+  //     print("Response API cancel-wfh: $data");
+  //     if (response.statusCode == 200) {
+  //       setState(() {
+  //         isWFHRequested = false;
+  //         wfhId = null;
+  //       });
+
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //             content: Text('WFH berhasil dibatalkan'),
+  //             backgroundColor: Colors.green),
+  //       );
+  //     } else {
+  //       print('Gagal membatalkan WFH: ${data['message']}');
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //   }
+  // }
+
+  Future<bool> getcancelwfh() async {
+    if (wfhId == null) return false; // Pastikan ada ID WFH
 
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
@@ -486,6 +519,7 @@ class _HomePageState extends State<HomePage> {
       var response = await http.delete(url, headers: headers);
       var data = jsonDecode(response.body.toString());
       print("Response API cancel-wfh: $data");
+
       if (response.statusCode == 200) {
         setState(() {
           isWFHRequested = false;
@@ -497,11 +531,15 @@ class _HomePageState extends State<HomePage> {
               content: Text('WFH berhasil dibatalkan'),
               backgroundColor: Colors.green),
         );
+
+        return true; // Berhasil membatalkan WFH
       } else {
         print('Gagal membatalkan WFH: ${data['message']}');
+        return false;
       }
     } catch (e) {
       print('Error occurred: $e');
+      return false;
     }
   }
 
@@ -967,8 +1005,18 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed:
-                                      getcancelwfh, // Fungsi untuk membatalkan WFH
+                                  onPressed: () async {
+                                    final success =
+                                        await getcancelwfh(); // Fungsi untuk membatalkan WFH
+                                    if (success) {
+                                      setState(() {
+                                        isWFHRequested = false;
+                                        hasClockedIn =
+                                            false; // Clock In aktif kembali
+                                        hasClockedOut = false; // Clock Out mati
+                                      });
+                                    }
+                                  },
                                   icon: const Icon(Icons.cancel),
                                   label: const Text('Batalkan'),
                                   style: ElevatedButton.styleFrom(
@@ -983,7 +1031,7 @@ class _HomePageState extends State<HomePage> {
                             Column(
                               children: [
                                 // Tampilkan Clock In & Out jika belum Clock Out
-                                if (!hasClockedOut)
+                                if (!hasClockedOut) ...[
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -1046,6 +1094,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ],
                                   ),
+                                ] else
                                 // const SizedBox(height: 10), // Jarak antar tombol
                                 // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
                                 if (hasClockedOut)
