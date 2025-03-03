@@ -507,10 +507,7 @@ class _HomePageState extends State<HomePage> {
   // }
 
   Future<bool> getcancelwfh() async {
-    if (wfhId == null)
-      // return
-      // false
-      ; // Pastikan ada ID WFH
+    if (wfhId == null) return false; // Pastikan ada ID WFH
 
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
