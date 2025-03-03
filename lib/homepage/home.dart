@@ -53,6 +53,7 @@ class _HomePageState extends State<HomePage> {
   bool isholiday = false; //status untuk card libur
   bool isovertime = false; //status untuk card lembur
   bool isWFHRequested = false; //status mengajukan WFH
+  bool jarak = false;
   bool hasUnreadNotifications =
       false; //Status untuk melihat notifikasi sudah di baca atau belum
   List<dynamic> notifications = []; //variabel noifiaksi
@@ -506,7 +507,10 @@ class _HomePageState extends State<HomePage> {
   // }
 
   Future<bool> getcancelwfh() async {
-    if (wfhId == null) return false; // Pastikan ada ID WFH
+    if (wfhId == null)
+      // return
+      // false
+      ; // Pastikan ada ID WFH
 
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
@@ -519,7 +523,7 @@ class _HomePageState extends State<HomePage> {
       var response = await http.delete(url, headers: headers);
       var data = jsonDecode(response.body.toString());
       print("Response API cancel-wfh: $data");
-
+      print("Full Response: $data");
       if (response.statusCode == 200) {
         setState(() {
           isWFHRequested = false;
@@ -547,10 +551,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> getData() async {
     // Ambil profil pengguna
     try {
+      // Ambil lokasi user
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      double userLatitude = position.latitude;
+      double userLongitude = position.longitude;
+
       final url =
           Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-
       var request = http.MultipartRequest('GET', url);
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
@@ -558,17 +567,46 @@ class _HomePageState extends State<HomePage> {
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
-      setState(() {
-        name = data['data']['name'];
-        wfhId = data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
-        userStatus = data['data']['user_level_id'].toString();
 
-        // avatarUrl =
-        //     "https://dev-portal.eksam.cloud/storage/foto/${data['data']['foto']}";
-      });
-      print("Profil pengguna: ${data['data']}");
+      if (rp.statusCode == 200) {
+        setState(() {
+          userStatus = data['data']['user_level_id'].toString();
+          name = data['data']['name'];
+          wfhId =
+              data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
+
+          double officeLatitude =
+              double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
+          double officeLongitude =
+              double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
+
+          // _compareDistance(officeLongitude, officeLatitude);
+
+          // Hitung jarak antara user dan kantor
+          double distance = Geolocator.distanceBetween(
+              userLatitude, userLongitude, officeLatitude, officeLongitude);
+
+          print("Jarak dari kantor: $distance meter");
+          print("Lokasi User: $userLatitude, $userLongitude");
+          print("Lokasi Kantor: $officeLatitude, $officeLongitude");
+          print("Jarak antara User dan Kantor: $distance meter");
+
+          print("Jarak dari kantor: $distance meter");
+          print("User level: $userStatus");
+
+          if (distance > 500) {
+            // Jika lebih dari 500 meter, hanya munculkan WFH
+            jarak = true;
+          } else {
+            // Jika kurang dari 500 meter, munculkan semua opsi
+            jarak = false;
+          }
+        });
+      } else {
+        print("Error mengambil profil pengguna: ${rp.statusCode}");
+      }
     } catch (e) {
-      print("Error mengambil profil pengguna: $e");
+      print("Error mengambil data lokasi: $e");
     }
 
     // Cek status clock-in
@@ -1036,23 +1074,104 @@ class _HomePageState extends State<HomePage> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
+                                      // ElevatedButton.icon(
+                                      //   onPressed: hasClockedIn
+                                      //       ? null
+                                      //       : () async {
+                                      //           final result =
+                                      //               await Navigator.push(
+                                      //             context,
+                                      //             MaterialPageRoute(
+                                      //               builder: (context) =>
+                                      //                   const ClockInPage(),
+                                      //             ),
+                                      //           );
+                                      //           if (result == true) {
+                                      //             setState(() {
+                                      //               hasClockedIn = true;
+                                      //               hasClockedOut = false;
+                                      //             });
+                                      //           }
+                                      //         },
+                                      //   icon: const Icon(Icons.login),
+                                      //   label: const Text('Clock In'),
+                                      //   style: ElevatedButton.styleFrom(
+                                      //     backgroundColor: hasClockedIn
+                                      //         ? Colors.grey
+                                      //         : Colors.white,
+                                      //   ),
+                                      // ),
                                       ElevatedButton.icon(
                                         onPressed: hasClockedIn
                                             ? null
                                             : () async {
-                                                final result =
-                                                    await Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
+                                                if (jarak) {
+                                                  // Jika user WFH, tampilkan pop-up konfirmasi
+                                                  bool? confirm =
+                                                      await showDialog(
+                                                    context: context,
                                                     builder: (context) =>
-                                                        const ClockInPage(),
-                                                  ),
-                                                );
-                                                if (result == true) {
-                                                  setState(() {
-                                                    hasClockedIn = true;
-                                                    hasClockedOut = false;
-                                                  });
+                                                        AlertDialog(
+                                                      title: const Text(
+                                                          "Konfirmasi Clock In"),
+                                                      content: const Text(
+                                                          "Anda akan melakukan Clock In dalam mode WFH. Lanjutkan?"),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context,
+                                                                false); // Tutup pop-up
+                                                          },
+                                                          child: const Text(
+                                                              "Cancel"),
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context,
+                                                                true); // Lanjut Clock In
+                                                          },
+                                                          child: const Text(
+                                                              "Clock In"),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+
+                                                  // Jika user memilih "Clock In", baru navigasi ke halaman Clock In
+                                                  if (confirm == true) {
+                                                    final result =
+                                                        await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const ClockInPage(),
+                                                      ),
+                                                    );
+                                                    if (result == true) {
+                                                      setState(() {
+                                                        hasClockedIn = true;
+                                                        hasClockedOut = false;
+                                                      });
+                                                    }
+                                                  }
+                                                } else {
+                                                  // Jika tidak WFH, langsung Clock In tanpa pop-up
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const ClockInPage(),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    setState(() {
+                                                      hasClockedIn = true;
+                                                      hasClockedOut = false;
+                                                    });
+                                                  }
                                                 }
                                               },
                                         icon: const Icon(Icons.login),
