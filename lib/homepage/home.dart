@@ -1115,9 +1115,9 @@ class _HomePageState extends State<HomePage> {
                                                       title: const Text(
                                                           "Konfirmasi Clock In"),
                                                       content: const Text(
-                                                          "Anda akan melakukan Clock In dalam mode WFH. Lanjutkan?"),
+                                                          "Lokasi Anda tidak dalam radius kantor. Ajukan WFH? "),
                                                       actions: [
-                                                        TextButton(
+                                                        ElevatedButton(
                                                           onPressed: () {
                                                             Navigator.pop(
                                                                 context,
@@ -1133,7 +1133,7 @@ class _HomePageState extends State<HomePage> {
                                                                 true); // Lanjut Clock In
                                                           },
                                                           child: const Text(
-                                                              "Clock In"),
+                                                              "Ajukan WFH"),
                                                         ),
                                                       ],
                                                     ),
