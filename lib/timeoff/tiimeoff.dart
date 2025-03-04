@@ -28,7 +28,8 @@ class _TimeOffState extends State<TimeOff> {
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
-  List<String> _typeOptions = [];
+  // List<String> _typeOptions = [];
+  List<String> _typeOptions = ['Cuti', 'Izin'];
   final _reasonController = TextEditingController();
   // final _formKey = GlobalKey<FormState>();
 
@@ -61,6 +62,32 @@ class _TimeOffState extends State<TimeOff> {
     }
   }
 
+  // Future<void> getData() async {
+  //   final url =
+  //       Uri.parse('https://portal.eksam.cloud/api/v1/request-history/get-type');
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   try {
+  //     var response = await http.get(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer ${localStorage.getString('token')}',
+  //       },
+  //     );
+  //     if (response.statusCode == 200) {
+  //       var data = jsonDecode(response.body);
+  //       setState(() {
+  //         _typeOptions =
+  //             List<String>.from(data['data'].map((item) => item['name']));
+  //       });
+  //     } else {
+  //       print('Gagal mengambil data: ${response.statusCode}');
+  //       print(response.body);
+  //     }
+  //   } catch (e) {
+  //     print('Terjadi kesalahan: $e');
+  //   }
+  // }
+
   Future<void> getData() async {
     final url =
         Uri.parse('https://portal.eksam.cloud/api/v1/request-history/get-type');
@@ -74,13 +101,16 @@ class _TimeOffState extends State<TimeOff> {
       );
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
+        List<String> fetchedTypes =
+            List<String>.from(data['data'].map((item) => item['name']));
+
         setState(() {
-          _typeOptions =
-              List<String>.from(data['data'].map((item) => item['name']));
+          _typeOptions = fetchedTypes
+              .where((type) => type == 'Cuti' || type == 'Izin')
+              .toList();
         });
       } else {
         print('Gagal mengambil data: ${response.statusCode}');
-        print(response.body);
       }
     } catch (e) {
       print('Terjadi kesalahan: $e');
@@ -115,7 +145,7 @@ class _TimeOffState extends State<TimeOff> {
       print("Error: $e");
     }
   }
-
+// hard code
   Future<void> _submitData() async {
     showDialog(
       context: context,
@@ -128,24 +158,15 @@ class _TimeOffState extends State<TimeOff> {
         );
       },
     );
-
     try {
       await getProfile();
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/request-history/make-request');
-
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      String formattedStartDate =
-          DateFormat('yyyy-MM-dd').format(_selectedStartDate!);
-      String formattedEndDate =
-          DateFormat('yyyy-MM-dd').format(_selectedEndDate!);
-
       if (_selectedType == "Izin") {
         type = '3';
-      } else if (_selectedType == "Sakit") {
-        type = '2';
       } else {
         type = '1';
       }
@@ -154,13 +175,11 @@ class _TimeOffState extends State<TimeOff> {
           'Bearer ${localStorage.getString('token')}';
       request.fields['user_id'] = iduser.toString();
       request.fields['notes'] = Reason;
-      request.fields['startdate'] = formattedStartDate;
-      request.fields['enddate'] = formattedEndDate;
+      request.fields['startdate'] = formatStarttedDate;
+      request.fields['enddate'] = formatEndtedDate;
       request.fields['type'] = type!;
 
       var response = await request.send();
-      // var rp = await http.Response.fromStream(response);
-      // var data = jsonDecode(rp.body.toString());
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
@@ -180,6 +199,72 @@ class _TimeOffState extends State<TimeOff> {
       );
     }
   }
+
+// cuti izin sakit
+  // Future<void> _submitData() async {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return const Center(
+  //         child: CircularProgressIndicator(
+  //           color: Color.fromARGB(255, 101, 19, 116),
+  //         ),
+  //       );
+  //     },
+  //   );
+
+  //   try {
+  //     await getProfile();
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/request-history/make-request');
+
+  //     var request = http.MultipartRequest('POST', url);
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     String formattedStartDate =
+  //         DateFormat('yyyy-MM-dd').format(_selectedStartDate!);
+  //     String formattedEndDate =
+  //         DateFormat('yyyy-MM-dd').format(_selectedEndDate!);
+
+  //     if (_selectedType == "Izin") {
+  //       type = '3';
+  //     } else if (_selectedType == "Sakit") {
+  //       type = '2';
+  //     } else {
+  //       type = '1';
+  //     }
+
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+  //     request.fields['user_id'] = iduser.toString();
+  //     request.fields['notes'] = Reason;
+  //     request.fields['startdate'] = formattedStartDate;
+  //     request.fields['enddate'] = formattedEndDate;
+  //     request.fields['type'] = type!;
+
+  //     var response = await request.send();
+  //     // var rp = await http.Response.fromStream(response);
+  //     // var data = jsonDecode(rp.body.toString());
+
+  //     if (response.statusCode == 200) {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const SuccessPage2I()),
+  //       );
+  //     } else {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const FailurePage2I()),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => const FailurePage2I()),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

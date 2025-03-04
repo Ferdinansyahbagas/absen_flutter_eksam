@@ -31,6 +31,7 @@ class _ClockInPageState extends State<ClockInPage> {
   List<String> workTypes = []; // Dynamically set work types
   bool _isImageRequired = false; // Flag to indicate if image is required
   bool _isHoliday = false; // Flag for holiday status
+  bool _isLoading = true; // Tambahkan state untuk loading
   final ImagePicker _picker = ImagePicker();
   List<String> workplaceTypes = [];
 
@@ -60,6 +61,13 @@ class _ClockInPageState extends State<ClockInPage> {
     setState(() {
       isWFHRequested = localStorage.getBool('isWFHRequested') ?? false;
       wfhId = localStorage.getString('wfhId');
+    });
+  }
+
+  Future<void> _startLoading() async {
+    await Future.delayed(const Duration(seconds: 2)); // Delay selama 2 detik
+    setState(() {
+      _isLoading = false; // Setelah delay, hilangkan loading
     });
   }
 
@@ -232,8 +240,12 @@ class _ClockInPageState extends State<ClockInPage> {
             _selectedWorkplaceType = 'WFH';
           } else {
             // Jika kurang dari 500 meter, munculkan semua opsi
-            workplaceTypes = ['WFO', 'WFH'];
-            _selectedWorkplaceType = 'WFO';
+            workplaceTypes
+                // = ['WFO', 'WFH']
+                ;
+            _selectedWorkplaceType
+                //  = 'WFO'
+                ;
           }
         });
       } else {
@@ -1128,7 +1140,9 @@ class _ClockInPageState extends State<ClockInPage> {
                     ),
                   ),
                 )
-              ] else if (userStatus == "1" || userStatus == "2") ...[
+              ] else if (userStatus == "1" ||
+                  userStatus == "2" ||
+                  userStatus == "3") ...[
                 Center(
                   child: ElevatedButton(
                     onPressed: _submitData,
@@ -1146,24 +1160,24 @@ class _ClockInPageState extends State<ClockInPage> {
                     ),
                   ),
                 )
-              ] else if (userStatus == "3") ...[
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitData,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      iconColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 120,
-                        vertical: 15,
-                      ),
-                    ),
-                    child: const Text(
-                      'Submit',
-                      style: TextStyle(fontSize: 15, color: Colors.white),
-                    ),
-                  ),
-                )
+                // ] else if (userStatus == "3") ...[
+                //   Center(
+                //     child: ElevatedButton(
+                //       onPressed: _submitData,
+                //       style: ElevatedButton.styleFrom(
+                //         backgroundColor: Colors.orange,
+                //         iconColor: Colors.white,
+                //         padding: const EdgeInsets.symmetric(
+                //           horizontal: 120,
+                //           vertical: 15,
+                //         ),
+                //       ),
+                //       child: const Text(
+                //         'Submit',
+                //         style: TextStyle(fontSize: 15, color: Colors.white),
+                //       ),
+                //     ),
+                //   )
               ],
 
               //   ]
