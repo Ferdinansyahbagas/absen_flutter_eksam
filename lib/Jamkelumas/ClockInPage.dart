@@ -75,7 +75,7 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> getStatus() async {
     final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-type');
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-type-parameter');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -258,7 +258,7 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> getLocation() async {
     final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-location');
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-location-parameter');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
