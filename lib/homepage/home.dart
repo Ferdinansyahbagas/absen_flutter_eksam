@@ -1048,6 +1048,9 @@ class _HomePageState extends State<HomePage> {
                                         isWFHRequested = false;
                                         hasClockedIn =
                                             false; // Clock In aktif kembali
+                                                hasClockedInOvertime = false;
+                                                    hasClockedOutOvertime =
+                                                        false;
                                         hasClockedOut = false; // Clock Out mati
                                       });
                                     }
@@ -1213,7 +1216,7 @@ class _HomePageState extends State<HomePage> {
                                 ] else
                                 // const SizedBox(height: 10), // Jarak antar tombol
                                 // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                                if (hasClockedOut)
+                                ... [
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -1261,7 +1264,7 @@ class _HomePageState extends State<HomePage> {
                                                 if (result == true) {
                                                   setState(() {
                                                     hasClockedOutOvertime =
-                                                        true;
+                                                        false;
                                                     hasClockedInOvertime =
                                                         false;
                                                   });
@@ -1280,6 +1283,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ],
                                   ),
+                                ]
                               ],
                             )
                           ]
