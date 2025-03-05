@@ -45,6 +45,7 @@ class _ClockInPageState extends State<ClockInPage> {
     getData();
     getcancelwfh();
     getcekwfh();
+    _startLoading();
     loadWFHStatus(); // Ambil status WFH saat halaman dimuat
   }
 
@@ -74,8 +75,8 @@ class _ClockInPageState extends State<ClockInPage> {
   // Check if today is a weekend or holiday from API
 
   Future<void> getStatus() async {
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-type-parameter');
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/get-type-parameter');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -257,8 +258,8 @@ class _ClockInPageState extends State<ClockInPage> {
   }
 
   Future<void> getLocation() async {
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-location-parameter');
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/get-location-parameter');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =

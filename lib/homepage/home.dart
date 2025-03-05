@@ -506,22 +506,72 @@ class _HomePageState extends State<HomePage> {
   //   }
   // }
 
+  // Future<bool> getcancelwfh() async {
+  //   if (wfhId == null)
+  //   //  return true
+  //    ; // Pastikan ada ID WFH
+
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   var headers = {
+  //     'Authorization': 'Bearer ${localStorage.getString('token')}'
+  //   };
+
+  //   try {
+  //     var response = await http.delete(url, headers: headers);
+  //     var data = jsonDecode(response.body.toString());
+  //     print("Response API cancel-wfh: $data");
+  //     print("Full Response: $data");
+  //     if (response.statusCode == 200) {
+  //       setState(() {
+  //         isWFHRequested = false;
+  //         wfhId = null;
+  //       });
+
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //             content: Text('WFH berhasil dibatalkan'),
+  //             backgroundColor: Colors.green),
+  //       );
+
+  //       return true; // Berhasil membatalkan WFH
+  //     } else {
+  //       print('Gagal membatalkan WFH: ${data['message']}');
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //     return false;
+  //   }
+  // }
+
   Future<bool> getcancelwfh() async {
-    if (wfhId == null) return false; // Pastikan ada ID WFH
+    if (wfhId == null) {
+      print("Gagal membatalkan WFH: wfhId tidak ditemukan");
+      return false;
+    }
 
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var headers = {
-      'Authorization': 'Bearer ${localStorage.getString('token')}'
+      'Authorization': 'Bearer ${localStorage.getString('token')}',
+      'Accept':
+          'application/json', // Tambahkan ini untuk memastikan format JSON
     };
 
     try {
       var response = await http.delete(url, headers: headers);
-      var data = jsonDecode(response.body.toString());
-      print("Response API cancel-wfh: $data");
-      print("Full Response: $data");
+
+      // Debugging output
+      print("Response Status Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
       if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        print("Response API cancel-wfh: $data");
+
         setState(() {
           isWFHRequested = false;
           wfhId = null;
@@ -529,13 +579,14 @@ class _HomePageState extends State<HomePage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('WFH berhasil dibatalkan'),
-              backgroundColor: Colors.green),
+            content: Text('WFH berhasil dibatalkan'),
+            backgroundColor: Colors.green,
+          ),
         );
-
-        return true; // Berhasil membatalkan WFH
+        return true;
       } else {
-        print('Gagal membatalkan WFH: ${data['message']}');
+        print("Gagal membatalkan WFH. Status Code: ${response.statusCode}");
+        print("Response Body: ${response.body}");
         return false;
       }
     } catch (e) {
@@ -1048,9 +1099,8 @@ class _HomePageState extends State<HomePage> {
                                         isWFHRequested = false;
                                         hasClockedIn =
                                             false; // Clock In aktif kembali
-                                                hasClockedInOvertime = false;
-                                                    hasClockedOutOvertime =
-                                                        false;
+                                        hasClockedInOvertime = false;
+                                        hasClockedOutOvertime = false;
                                         hasClockedOut = false; // Clock Out mati
                                       });
                                     }
@@ -1214,9 +1264,9 @@ class _HomePageState extends State<HomePage> {
                                     ],
                                   ),
                                 ] else
-                                // const SizedBox(height: 10), // Jarak antar tombol
-                                // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                                ... [
+                                  // const SizedBox(height: 10), // Jarak antar tombol
+                                  // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
+                                  ...[
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,

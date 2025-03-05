@@ -27,7 +27,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   String? _selectedWorkplaceType;
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
-  bool _isDateEmpty = false;
+  // bool _isDateEmpty = false;
   bool _isTimeEmpty = false;
   String? userStatus; // Tambahan untuk menyimpan user level
   List<String> WorkTypes = [];
@@ -80,7 +80,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
         if (isStartDate) {
           selectedDate = picked;
           formattedDate = DateFormat('yyyy-MM-dd').format(picked);
-          _isDateEmpty = false;
+          // _isDateEmpty = false;
         }
       });
     }
@@ -243,46 +243,74 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   // }
 
   Future<void> getDatalupa() async {
+    // try {
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+    //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    //     var request = http.MultipartRequest('GET', url);
+    //     request.headers['Authorization'] =
+    //         'Bearer ${localStorage.getString('token')}';
+
+    //     var response = await request.send();
+    //     var rp = await http.Response.fromStream(response);
+
+    //     print("Response Body: ${rp.body}"); // Debugging: Lihat isi respons
+
+    //     var data = jsonDecode(rp.body.toString());
+
+    //     if (data != null && data['data'] != null) {
+    //       setState(() {
+    //         _selectedWorkType =
+    //             data['data']['attendance_type_id']?.toString() ?? 'Unknown';
+    //         _selectedWorkplaceType =
+    //             data['data']['attendance_location_id']?.toString() ?? 'Unknown';
+    //       });
+    //     } else {
+    //       print("Data tidak ditemukan dalam respons API");
+    //     }
+    //   } catch (e) {
+    //     print("Error mengecek status clock-in: $e");
+    //   }
+    // }
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
     try {
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
 
-      print("Response Body: ${rp.body}"); // Debugging: Lihat isi respons
-
-      var data = jsonDecode(rp.body.toString());
-
-      if (data != null && data['data'] != null) {
+      if (rp.statusCode == 200) {
+        var data = jsonDecode(rp.body.toString());
+        print(data);
         setState(() {
-          _selectedWorkType =
-              data['data']['attendance_type_id']?.toString() ?? 'Unknown';
-          _selectedWorkplaceType =
-              data['data']['attendance_location_id']?.toString() ?? 'Unknown';
+          _selectedWorkType = data['data']['type']['name'];
+          _selectedWorkplaceType = data['data']['location']['name'];
+          formattedDate = data['data']['date'];
         });
       } else {
-        print("Data tidak ditemukan dalam respons API");
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
       }
     } catch (e) {
-      print("Error mengecek status clock-in: $e");
+      print('Error occurred: $e');
     }
   }
 
   Future<void> _submitData() async {
     setState(() {
-      _isDateEmpty = selectedDate == null;
+      // _isDateEmpty = selectedDate == null;
       _isTimeEmpty = _selectedTime == null;
       _isImageRequired = _image == null;
       _isNoteRequired = _noteController.text.isEmpty;
     });
 
-    if (_isDateEmpty || _isTimeEmpty || _isImageRequired || _isNoteRequired) {
+    if (
+        // _isDateEmpty
+        //  ||
+        _isTimeEmpty || _isImageRequired || _isNoteRequired) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Harap isi semua field sebelum submit.'),
@@ -435,51 +463,71 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
               ),
               const SizedBox(height: 20),
               // Date picker field
-              InkWell(
-                onTap: () => _selectDate(context, true),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Tanggal',
-                    labelStyle: const TextStyle(
-                        color: Color.fromARGB(255, 101, 19, 116)),
-                    floatingLabelBehavior: FloatingLabelBehavior
-                        .always, // Always show label on top
-                    border: const OutlineInputBorder(),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: _isDateEmpty
-                              ? Colors.red
-                              : const Color.fromARGB(255, 101, 19, 116)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Colors.red), // Border saat error
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Colors.red), // Border saat error dan fokus
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    errorText: _isDateEmpty
-                        ? 'Tanggal Wajib Di isi'
-                        : null, // Error message
+              // InkWell(
+              //   onTap: () => _selectDate(context, true),
+              //   child: InputDecorator(
+              //     decoration: InputDecoration(
+              //       labelText: 'Tanggal',
+              //       labelStyle: const TextStyle(
+              //           color: Color.fromARGB(255, 101, 19, 116)),
+              //       floatingLabelBehavior: FloatingLabelBehavior
+              //           .always, // Always show label on top
+              //       border: const OutlineInputBorder(),
+              //       enabledBorder: OutlineInputBorder(
+              //         borderSide: BorderSide(
+              //             color: _isDateEmpty
+              //                 ? Colors.red
+              //                 : const Color.fromARGB(255, 101, 19, 116)),
+              //       ),
+              //       focusedBorder: OutlineInputBorder(
+              //         borderSide: const BorderSide(
+              //             color: Color.fromARGB(255, 101, 19, 116), width: 2),
+              //         borderRadius: BorderRadius.circular(8),
+              //       ),
+              //       errorBorder: OutlineInputBorder(
+              //         borderSide: const BorderSide(
+              //             color: Colors.red), // Border saat error
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //       focusedErrorBorder: OutlineInputBorder(
+              //         borderSide: const BorderSide(
+              //             color: Colors.red), // Border saat error dan fokus
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //       errorText: _isDateEmpty
+              //           ? 'Tanggal Wajib Di isi'
+              //           : null, // Error message
+              //     ),
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //       children: [
+              //         Text(
+              //           selectedDate == null ? 'Select Date' : formattedDate,
+              //         ),
+              //         const Icon(Icons.calendar_today, color: Colors.orange),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              InputDecorator(
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Tanggal Clock Out',
+                  labelStyle:
+                      const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
+                  floatingLabelBehavior:
+                      FloatingLabelBehavior.always, // Always show label on top
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: const Color.fromARGB(255, 101, 19, 116)),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        selectedDate == null ? 'Select Date' : formattedDate,
-                      ),
-                      const Icon(Icons.calendar_today, color: Colors.orange),
-                    ],
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 101, 19, 116), width: 2),
                   ),
                 ),
+                child: Text(
+                    formattedDate.isNotEmpty ? formattedDate : 'Memuat...'),
               ),
               const SizedBox(height: 20),
 
@@ -528,27 +576,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
                 ),
               ),
 
-              // const Text(
-              //   'Clock-Out Time',
-              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              // ),
-              // const SizedBox(height: 10),
-              // InkWell(
-              //   onTap: _pickTime,
-              //   child: Container(
-              //     padding: const EdgeInsets.all(15),
-              //     decoration: BoxDecoration(
-              //       border: Border.all(color: Colors.purple, width: 2),
-              //       borderRadius: BorderRadius.circular(8),
-              //     ),
-              //     child: Text(
-              //       _selectedTime == null
-              //           ? 'Select Time'
-              //           : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
-              //       style: const TextStyle(fontSize: 16),
-              //     ),
-              //   ),
-              // ),
               const SizedBox(height: 20),
 
               // Upload Photo Button

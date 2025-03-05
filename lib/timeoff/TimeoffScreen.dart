@@ -343,79 +343,166 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             ),
             // Time Off Request Card
             Expanded(
-              child: ListView.builder(
-                itemCount: historyData.length,
-                itemBuilder: (context, index) {
-                  final item = historyData[index] as Map<String, dynamic>;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 20),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 236, 81, 109),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header dengan judul tipe dan tanggal
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              item['type']['name']?.toString() ??
-                                  'Unknown Type', // Hanya menampilkan nama tipe
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 25,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+              child: historyData.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "Belum ada history time off",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                        // Catatan atau deskripsi
-                        Text(
-                          item['notes']?.toString() ?? 'No reason provided',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: historyData.length,
+                      itemBuilder: (context, index) {
+                        final item = historyData[index] as Map<String, dynamic>;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 20),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 236, 81, 109),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        // Status pengajuan
-                        Align(
-                          alignment: Alignment.center,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 110),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(9),
-                            ),
-                            child: Text(
-                              item['status']['name']?.toString() ??
-                                  'Unknown Status',
-                              style: const TextStyle(
-                                color: Colors.pink,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header dengan judul tipe dan tanggal
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    item['type']['name']?.toString() ??
+                                        'Unknown Type',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
+                              // Catatan atau deskripsi
+                              Text(
+                                item['notes']?.toString() ??
+                                    'No reason provided',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              // Status pengajuan
+                              Align(
+                                alignment: Alignment.center,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 110),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(9),
+                                  ),
+                                  child: Text(
+                                    item['status']['name']?.toString() ??
+                                        'Unknown Status',
+                                    style: const TextStyle(
+                                      color: Colors.pink,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
+            )
+            // Expanded(
+            //   child: ListView.builder(
+            //     itemCount: historyData.length,
+            //     itemBuilder: (context, index) {
+            //       final item = historyData[index] as Map<String, dynamic>;
+            //       return Container(
+            //         margin: const EdgeInsets.only(bottom: 16),
+            //         padding: const EdgeInsets.symmetric(
+            //             horizontal: 16, vertical: 20),
+            //         decoration: BoxDecoration(
+            //           color: const Color.fromARGB(255, 236, 81, 109),
+            //           borderRadius: BorderRadius.circular(12),
+            //         ),
+            //         child: Column(
+            //           crossAxisAlignment: CrossAxisAlignment.start,
+            //           children: [
+            //             // Header dengan judul tipe dan tanggal
+            //             Row(
+            //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //               children: [
+            //                 Text(
+            //                   item['type']['name']?.toString() ??
+            //                       'Unknown Type', // Hanya menampilkan nama tipe
+            //                   style: const TextStyle(
+            //                     color: Colors.white,
+            //                     fontSize: 25,
+            //                     fontWeight: FontWeight.bold,
+            //                   ),
+            //                 ),
+            //                 Text(
+            //                   '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
+            //                   style: const TextStyle(
+            //                     color: Colors.white,
+            //                     fontSize: 12,
+            //                   ),
+            //                 ),
+            //               ],
+            //             ),
+            //             // Catatan atau deskripsi
+            //             Text(
+            //               item['notes']?.toString() ?? 'No reason provided',
+            //               style: const TextStyle(
+            //                 color: Colors.white,
+            //                 fontSize: 14,
+            //               ),
+            //             ),
+            //             const SizedBox(height: 20),
+            //             // Status pengajuan
+            //             Align(
+            //               alignment: Alignment.center,
+            //               child: Container(
+            //                 padding: const EdgeInsets.symmetric(
+            //                     vertical: 8, horizontal: 110),
+            //                 decoration: BoxDecoration(
+            //                   color: Colors.white,
+            //                   borderRadius: BorderRadius.circular(9),
+            //                 ),
+            //                 child: Text(
+            //                   item['status']['name']?.toString() ??
+            //                       'Unknown Status',
+            //                   style: const TextStyle(
+            //                     color: Colors.pink,
+            //                     fontWeight: FontWeight.bold,
+            //                     fontSize: 16,
+            //                   ),
+            //                 ),
+            //               ),
+            //             ),
+            //           ],
+            //         ),
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -490,43 +577,45 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
           // Handle bottom navigation bar tap
           // Navigate to the appropriate screen
           switch (index) {
-          case 0:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-        (route) => false, // Menghapus semua halaman sebelumnya
-      );
-      break;
-    case 1:
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => const TimeOffScreen()),
-      //   (route) => false,
-      // );
-      break;
-    case 2:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const ReimbursementPage()),
-        (route) => false,
-      );
-      break;
-    case 3:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const NotificationPage()),
-        (route) => false,
-      );
-      break;
-    case 4:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileScreen()),
-        (route) => false,
-      );
-      break;
-  }
-},
+            case 0:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+                (route) => false, // Menghapus semua halaman sebelumnya
+              );
+              break;
+            case 1:
+              // Navigator.pushAndRemoveUntil(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => const TimeOffScreen()),
+              //   (route) => false,
+              // );
+              break;
+            case 2:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ReimbursementPage()),
+                (route) => false,
+              );
+              break;
+            case 3:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NotificationPage()),
+                (route) => false,
+              );
+              break;
+            case 4:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                (route) => false,
+              );
+              break;
+          }
+        },
       ),
     );
   }
