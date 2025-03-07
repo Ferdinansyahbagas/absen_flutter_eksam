@@ -5,6 +5,7 @@ import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor hala
 import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
 import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clockout
+import 'package:absen/Jamkelumas/Clockinwfa.dart';
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
 import 'dart:async'; // Untuk timer
 import 'dart:convert';
@@ -1562,6 +1563,60 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 14,
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Menu Shortcut
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment
+                        .start, // Memberi jarak di antara shortcut
+                    children: [
+                      // Menggunakan gambar dari aset dan mengatur ukuran gambar
+                      _buildMenuShortcut(
+                        label: 'Request WFA',
+                        targetPage: ClockinwfaPage(),
+                        bgColor: const Color.fromRGBO(
+                            101, 19, 116, 1), // Warna background
+                        imagePath:
+                            'assets/icon/timeoff.png', // Path gambar aset
+                        iconColor:
+                            Colors.white, // Warna yang diterapkan ke gambar
+                        iconSize: 32, // Ukuran gambar
+                        labelStyle: const TextStyle(
+                          color: Colors.pink, // Warna label menjadi pink
+                          fontSize: 14,
+                        ),
+                      ),
+                      // // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
+                      // _buildMenuShortcut(
+                      //   label: 'Reimbursement',
+                      //   targetPage: const ReimbursementPage(),
+                      //   bgColor: const Color.fromARGB(
+                      //       255, 101, 19, 116), // Warna background
+                      //   iconData: Icons.receipt, // Ikon bawaan Flutter
+                      //   iconColor: Colors.white, // Warna ikon
+                      //   iconSize: 30, // Ukuran ikon
+                      //   labelStyle: const TextStyle(
+                      //     color: Colors.pink, // Warna label menjadi pink
+                      //     fontSize: 14,
+                      //   ),
+                      // ),
+                      // // Menggunakan gambar dari aset dan mengatur ukuran gambar
+                      // _buildMenuShortcut(
+                      //   label: 'History',
+                      //   targetPage: const HistoryScreen(),
+                      //   bgColor: const Color.fromARGB(
+                      //       255, 101, 19, 116), // Warna background
+                      //   imagePath:
+                      //       'assets/icon/history.png', // Path gambar aset
+                      //   iconColor:
+                      //       Colors.white, // Warna yang diterapkan ke gambar
+                      //   iconSize: 26, // Ukuran gambar
+                      //   labelStyle: const TextStyle(
+                      //     color: Colors.pink, // Warna label menjadi pink
+                      //     fontSize: 14,
+                      //   ),
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 20),

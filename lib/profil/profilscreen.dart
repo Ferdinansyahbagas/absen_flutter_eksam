@@ -198,7 +198,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _getBank() async {
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/get-bank-parameter');
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/other/get-bank-parameter');
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
 

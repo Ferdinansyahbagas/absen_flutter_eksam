@@ -61,7 +61,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       print("Error mengecek status clock-in: $e");
     }
   }
-
+  
   void _showLupaClockOutModal() {
     showModalBottomSheet(
       context: context,

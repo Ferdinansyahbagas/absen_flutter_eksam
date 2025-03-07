@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ClockOutScreen extends StatefulWidget {
@@ -25,6 +26,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   String? userStatus; // Tambahan untuk menyimpan user level
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
+  bool isWithinRange = true; // Default true agar tidak menghalangi WFH
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
   final ImagePicker _picker = ImagePicker();
@@ -60,13 +62,72 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       });
     }
   }
+//  Future<void> getProfil() async {
+//     try {
+//       // Ambil lokasi user
+//       Position position = await Geolocator.getCurrentPosition(
+//           desiredAccuracy: LocationAccuracy.high);
+//       double userLatitude = position.latitude;
+//       double userLongitude = position.longitude;
+
+//       final url =
+//           Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
+//       var request = http.MultipartRequest('GET', url);
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
+
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
+
+//       if (rp.statusCode == 200) {
+//         setState(() {
+//           userStatus = data['data']['user_level_id'].toString();
+
+//           double officeLatitude =
+//               double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
+//           double officeLongitude =
+//               double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
+
+//           // _compareDistance(officeLongitude, officeLatitude);
+
+//           // Hitung jarak antara user dan kantor
+//           double distance = Geolocator.distanceBetween(
+//               userLatitude, userLongitude, officeLatitude, officeLongitude);
+
+//           print("Jarak dari kantor: $distance meter");
+//           print("Lokasi User: $userLatitude, $userLongitude");
+//           print("Lokasi Kantor: $officeLatitude, $officeLongitude");
+//           print("Jarak antara User dan Kantor: $distance meter");
+
+//           print("Jarak dari kantor: $distance meter");
+//           print("User level: $userStatus");
+
+//           if (distance > 500) {
+
+//           } else {
+
+//           }
+//         });
+//       } else {
+//         print("Error mengambil profil pengguna: ${rp.statusCode}");
+//       }
+//     } catch (e) {
+//       print("Error mengambil data lokasi: $e");
+//     }
+//   }
 
   Future<void> getProfil() async {
     try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      double userLatitude = position.latitude;
+      double userLongitude = position.longitude;
+
       final url =
           Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-
       var request = http.MultipartRequest('GET', url);
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
@@ -75,14 +136,34 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
 
-      setState(() {
-        userStatus = data['data']['user_level_id'].toString();
-      });
+      if (rp.statusCode == 200) {
+        double officeLatitude =
+            double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
+        double officeLongitude =
+            double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
 
-      print("Profil pengguna: ${data['data']}");
-      _setWorkTypeLembur(); // Panggil setelah dapat userStatus
+        // Hitung jarak antara user dan kantor
+        double distance = Geolocator.distanceBetween(
+            userLatitude, userLongitude, officeLatitude, officeLongitude);
+
+        print("Jarak dari kantor: $distance meter");
+
+        if (distance > 500) {
+          // // Jika user memilih WFO dan jaraknya lebih dari 500m, pindah ke FailurePage
+          // Navigator.pushReplacement(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => const FailurePage()),
+          // );
+        } else {
+          setState(() {
+            isWithinRange = true;
+          });
+        }
+      } else {
+        print("Error mengambil profil pengguna: ${rp.statusCode}");
+      }
     } catch (e) {
-      print("Error mengambil profil pengguna: $e");
+      print("Error mengambil data lokasi: $e");
     }
   }
 
@@ -105,14 +186,46 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
           _selectedWorkType = data['data']['type']['name'];
           _selectedWorkplaceType = data['data']['location']['name'];
         });
+
+        // Jika user memilih WFO, lakukan validasi jarak
+        if (_selectedWorkplaceType == "WFO") {
+          getProfil();
+        }
       } else {
         print('Error fetching history data: ${rp.statusCode}');
-        print(rp.body);
       }
     } catch (e) {
       print('Error occurred: $e');
     }
   }
+
+  // Future<void> getData() async {
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/attendance/get-self-detail-today');
+  //   var request = http.MultipartRequest('GET', url);
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   request.headers['Authorization'] =
+  //       'Bearer ${localStorage.getString('token')}';
+
+  //   try {
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+
+  //     if (rp.statusCode == 200) {
+  //       var data = jsonDecode(rp.body.toString());
+  //       print(data);
+  //       setState(() {
+  //         _selectedWorkType = data['data']['type']['name'];
+  //         _selectedWorkplaceType = data['data']['location']['name'];
+  //       });
+  //     } else {
+  //       print('Error fetching history data: ${rp.statusCode}');
+  //       print(rp.body);
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //   }
+  // }
 
   Future<void> _setWorkTypeLembur() async {
     try {
@@ -157,6 +270,15 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   }
 
   Future<void> _submitData() async {
+    if (_selectedWorkplaceType == "WFO" && !isWithinRange) {
+      // Jika user WFO dan di luar jangkauan, arahkan ke FailurePage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePage()),
+      );
+      return;
+    }
+
     if (_noteController.text.isEmpty) {
       setState(() {
         _isNoteRequired = true;
