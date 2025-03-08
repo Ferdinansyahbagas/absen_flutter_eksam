@@ -335,7 +335,9 @@ class _HomePageState extends State<HomePage> {
   // Fungsi untuk mengambil data dari API townhall
   Future<void> getPengumuman() async {
     final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/other/get-self-th');
+        // Uri.parse('https://portal.eksam.cloud/api/v1/other/get-self-th');
+        Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
+
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
