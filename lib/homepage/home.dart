@@ -1568,57 +1568,59 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 10),
                   // Menu Shortcut
                   Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .start, // Memberi jarak di antara shortcut
+                    mainAxisAlignment:
+                        MainAxisAlignment.start, // Biar mulai dari kiri
                     children: [
-                      // Menggunakan gambar dari aset dan mengatur ukuran gambar
-                      _buildMenuShortcut(
-                        label: 'Request WFA',
-                        targetPage: ClockinwfaPage(),
-                        bgColor: const Color.fromRGBO(
-                            101, 19, 116, 1), // Warna background
-                        imagePath:
-                            'assets/icon/timeoff.png', // Path gambar aset
-                        iconColor:
-                            Colors.white, // Warna yang diterapkan ke gambar
-                        iconSize: 32, // Ukuran gambar
-                        labelStyle: const TextStyle(
-                          color: Colors.pink, // Warna label menjadi pink
-                          fontSize: 14,
+                      Expanded(
+                        flex: 1, // Buat lebar shortcut lebih fleksibel
+                        child: _buildMenuShortcut(
+                          label: 'Request WFA',
+                          targetPage: ClockinwfaPage(),
+                          bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                          imagePath: 'assets/icon/WFA.png',
+                          iconColor: Colors.white,
+                          iconSize: 32,
+                          labelStyle: const TextStyle(
+                            color: Colors.pink,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-                      // // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
-                      // _buildMenuShortcut(
-                      //   label: 'Reimbursement',
-                      //   targetPage: const ReimbursementPage(),
-                      //   bgColor: const Color.fromARGB(
-                      //       255, 101, 19, 116), // Warna background
-                      //   iconData: Icons.receipt, // Ikon bawaan Flutter
-                      //   iconColor: Colors.white, // Warna ikon
-                      //   iconSize: 30, // Ukuran ikon
-                      //   labelStyle: const TextStyle(
-                      //     color: Colors.pink, // Warna label menjadi pink
-                      //     fontSize: 14,
-                      //   ),
-                      // ),
-                      // // Menggunakan gambar dari aset dan mengatur ukuran gambar
-                      // _buildMenuShortcut(
-                      //   label: 'History',
-                      //   targetPage: const HistoryScreen(),
-                      //   bgColor: const Color.fromARGB(
-                      //       255, 101, 19, 116), // Warna background
-                      //   imagePath:
-                      //       'assets/icon/history.png', // Path gambar aset
-                      //   iconColor:
-                      //       Colors.white, // Warna yang diterapkan ke gambar
-                      //   iconSize: 26, // Ukuran gambar
-                      //   labelStyle: const TextStyle(
-                      //     color: Colors.pink, // Warna label menjadi pink
-                      //     fontSize: 14,
-                      //   ),
-                      // ),
+                      const Spacer(), // Tambahkan spacer biar ke kiri
                     ],
                   ),
+                  // // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
+                  // _buildMenuShortcut(
+                  //   label: 'Reimbursement',
+                  //   targetPage: const ReimbursementPage(),
+                  //   bgColor: const Color.fromARGB(
+                  //       255, 101, 19, 116), // Warna background
+                  //   iconData: Icons.receipt, // Ikon bawaan Flutter
+                  //   iconColor: Colors.white, // Warna ikon
+                  //   iconSize: 30, // Ukuran ikon
+                  //   labelStyle: const TextStyle(
+                  //     color: Colors.pink, // Warna label menjadi pink
+                  //     fontSize: 14,
+                  //   ),
+                  // ),
+                  // // Menggunakan gambar dari aset dan mengatur ukuran gambar
+                  // _buildMenuShortcut(
+                  //   label: 'History',
+                  //   targetPage: const HistoryScreen(),
+                  //   bgColor: const Color.fromARGB(
+                  //       255, 101, 19, 116), // Warna background
+                  //   imagePath:
+                  //       'assets/icon/history.png', // Path gambar aset
+                  //   iconColor:
+                  //       Colors.white, // Warna yang diterapkan ke gambar
+                  //   iconSize: 26, // Ukuran gambar
+                  //   labelStyle: const TextStyle(
+                  //     color: Colors.pink, // Warna label menjadi pink
+                  //     fontSize: 14,
+                  //   ),
+                  // ),
+                  //   ],
+                  // ),
                   const SizedBox(height: 20),
                   //card untuk absen biasa
                   if (isSuccess)

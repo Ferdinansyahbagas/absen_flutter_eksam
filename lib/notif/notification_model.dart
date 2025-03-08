@@ -1,193 +1,203 @@
-// import 'dart:convert';
-// import 'dart:io';
-// import 'package:absen/homepage/home.dart';
-// import 'package:absen/susses&failde/berhasilV1.dart';
-// import 'package:absen/susses&failde/gagalV1.dart';
-// import 'package:flutter/material.dart';
-// import 'package:geolocator/geolocator.dart';
-// import 'package:http/http.dart' as http;
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:http_parser/http_parser.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:absen/susses&failde/berhasilV1.dart';
+import 'package:absen/susses&failde/gagalV1.dart';
 
-// class ClockInPage extends StatefulWidget {
-//   const ClockInPage({super.key});
+class ClockinwfaPage extends StatefulWidget {
+  @override
+  _ClockinwfaPageState createState() => _ClockinwfaPageState();
+}
 
-//   @override
-//   _ClockInPageState createState() => _ClockInPageState();
-// }
+class _ClockinwfaPageState extends State<ClockinwfaPage> {
+  DateTime? selectedDate;
+  TextEditingController noteController = TextEditingController();
 
-// class _ClockInPageState extends State<ClockInPage> {
-//   String? _selectedWorkType = 'Reguler';
-//   String? _selectedWorkplaceType = 'WFO';
-//   File? _image;
-//   List<String> workTypes = [];
-//   bool _isImageRequired = false;
-//   final ImagePicker _picker = ImagePicker();
-//   double officeLatitude = 0.0;
-//   double officeLongitude = 0.0;
-//   final double allowedRadius = 100.0; // 100 meter
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
+  }
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     fetchOfficeLocation();
-//   }
+  void _submit() {
+    if (selectedDate != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SuccessPage()),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => FailurePage()),
+      );
+    }
+  }
 
-//   Future<void> fetchOfficeLocation() async {
-//     try {
-//       final url = Uri.parse(
-//           'https://dev-portal.eksam.cloud/api/v1/attendance/get-location');
-//       SharedPreferences localStorage = await SharedPreferences.getInstance();
-//       var request = http.MultipartRequest('GET', url);
-//       request.headers['Authorization'] =
-//           'Bearer ${localStorage.getString('token')}';
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        title: const Text('Clock In WFA'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Work Type Dropdown
+              const Text(
+                'Work Type',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromRGBO(101, 19, 116, 1)),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: "Reguler",
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
+                ),
+                items: ["Reguler"].map((String workType) {
+                  return DropdownMenuItem<String>(
+                      value: workType, child: Text(workType));
+                }).toList(),
+                onChanged: null, // Disabled
+              ),
+              const SizedBox(height: 20),
 
-//       var response = await request.send();
-//       var rp = await http.Response.fromStream(response);
-//       var data = jsonDecode(rp.body.toString());
+              // Workplace Type Dropdown
+              const Text(
+                'Workplace Type',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromRGBO(101, 19, 116, 1)),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: "WFA",
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
+                ),
+                items: ["WFA"].map((String workplaceType) {
+                  return DropdownMenuItem<String>(
+                      value: workplaceType, child: Text(workplaceType));
+                }).toList(),
+                onChanged: null, // Disabled
+              ),
+              const SizedBox(height: 20),
 
-//       if (response.statusCode == 200) {
-//         setState(() {
-//           officeLatitude = data['data']['latitude'];
-//           officeLongitude = data['data']['longitude'];
-//         });
-//       } else {
-//         print('Error fetching office location: ${response.statusCode}');
-//       }
-//     } catch (e) {
-//       print('Error fetching office location: $e');
-//     }
-//   }
+              // Date Picker
+              const Text(
+                'Tanggal',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromRGBO(101, 19, 116, 1)),
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: () => _selectDate(context),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                            color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                            color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  ),
+                  child: Text(
+                    selectedDate == null
+                        ? "Choose Date"
+                        : DateFormat('dd MMMM yyyy').format(selectedDate!),
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
 
-//   Future<void> _pickImage() async {
-//     final XFile? pickedFile =
-//         await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
-//     if (pickedFile != null) {
-//       setState(() {
-//         _image = File(pickedFile.path);
-//         _isImageRequired = false;
-//       });
-//     }
-//   }
+              // Note Field
+              const Text(
+                'Note',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromRGBO(101, 19, 116, 1)),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: noteController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: Color.fromRGBO(101, 19, 116, 1))),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(
+                          color: Color.fromRGBO(101, 19, 116, 1))),
+                  hintText: "Enter your note",
+                ),
+              ),
+              const SizedBox(height: 120),
 
-//   Future<void> _submitData() async {
-//     if (_image == null) {
-//       setState(() {
-//         _isImageRequired = true;
-//       });
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(
-//           content: Text('Please upload a photo before submitting.'),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//       return;
-//     }
-
-//     Position position = await Geolocator.getCurrentPosition(
-//         desiredAccuracy: LocationAccuracy.high);
-//     double userLatitude = position.latitude;
-//     double userLongitude = position.longitude;
-
-//     double distance = Geolocator.distanceBetween(
-//         userLatitude, userLongitude, officeLatitude, officeLongitude);
-
-//     if (distance > allowedRadius) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(
-//           content: Text('Anda berada di luar radius kantor. Clock-in gagal.'),
-//           backgroundColor: Colors.red,
-//         ),
-//       );
-//       return;
-//     }
-
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (BuildContext context) {
-//         return const Center(child: CircularProgressIndicator());
-//       },
-//     );
-
-//     try {
-//       final url = Uri.parse(
-//           'https://dev-portal.eksam.cloud/api/v1/attendance/clock-in');
-//       SharedPreferences localStorage = await SharedPreferences.getInstance();
-//       var request = http.MultipartRequest('POST', url);
-//       request.headers['Authorization'] =
-//           'Bearer ${localStorage.getString('token')}';
-//       request.fields['type'] = _selectedWorkType == "Lembur" ? '2' : '1';
-//       request.fields['location'] = _selectedWorkplaceType == "WFH" ? '2' : '1';
-//       request.fields['geolocation'] = '$userLatitude, $userLongitude';
-
-//       if (_image != null) {
-//         request.files.add(await http.MultipartFile.fromPath(
-//           'foto',
-//           _image!.path,
-//           contentType: MediaType('image', 'jpg'),
-//         ));
-//       }
-
-//       var response = await request.send();
-//       var rp = await http.Response.fromStream(response);
-//       var data = jsonDecode(rp.body.toString());
-
-//       Navigator.pop(context);
-//       if (data['status'] == 'success') {
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(builder: (context) => SuccessPage()),
-//         );
-//       } else {
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(builder: (context) => FailurePage()),
-//         );
-//       }
-//     } catch (e) {
-//       Navigator.pop(context);
-//       Navigator.pushReplacement(
-//         context,
-//         MaterialPageRoute(builder: (context) => FailurePage()),
-//       );
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Clock In'),
-//         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back),
-//           onPressed: () {
-//             Navigator.pushReplacement(
-//               context,
-//               MaterialPageRoute(builder: (context) => const HomePage()),
-//             );
-//           },
-//         ),
-//       ),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Center(
-//               child: ElevatedButton(
-//                 onPressed: _submitData,
-//                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-//                 child: const Text(
-//                   'Submit',
-//                   style: TextStyle(fontSize: 15, color: Colors.white),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+              // Submit Button
+              Center(
+                child: ElevatedButton(
+                  onPressed: _submit, // Call the function to submit data
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    iconColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 120,
+                      vertical: 15,
+                    ),
+                  ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
