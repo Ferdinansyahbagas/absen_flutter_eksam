@@ -18,6 +18,7 @@ import 'package:absen/utils/preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -40,7 +41,9 @@ class _HomePageState extends State<HomePage> {
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   int currentIndex = 0; // Default to the home page
-  int _currentPage = 0; // Variable to keep track of the current page
+  int _currentIndex = 0;
+  int _currentPage = 0;
+  // Variable to keep track of the current page
   int? userId;
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
   bool hasClockedIn = false; // Status clock-in biasa
@@ -333,11 +336,39 @@ class _HomePageState extends State<HomePage> {
   //sampai sini buat notifikasi
 
   // Fungsi untuk mengambil data dari API townhall
-  Future<void> getPengumuman() async {
-    final url =
-        // Uri.parse('https://portal.eksam.cloud/api/v1/other/get-self-th');
-        Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
+  // Future<void> getPengumuman() async {
+  //   final url =
+  //       // Uri.parse('https://portal.eksam.cloud/api/v1/other/get-self-th');
+  //       Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
 
+  //   var request = http.MultipartRequest('GET', url);
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   request.headers['Authorization'] =
+  //       'Bearer ${localStorage.getString('token')}';
+
+  //   try {
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+  //     print(data);
+
+  //     if (rp.statusCode == 200) {
+  //       setState(() {
+  //         announcements = List<String>.from(data['data']
+  //             .where((item) => item['status']['id'] == 1)
+  //             .map((item) => item['message'])).toList();
+  //       });
+  //       print(announcements);
+  //     } else {
+  //       print('Error fetching announcements: ${rp.statusCode}');
+  //       print(rp.body);
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //   }
+  // }
+  Future<void> getPengumuman() async {
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -347,22 +378,45 @@ class _HomePageState extends State<HomePage> {
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
-      print(data);
 
       if (rp.statusCode == 200) {
         setState(() {
           announcements = List<String>.from(data['data']
               .where((item) => item['status']['id'] == 1)
-              .map((item) => item['message'])).toList();
+              .map((item) => item['message']));
         });
-        print(announcements);
+        _startAutoSlide();
       } else {
         print('Error fetching announcements: ${rp.statusCode}');
-        print(rp.body);
       }
     } catch (e) {
       print('Error occurred: $e');
     }
+  }
+
+  void _startAutoSlide() {
+    _timer?.cancel(); // Hentikan timer jika sebelumnya sudah berjalan
+    if (announcements.isNotEmpty) {
+      _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+        if (_currentIndex < announcements.length - 1) {
+          _currentIndex++;
+        } else {
+          _currentIndex = 0; // Balik ke awal jika sudah di akhir
+        }
+        _pageController.animateToPage(
+          _currentIndex,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Hentikan timer saat widget dihapus
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadToken() async {
@@ -791,11 +845,11 @@ class _HomePageState extends State<HomePage> {
   //   });
   // }
 
-  @override
-  void dispose() {
-    resetNoteTimer?.cancel(); // Membatalkan timer saat widget dibuang
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   resetNoteTimer?.cancel(); // Membatalkan timer saat widget dibuang
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -1755,7 +1809,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // Slider untuk pengumuman
+                  // // Slider untuk pengumuman
                   Container(
                     height: 150,
                     decoration: BoxDecoration(
@@ -1780,9 +1834,13 @@ class _HomePageState extends State<HomePage> {
                               PageView.builder(
                                 controller: _pageController,
                                 itemCount: announcements.length,
+                                onPageChanged: (index) {
+                                  setState(() {
+                                    _currentIndex = index;
+                                  });
+                                },
                                 itemBuilder: (context, index) {
                                   final message = announcements[index];
-
                                   return GestureDetector(
                                     onTap: () {
                                       Navigator.push(
@@ -1802,27 +1860,24 @@ class _HomePageState extends State<HomePage> {
                                         color: Colors.white,
                                       ),
                                       child: Center(
-                                        child: Text(
-                                          message,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color.fromARGB(
-                                                255, 101, 19, 116),
-                                          ),
-                                          textAlign: TextAlign.center,
+                                        child: Html(
+                                          data: message,
+                                          style: {
+                                            "body": Style(
+                                              textAlign: TextAlign.center,
+                                              fontSize: FontSize(16.0),
+                                              fontWeight: FontWeight.bold,
+                                              color: Color.fromARGB(
+                                                  255, 101, 19, 116),
+                                            ),
+                                          },
                                         ),
                                       ),
                                     ),
                                   );
                                 },
-                                onPageChanged: (int index) {
-                                  setState(() {
-                                    _currentPage = index;
-                                  });
-                                },
                               ),
-                              // Tambahkan indikator
+                              // Indikator halaman
                               Positioned(
                                 bottom: 10,
                                 left: 0,
@@ -1844,6 +1899,94 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                   ),
+                  // Container(
+                  //   height: 150,
+                  //   decoration: BoxDecoration(
+                  //     borderRadius: BorderRadius.circular(12),
+                  //     color: Colors.grey[300],
+                  //   ),
+                  //   child: announcements.isEmpty
+                  //       ? const Center(
+                  //           child: Text(
+                  //             'Hari ini tidak ada pengumuman',
+                  //             style: TextStyle(
+                  //               fontSize: 16,
+                  //               fontWeight: FontWeight.bold,
+                  //               color: Colors.purple,
+                  //             ),
+                  //             textAlign: TextAlign.center,
+                  //           ),
+                  //         )
+                  //       : Stack(
+                  //           alignment: Alignment.bottomCenter,
+                  //           children: [
+                  //             PageView.builder(
+                  //               controller: _pageController,
+                  //               itemCount: announcements.length,
+                  //               itemBuilder: (context, index) {
+                  //                 final message = announcements[index];
+
+                  //                 return GestureDetector(
+                  //                   onTap: () {
+                  //                     Navigator.push(
+                  //                       context,
+                  //                       MaterialPageRoute(
+                  //                         builder: (context) =>
+                  //                             AnnouncementDetailPage(
+                  //                           message: message,
+                  //                         ),
+                  //                       ),
+                  //                     );
+                  //                   },
+                  //                   child: Container(
+                  //                     padding: const EdgeInsets.all(10),
+                  //                     decoration: BoxDecoration(
+                  //                       borderRadius: BorderRadius.circular(12),
+                  //                       color: Colors.white,
+                  //                     ),
+                  //                     child: Center(
+                  //                       child: Text(
+                  //                         message,
+                  //                         style: const TextStyle(
+                  //                           fontSize: 16,
+                  //                           fontWeight: FontWeight.bold,
+                  //                           color: Color.fromARGB(
+                  //                               255, 101, 19, 116),
+                  //                         ),
+                  //                         textAlign: TextAlign.center,
+                  //                       ),
+                  //                     ),
+                  //                   ),
+                  //                 );
+                  //               },
+                  //               onPageChanged: (int index) {
+                  //                 setState(() {
+                  //                   _currentPage = index;
+                  //                 });
+                  //               },
+                  //             ),
+                  //             // Tambahkan indikator
+                  //             Positioned(
+                  //               bottom: 10,
+                  //               left: 0,
+                  //               right: 0,
+                  //               child: Center(
+                  //                 child: SmoothPageIndicator(
+                  //                   controller: _pageController,
+                  //                   count: announcements.length,
+                  //                   effect: const ExpandingDotsEffect(
+                  //                     activeDotColor:
+                  //                         Color.fromARGB(255, 101, 19, 116),
+                  //                     dotColor: Colors.grey,
+                  //                     dotHeight: 8,
+                  //                     dotWidth: 8,
+                  //                   ),
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //           ],
+                  //         ),
+                  // ),
                   // ini fungsi kalo tidak ada pengumuman maka kosong
                   // Container(
                   //   height: 150,
@@ -2200,27 +2343,49 @@ class _HomePageState extends State<HomePage> {
 }
 
 // tampilan dalam announcement
+// class AnnouncementDetailPage extends StatelessWidget {
+//   final String message;
+
+//   const AnnouncementDetailPage({
+//     super.key,
+//     required this.message,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Detail Announcement'),
+//         backgroundColor: Colors.purple,
+//       ),
+//       body: SingleChildScrollView(
+//         physics:
+//             const BouncingScrollPhysics(), // Memberikan efek scroll yang halus        padding: const EdgeInsets.all(16.0),
+//         child: Text(
+//           message,
+//           style: const TextStyle(fontSize: 16, color: Colors.black87),
+//         ),
+//       ),
+//     );
+//   }
+// }
 class AnnouncementDetailPage extends StatelessWidget {
   final String message;
 
-  const AnnouncementDetailPage({
-    super.key,
-    required this.message,
-  });
+  const AnnouncementDetailPage({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar( 
+      appBar: AppBar(
         title: const Text('Detail Announcement'),
         backgroundColor: Colors.purple,
       ),
       body: SingleChildScrollView(
-        physics:
-            const BouncingScrollPhysics(), // Memberikan efek scroll yang halus        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          message,
-          style: const TextStyle(fontSize: 16, color: Colors.black87),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(16.0),
+        child: Html(
+          data: message,
         ),
       ),
     );
