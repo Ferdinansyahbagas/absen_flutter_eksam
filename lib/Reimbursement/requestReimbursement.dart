@@ -31,9 +31,40 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
+  // *Menampilkan dialog pilihan sumber gambar*
   Future<void> _pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Ambil dari Kamera'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // *Mengambil gambar dari sumber yang dipilih*
+  Future<void> _getImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
@@ -317,7 +348,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
               const SizedBox(height: 20),
               // Upload Photo Button
               GestureDetector(
-                onTap: _pickImage, // Langsung panggil kamera
+                onTap: _pickImage,
                 child: Container(
                   height: 130,
                   width: 150,
@@ -327,7 +358,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                           ? Colors.red
                           : (_image == null
                               ? const Color.fromRGBO(101, 19, 116, 1)
-                              : Colors.orange), // Red if image is required
+                              : Colors.orange),
                       width: 2,
                     ),
                     borderRadius: BorderRadius.circular(15),
@@ -342,17 +373,15 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                             ? Colors.red
                             : (_image == null
                                 ? const Color.fromRGBO(101, 19, 116, 1)
-                                : Colors
-                                    .orange), // Red icon if image is required
+                                : Colors.orange),
                       ),
                       const SizedBox(height: 3),
                       if (_image == null && !_isImageRequired)
                         const Text(
                           'Upload Photo Anda',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Color.fromRGBO(101, 19, 116, 1),
-                          ),
+                              fontSize: 14,
+                              color: Color.fromRGBO(101, 19, 116, 1)),
                         ),
                     ],
                   ),
@@ -360,35 +389,24 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
               ),
               const SizedBox(height: 10),
 
-// Preview Photo Button
               if (_image != null)
                 Align(
-                  alignment: Alignment.centerLeft, // Atur posisi teks di kiri
+                  alignment: Alignment.centerLeft,
                   child: InkWell(
                     onTap: () {
-                      // Show dialog to preview the photo
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return Dialog(
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                                borderRadius: BorderRadius.circular(10)),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (kIsWeb)
-                                  // Jika platform adalah Web
-                                  Image.network(
-                                    _image!.path,
-                                    fit: BoxFit.cover,
-                                  )
+                                  Image.network(_image!.path, fit: BoxFit.cover)
                                 else
-                                  // Jika platform bukan Web (mobile)
-                                  Image.file(
-                                    _image!,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  Image.file(_image!, fit: BoxFit.cover),
                               ],
                             ),
                           );
@@ -398,15 +416,12 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                     child: const Text(
                       'Lihat Photo',
                       style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.orange, // Warna teks seperti hyperlink
-                        decoration: TextDecoration
-                            .underline, // Garis bawah untuk efek hyperlink
-                      ),
+                          fontSize: 15,
+                          color: Colors.orange,
+                          decoration: TextDecoration.underline),
                     ),
                   ),
                 ),
-
               const SizedBox(height: 130),
               // Submit button
               ElevatedButton(

@@ -25,9 +25,12 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _fetchBatasWFH() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-    var response = await http.get(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'});
-    
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+    var response = await http.get(url, headers: {
+      'Authorization': 'Bearer ${localStorage.getString('token')}'
+    });
+
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
       setState(() {
@@ -38,9 +41,12 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _checkWFHStatus() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
-    var response = await http.get(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'});
-    
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
+    var response = await http.get(url, headers: {
+      'Authorization': 'Bearer ${localStorage.getString('token')}'
+    });
+
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
       setState(() {
@@ -51,9 +57,12 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _submitWFH() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
-    var response = await http.post(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'}, body: {'type': '1', 'location': '2'});
-    
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+    var response = await http.post(url,
+        headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'},
+        body: {'type': '1', 'location': '2'});
+
     if (response.statusCode == 200) {
       setState(() {
         isPending = true;
@@ -63,9 +72,12 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _cancelWFH() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/cancel-wfh');
-    var response = await http.delete(url, headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'});
-    
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/cancel-wfh');
+    var response = await http.delete(url, headers: {
+      'Authorization': 'Bearer ${localStorage.getString('token')}'
+    });
+
     if (response.statusCode == 200) {
       setState(() {
         isPending = false;
@@ -86,7 +98,8 @@ class _ClockInPageState extends State<ClockInPage> {
             DropdownButtonFormField<String>(
               value: _selectedWorkType,
               items: ['Reguler', 'Lembur'].map((String value) {
-                return DropdownMenuItem<String>(value: value, child: Text(value));
+                return DropdownMenuItem<String>(
+                    value: value, child: Text(value));
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -99,7 +112,8 @@ class _ClockInPageState extends State<ClockInPage> {
             DropdownButtonFormField<String>(
               value: _selectedWorkplaceType,
               items: ['WFO', 'WFH'].map((String value) {
-                return DropdownMenuItem<String>(value: value, child: Text(value));
+                return DropdownMenuItem<String>(
+                    value: value, child: Text(value));
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -107,7 +121,8 @@ class _ClockInPageState extends State<ClockInPage> {
                 });
               },
             ),
-            if (_selectedWorkType == 'Reguler' && _selectedWorkplaceType == 'WFH')
+            if (_selectedWorkType == 'Reguler' &&
+                _selectedWorkplaceType == 'WFH')
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Text('Batas WFH anda tersisa: $batasWfh'),
