@@ -220,10 +220,10 @@ class _NotificationPageState extends State<NotificationPage> {
                       //                   description: notif['description'] ?? '',
                       //                   fileUrl: notif['fileUrl'],
                       //                   isRead: notif['isRead'],
-                      //                   onTap: () async {
-                      //                     await putRead(notif['id']);
-                      //                   },
-                      //                 );
+                      //   onTap: () async {
+                      //     await putRead(notif['id']);
+                      //   },
+                      // );
                       //               },
                       //             ),
                       // ),
@@ -232,9 +232,11 @@ class _NotificationPageState extends State<NotificationPage> {
                         title: notif['title'] ?? '',
                         description: notif['description'] ?? '',
                         fileUrl: notif['fileUrl'],
-                        isRead: notif['isRead'] ?? false,
+                        isRead: notif['isRead'],
                         createdAt: notif['createdAt'] ?? '',
-                        onTap: () {},
+                        onTap: () async {
+                          await putRead(notif['id']);
+                        },
                       );
                     },
                   ),

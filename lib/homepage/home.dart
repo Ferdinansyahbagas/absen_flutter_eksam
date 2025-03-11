@@ -19,6 +19,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:absen/service/api_service.dart'; // Import ApiService
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -74,7 +75,7 @@ class _HomePageState extends State<HomePage> {
     getcancelwfh();
     getcekwfh();
     getNotif();
-    _loadToken();
+    // _loadToken();
     saveFirebaseToken();
     gettoken(); // Kirim token ke server setelah disimpan
     _pageController.addListener(() {
@@ -247,49 +248,26 @@ class _HomePageState extends State<HomePage> {
 
 // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/other/get-self-notification');
-    var request = http.MultipartRequest('GET', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
+    var data =
+        await ApiService.sendRequest(endpoint: "other/get-self-notification");
+    if (data == null || data['data'] == null) return;
 
-    try {
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+    List<dynamic> loadedNotifications = List.from(data['data']).map((notif) {
+      return {
+        'id': notif['id'],
+        'isRead': notif['isRead'] ?? false,
+      };
+    }).toList();
 
-      if (rp.statusCode == 200 && data['data'] != null) {
-        List<dynamic> loadedNotifications =
-            List.from(data['data']).map((notif) {
-          return {
-            // 'id': notif['id'],
-            // 'title': notif['title']?.toString(),
-            // 'description': notif['description']?.toString(),
-            // 'fileUrl': notif['file'] != null
-            //     ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
-            //     : null,
-            'isRead': notif['isRead'] ?? false,
-          };
-        }).toList();
-
-        // Cek status dari SharedPreferences
-        for (var notif in loadedNotifications) {
-          notif['isRead'] = await _isNotificationRead(notif['id']) ||
-              notif['isRead']; // Gabungkan status dari API dan lokal
-        }
-
-        setState(() {
-          notifications = loadedNotifications;
-          bool hasUnread = notifications.any((notif) => !notif['isRead']);
-          NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
-        });
-      } else {
-        setState(() {});
-      }
-    } catch (e) {
-      setState(() {});
+    for (var notif in loadedNotifications) {
+      notif['isRead'] =
+          await _isNotificationRead(notif['id']) || notif['isRead'];
     }
+
+    setState(() {
+      notifications = loadedNotifications;
+      hasUnreadNotifications = notifications.any((notif) => !notif['isRead']);
+    });
   }
 
   Future<bool> _isNotificationRead(int id) async {
@@ -303,44 +281,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> putRead(int id) async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
-    var request = http.MultipartRequest('PUT', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
-
-    try {
-      var response = await request.send();
-      if (response.statusCode == 200) {
-        // Tandai sebagai dibaca
-        await _markNotificationAsRead(id);
-
-        // Update status unread
-        bool hasUnread = notifications.any((notif) => !notif['isRead']);
-        await NotificationHelper.setUnreadNotifications(hasUnread);
-
-        setState(() {
-          notifications = notifications.map((notif) {
-            if (notif['id'] == id) {
-              notif['isRead'] = true;
-            }
-            return notif;
-          }).toList();
-        });
-      }
-    } catch (e) {
-      print('Error occurred: $e');
+    var response = await ApiService.sendRequest(
+        endpoint: "other/read-notification/$id", method: 'PUT');
+    if (response != null) {
+      await _markNotificationAsRead(id);
+      setState(() {
+        notifications = notifications.map((notif) {
+          if (notif['id'] == id) notif['isRead'] = true;
+          return notif;
+        }).toList();
+        hasUnreadNotifications = notifications.any((notif) => !notif['isRead']);
+      });
     }
   }
-  //sampai sini buat notifikasi
-
-  // Fungsi untuk mengambil data dari API townhall
-  // Future<void> getPengumuman() async {
-  //   final url =
-  //       // Uri.parse('https://portal.eksam.cloud/api/v1/other/get-self-th');
-  //       Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
-
+  // Future<void> getNotif() async {
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/other/get-self-notification');
   //   var request = http.MultipartRequest('GET', url);
   //   SharedPreferences localStorage = await SharedPreferences.getInstance();
   //   request.headers['Authorization'] =
@@ -350,48 +306,114 @@ class _HomePageState extends State<HomePage> {
   //     var response = await request.send();
   //     var rp = await http.Response.fromStream(response);
   //     var data = jsonDecode(rp.body.toString());
-  //     print(data);
 
-  //     if (rp.statusCode == 200) {
+  //     if (rp.statusCode == 200 && data['data'] != null) {
+  //       List<dynamic> loadedNotifications =
+  //           List.from(data['data']).map((notif) {
+  //         return {
+  //           'isRead': notif['isRead'] ?? false,
+  //         };
+  //       }).toList();
+
+  //       // Cek status dari SharedPreferences
+  //       for (var notif in loadedNotifications) {
+  //         notif['isRead'] = await _isNotificationRead(notif['id']) ||
+  //             notif['isRead']; // Gabungkan status dari API dan lokal
+  //       }
+
   //       setState(() {
-  //         announcements = List<String>.from(data['data']
-  //             .where((item) => item['status']['id'] == 1)
-  //             .map((item) => item['message'])).toList();
+  //         notifications = loadedNotifications;
+  //         bool hasUnread = notifications.any((notif) => !notif['isRead']);
+  //         NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
   //       });
-  //       print(announcements);
   //     } else {
-  //       print('Error fetching announcements: ${rp.statusCode}');
-  //       print(rp.body);
+  //       setState(() {});
+  //     }
+  //   } catch (e) {
+  //     setState(() {});
+  //   }
+  // }
+
+  // Future<bool> _isNotificationRead(int id) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   return prefs.getBool('notif_read_$id') ?? false;
+  // }
+
+  // Future<void> _markNotificationAsRead(int id) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   await prefs.setBool('notif_read_$id', true);
+  // }
+
+  // Future<void> putRead(int id) async {
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
+  //   var request = http.MultipartRequest('PUT', url);
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   request.headers['Authorization'] =
+  //       'Bearer ${localStorage.getString('token')}';
+
+  //   try {
+  //     var response = await request.send();
+  //     if (response.statusCode == 200) {
+  //       // Tandai sebagai dibaca
+  //       await _markNotificationAsRead(id);
+
+  //       // Update status unread
+  //       bool hasUnread = notifications.any((notif) => !notif['isRead']);
+  //       await NotificationHelper.setUnreadNotifications(hasUnread);
+
+  //       setState(() {
+  //         notifications = notifications.map((notif) {
+  //           if (notif['id'] == id) {
+  //             notif['isRead'] = true;
+  //           }
+  //           return notif;
+  //         }).toList();
+  //       });
   //     }
   //   } catch (e) {
   //     print('Error occurred: $e');
   //   }
   // }
+  //sampai sini buat notifikasi
+
+  // Future<void> getPengumuman() async {
+  //   final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
+  //   var request = http.MultipartRequest('GET', url);
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   request.headers['Authorization'] =
+  //       'Bearer ${localStorage.getString('token')}';
+
+  //   try {
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     if (rp.statusCode == 200) {
+  //       setState(() {
+  //         announcements = List<String>.from(data['data']
+  //             .where((item) => item['status']['id'] == 1)
+  //             .map((item) => item['message']));
+  //       });
+  //       _startAutoSlide();
+  //     } else {
+  //       print('Error fetching announcements: ${rp.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //   }
+  // }
+
   Future<void> getPengumuman() async {
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
-    var request = http.MultipartRequest('GET', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
+    var data = await ApiService.sendRequest(endpoint: "other/get-th");
+    if (data == null) return;
 
-    try {
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      if (rp.statusCode == 200) {
-        setState(() {
-          announcements = List<String>.from(data['data']
-              .where((item) => item['status']['id'] == 1)
-              .map((item) => item['message']));
-        });
-        _startAutoSlide();
-      } else {
-        print('Error fetching announcements: ${rp.statusCode}');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
+    setState(() {
+      announcements = List<String>.from(data['data']
+          .where((item) => item['status']['id'] == 1)
+          .map((item) => item['message']));
+      _startAutoSlide();
+    });
   }
 
   void _startAutoSlide() {
@@ -419,89 +441,91 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<void> _loadToken() async {
-    String? token = await Preferences.getToken();
-    setState(() {
-      _token = token;
-    });
-  }
-
   void saveFirebaseToken() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
-    String? token = await messaging.getToken(); // Ambil token Firebase
+    String? token = await messaging.getToken();
 
     if (token != null) {
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       await localStorage.setString('firebase_token', token);
-      print("Token Firebase disimpan: $token");
-
-      gettoken(); // Kirim token ke server setelah disimpan
+      gettoken();
     }
   }
 
   Future<void> gettoken() async {
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
-
     SharedPreferences localStorage = await SharedPreferences.getInstance();
-    String? token = localStorage
-        .getString('firebase_token'); // Ambil token Firebase dari local storage
+    String? token = localStorage.getString('firebase_token');
 
     if (token == null || token.isEmpty) {
       print("Token Firebase tidak ditemukan!");
       return;
     }
 
-    var request = http.MultipartRequest('POST', url);
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
-    request.fields['firebase_token'] = token; // Kirim token Firebase ke API
+    var response = await ApiService.sendRequest(
+      endpoint: "other/send-token",
+      method: 'POST',
+      body: {'firebase_token': token},
+    );
 
-    try {
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      if (rp.statusCode == 200) {
-        print("Token Firebase berhasil dikirim: $token");
-      } else {
-        print("Error mengirim token Firebase: ${rp.statusCode}");
-        print(rp.body);
-      }
-    } catch (e) {
-      print("Error occurred: $e");
+    if (response != null) {
+      print("Token Firebase berhasil dikirim: $token");
     }
   }
 
-  Future<void> getcekwfh() async {
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    var headers = {
-      'Authorization': 'Bearer ${localStorage.getString('token')}'
-    };
+  // Future<void> _loadToken() async {
+  //   String? token = await Preferences.getToken();
+  //   setState(() {
+  //     _token = token;
+  //   });
+  // }
 
-    try {
-      var response = await http.get(url, headers: headers);
-      var data = jsonDecode(response.body.toString());
-      print("Response API is-wfh: $data");
+  // void saveFirebaseToken() async {
+  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  //   String? token = await messaging.getToken(); // Ambil token Firebase
 
-      setState(() {
-        if (response.statusCode == 200 &&
-            data['message'] == 'User mengajukan WFH') {
-          isWFHRequested = true;
-          wfhId =
-              data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
-        } else {
-          isWFHRequested = false;
-          wfhId = null;
-        }
-      });
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
+  //   if (token != null) {
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     await localStorage.setString('firebase_token', token);
+  //     print("Token Firebase disimpan: $token");
 
-  // Future getcekwfh() async {
+  //     gettoken(); // Kirim token ke server setelah disimpan
+  //   }
+  // }
+
+  // Future<void> gettoken() async {
+  //   final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
+
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   String? token = localStorage
+  //       .getString('firebase_token'); // Ambil token Firebase dari local storage
+
+  //   if (token == null || token.isEmpty) {
+  //     print("Token Firebase tidak ditemukan!");
+  //     return;
+  //   }
+
+  //   var request = http.MultipartRequest('POST', url);
+  //   request.headers['Authorization'] =
+  //       'Bearer ${localStorage.getString('token')}';
+  //   request.fields['firebase_token'] = token; // Kirim token Firebase ke API
+
+  //   try {
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     if (rp.statusCode == 200) {
+  //       print("Token Firebase berhasil dikirim: $token");
+  //     } else {
+  //       print("Error mengirim token Firebase: ${rp.statusCode}");
+  //       print(rp.body);
+  //     }
+  //   } catch (e) {
+  //     print("Error occurred: $e");
+  //   }
+  // }
+
+  // Future<void> getcekwfh() async {
   //   final url =
   //       Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
   //   SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -513,95 +537,38 @@ class _HomePageState extends State<HomePage> {
   //     var response = await http.get(url, headers: headers);
   //     var data = jsonDecode(response.body.toString());
   //     print("Response API is-wfh: $data");
-  //     if (response.statusCode == 200) {
-  //       setState(() {
+
+  //     setState(() {
+  //       if (response.statusCode == 200 &&
+  //           data['message'] == 'User mengajukan WFH') {
   //         isWFHRequested = true;
   //         wfhId =
   //             data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
-  //       });
-  //     } else {
-  //       setState(() {
+  //       } else {
   //         isWFHRequested = false;
   //         wfhId = null;
-  //       });
-  //     }
+  //       }
+  //     });
   //   } catch (e) {
   //     print('Error occurred: $e');
   //   }
   // }
+  // Fungsi untuk cek status WFH
+  Future<void> getcekwfh() async {
+    var data = await ApiService.sendRequest(endpoint: 'attendance/is-wfh');
 
-  // Future<void> getcancelwfh() async {
-  //   if (wfhId == null) return; // Pastikan ada ID WFH
-
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   var headers = {
-  //     'Authorization': 'Bearer ${localStorage.getString('token')}'
-  //   };
-
-  //   try {
-  //     var response = await http.delete(url, headers: headers);
-  //     var data = jsonDecode(response.body.toString());
-  //     print("Response API cancel-wfh: $data");
-  //     if (response.statusCode == 200) {
-  //       setState(() {
-  //         isWFHRequested = false;
-  //         wfhId = null;
-  //       });
-
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //             content: Text('WFH berhasil dibatalkan'),
-  //             backgroundColor: Colors.green),
-  //       );
-  //     } else {
-  //       print('Gagal membatalkan WFH: ${data['message']}');
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
-
-  // Future<bool> getcancelwfh() async {
-  //   if (wfhId == null)
-  //   //  return true
-  //    ; // Pastikan ada ID WFH
-
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   var headers = {
-  //     'Authorization': 'Bearer ${localStorage.getString('token')}'
-  //   };
-
-  //   try {
-  //     var response = await http.delete(url, headers: headers);
-  //     var data = jsonDecode(response.body.toString());
-  //     print("Response API cancel-wfh: $data");
-  //     print("Full Response: $data");
-  //     if (response.statusCode == 200) {
-  //       setState(() {
-  //         isWFHRequested = false;
-  //         wfhId = null;
-  //       });
-
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //             content: Text('WFH berhasil dibatalkan'),
-  //             backgroundColor: Colors.green),
-  //       );
-
-  //       return true; // Berhasil membatalkan WFH
-  //     } else {
-  //       print('Gagal membatalkan WFH: ${data['message']}');
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //     return false;
-  //   }
-  // }
+    if (data != null && data['message'] == 'User mengajukan WFH') {
+      setState(() {
+        isWFHRequested = true;
+        wfhId = data['data']['id'].toString();
+      });
+    } else {
+      setState(() {
+        isWFHRequested = false;
+        wfhId = null;
+      });
+    }
+  }
 
   Future<bool> getcancelwfh() async {
     if (wfhId == null) {
@@ -654,7 +621,6 @@ class _HomePageState extends State<HomePage> {
 
   // Fungsi untuk mengambil data dari API
   Future<void> getData() async {
-    // Ambil profil pengguna
     try {
       // Ambil lokasi user
       Position position = await Geolocator.getCurrentPosition(
@@ -662,193 +628,253 @@ class _HomePageState extends State<HomePage> {
       double userLatitude = position.latitude;
       double userLongitude = position.longitude;
 
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      if (rp.statusCode == 200) {
+      // Ambil profil pengguna
+      var profileData =
+          await ApiService.sendRequest(endpoint: 'karyawan/get-profile');
+      if (profileData != null) {
         setState(() {
-          userStatus = data['data']['user_level_id'].toString();
-          name = data['data']['name'];
-          wfhId =
-              data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
+          userStatus = profileData['data']['user_level_id'].toString();
+          name = profileData['data']['name'];
+          wfhId = profileData['data']['id'].toString(); // ID WFH
 
           double officeLatitude =
-              double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
+              double.tryParse(profileData['data']['latitude'].toString()) ??
+                  0.0;
           double officeLongitude =
-              double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
+              double.tryParse(profileData['data']['longitude'].toString()) ??
+                  0.0;
 
-          // _compareDistance(officeLongitude, officeLatitude);
-
-          // Hitung jarak antara user dan kantor
+          // Hitung jarak user dengan kantor
           double distance = Geolocator.distanceBetween(
               userLatitude, userLongitude, officeLatitude, officeLongitude);
 
           print("Jarak dari kantor: $distance meter");
-          print("Lokasi User: $userLatitude, $userLongitude");
-          print("Lokasi Kantor: $officeLatitude, $officeLongitude");
-          print("Jarak antara User dan Kantor: $distance meter");
 
-          print("Jarak dari kantor: $distance meter");
-          print("User level: $userStatus");
-
-          if (distance > 500) {
-            // Jika lebih dari 500 meter, hanya munculkan WFH
-            jarak = true;
-          } else {
-            // Jika kurang dari 500 meter, munculkan semua opsi
-            jarak = false;
-          }
+          jarak = distance > 500;
         });
-      } else {
-        print("Error mengambil profil pengguna: ${rp.statusCode}");
       }
-    } catch (e) {
-      print("Error mengambil data lokasi: $e");
-    }
 
-    // Cek status clock-in
-    try {
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      setState(() {
-        // Status clock-in diambil dari respons API
-        hasClockedIn = data['message'] != 'belum clock-in';
-        print(data['data']);
-        if (hasClockedIn) {
-          showNote = false;
-
-          final hasHoliday = data['data']['attendance_status_id'] ?? false;
-          if (hasHoliday == 5) {
-            isholiday = true;
-          } else {
-            isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
-          }
-        }
-      });
-    } catch (e) {
-      print("Error mengecek status clock-in: $e");
-    }
-
-    // Cek status clock-out
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/is-clock-out');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      setState(() {
-        print(hasClockedOut);
-        hasClockedOut = data['message'] == 'sudah clock-out';
-      });
-    } catch (e) {
-      print("Error mengecek status clock-out: $e");
-    }
-
-    // Cek status lembur masuk
-    if (userStatus == "1" || userStatus == "2"
-        // userStatus != "3"
-        ) {
-      try {
-        final url = Uri.parse(
-            'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
-        SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-        var request = http.MultipartRequest('GET', url);
-        request.headers['Authorization'] =
-            'Bearer ${localStorage.getString('token')}';
-
-        var response = await request.send();
-        var rp = await http.Response.fromStream(response);
-        var data = jsonDecode(rp.body.toString());
-
+      // Cek status clock-in
+      var clockInData =
+          await ApiService.sendRequest(endpoint: 'attendance/is-clock-in');
+      if (clockInData != null) {
         setState(() {
-          hasClockedInOvertime = data['message'] != 'belum clock-in';
-          if (hasClockedInOvertime) {
+          hasClockedIn = clockInData['message'] != 'belum clock-in';
+          if (hasClockedIn) {
             showNote = false;
-            isSuccess = false;
-            isholiday = false;
-            isovertime = true;
+            isholiday = clockInData['data']['attendance_status_id'] == 5;
+            isSuccess = !isholiday; // Clock-in berhasil sebelum jam 8
           }
         });
-      } catch (e) {
-        print("Error mengecek status clock-out: $e");
       }
-      // Cek status lembur keluar
-      try {
-        final url = Uri.parse(
-            'https://portal.eksam.cloud/api/v1/attendance/is-lembur-out');
-        SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-        var request = http.MultipartRequest('GET', url);
-        request.headers['Authorization'] =
-            'Bearer ${localStorage.getString('token')}';
-
-        var response = await request.send();
-        var rp = await http.Response.fromStream(response);
-        var data = jsonDecode(rp.body.toString());
-
+      // Cek status clock-out
+      var clockOutData =
+          await ApiService.sendRequest(endpoint: 'attendance/is-clock-out');
+      if (clockOutData != null) {
         setState(() {
-          hasClockedOutOvertime = data['message'] != 'belum clock-out';
+          hasClockedOut = clockOutData['message'] == 'sudah clock-out';
         });
-      } catch (e) {
-        print("Error mengecek status clock-out: $e");
       }
+
+      // Cek status lembur masuk
+      if (userStatus == "1" || userStatus == "2") {
+        var overtimeInData =
+            await ApiService.sendRequest(endpoint: 'attendance/is-lembur-in');
+        if (overtimeInData != null) {
+          setState(() {
+            hasClockedInOvertime =
+                overtimeInData['message'] != 'belum clock-in';
+            if (hasClockedInOvertime) {
+              showNote = false;
+              isholiday = false;
+              isSuccess = false;
+              isovertime = true;
+            }
+          });
+        }
+
+        // Cek status lembur keluar
+        var overtimeOutData =
+            await ApiService.sendRequest(endpoint: 'attendance/is-lembur-out');
+        if (overtimeOutData != null) {
+          setState(() {
+            hasClockedOutOvertime =
+                overtimeOutData['message'] != 'belum clock-out';
+          });
+        }
+      }
+    } catch (e) {
+      print("Error mengambil data: $e");
     }
   }
 
-  // Fungsi untuk mereset status setiap jam 5 pagi
-  // void _resetNoteAtFiveAM() {
-  //   final now = DateTime.now();
-  //   final fiveAM = DateTime(now.year, now.month, now.day, 5);
-  //   final timeUntilReset = fiveAM.isBefore(now)
-  //       ? fiveAM.add(const Duration(days: 1)).difference(now)
-  //       : fiveAM.difference(now);
+  // Future<void> getData() async {
+  //   // Ambil profil pengguna
+  //   try {
+  //     // Ambil lokasi user
+  //     Position position = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.high);
+  //     double userLatitude = position.latitude;
+  //     double userLongitude = position.longitude;
 
-  //   resetNoteTimer = Timer(timeUntilReset, () {
+  //     final url =
+  //         Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     if (rp.statusCode == 200) {
+  //       setState(() {
+  //         userStatus = data['data']['user_level_id'].toString();
+  //         name = data['data']['name'];
+  //         wfhId =
+  //             data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
+
+  //         double officeLatitude =
+  //             double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
+  //         double officeLongitude =
+  //             double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
+
+  //         // _compareDistance(officeLongitude, officeLatitude);
+
+  //         // Hitung jarak antara user dan kantor
+  //         double distance = Geolocator.distanceBetween(
+  //             userLatitude, userLongitude, officeLatitude, officeLongitude);
+
+  //         print("Jarak dari kantor: $distance meter");
+  //         print("Lokasi User: $userLatitude, $userLongitude");
+  //         print("Lokasi Kantor: $officeLatitude, $officeLongitude");
+  //         print("Jarak antara User dan Kantor: $distance meter");
+
+  //         print("Jarak dari kantor: $distance meter");
+  //         print("User level: $userStatus");
+
+  //         if (distance > 500) {
+  //           // Jika lebih dari 500 meter, hanya munculkan WFH
+  //           jarak = true;
+  //         } else {
+  //           // Jika kurang dari 500 meter, munculkan semua opsi
+  //           jarak = false;
+  //         }
+  //       });
+  //     } else {
+  //       print("Error mengambil profil pengguna: ${rp.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     print("Error mengambil data lokasi: $e");
+  //   }
+
+  //   // Cek status clock-in
+  //   try {
+  //     final url =
+  //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
   //     setState(() {
-  //       hasClockedIn = false;
-  //       hasClockedOut = false;
-  //       hasClockedInOvertime = false;
-  //       hasClockedOutOvertime = false;
-  //       showNote = true;
-  //       isSuccess = false;
-  //       isLate = false;
-  //       isholiday = false;
-  //       isovertime = false;
-  //       clockInMessage = null;
-  //     });
-  //   });
-  // }
+  //       // Status clock-in diambil dari respons API
+  //       hasClockedIn = data['message'] != 'belum clock-in';
+  //       print(data['data']);
+  //       if (hasClockedIn) {
+  //         showNote = false;
 
-  // @override
-  // void dispose() {
-  //   resetNoteTimer?.cancel(); // Membatalkan timer saat widget dibuang
-  //   super.dispose();
+  //         final hasHoliday = data['data']['attendance_status_id'] ?? false;
+  //         if (hasHoliday == 5) {
+  //           isholiday = true;
+  //         } else {
+  //           isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+  //         }
+  //       }
+  //     });
+  //   } catch (e) {
+  //     print("Error mengecek status clock-in: $e");
+  //   }
+
+  //   // Cek status clock-out
+  //   try {
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/attendance/is-clock-out');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     var request = http.MultipartRequest('GET', url);
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var data = jsonDecode(rp.body.toString());
+
+  //     setState(() {
+  //       print(hasClockedOut);
+  //       hasClockedOut = data['message'] == 'sudah clock-out';
+  //     });
+  //   } catch (e) {
+  //     print("Error mengecek status clock-out: $e");
+  //   }
+
+  //   // Cek status lembur masuk
+  //   if (userStatus == "1" || userStatus == "2"
+  //       // userStatus != "3"
+  //       ) {
+  //     try {
+  //       final url = Uri.parse(
+  //           'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
+  //       SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //       var request = http.MultipartRequest('GET', url);
+  //       request.headers['Authorization'] =
+  //           'Bearer ${localStorage.getString('token')}';
+
+  //       var response = await request.send();
+  //       var rp = await http.Response.fromStream(response);
+  //       var data = jsonDecode(rp.body.toString());
+
+  //       setState(() {
+  //         hasClockedInOvertime = data['message'] != 'belum clock-in';
+  //         if (hasClockedInOvertime) {
+  //           showNote = false;
+  //           isSuccess = false;
+  //           isholiday = false;
+  //           isovertime = true;
+  //         }
+  //       });
+  //     } catch (e) {
+  //       print("Error mengecek status clock-out: $e");
+  //     }
+  //     // Cek status lembur keluar
+  //     try {
+  //       final url = Uri.parse(
+  //           'https://portal.eksam.cloud/api/v1/attendance/is-lembur-out');
+  //       SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //       var request = http.MultipartRequest('GET', url);
+  //       request.headers['Authorization'] =
+  //           'Bearer ${localStorage.getString('token')}';
+
+  //       var response = await request.send();
+  //       var rp = await http.Response.fromStream(response);
+  //       var data = jsonDecode(rp.body.toString());
+
+  //       setState(() {
+  //         hasClockedOutOvertime = data['message'] != 'belum clock-out';
+  //       });
+  //     } catch (e) {
+  //       print("Error mengecek status clock-out: $e");
+  //     }
+  //   }
   // }
 
   @override
@@ -997,69 +1023,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        // if (
-                        //     // userStatus == "1" ||
-                        //     //   userStatus == "2" ||
-                        //     userStatus == "3") ...[
-                        //   // if (hasClockedOut) ...[
-                        //   // Clock In & Clock Out buttons
-                        //   Row(
-                        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //     children: [
-                        //       ElevatedButton.icon(
-                        //         onPressed: hasClockedIn
-                        //             ? null
-                        //             : () async {
-                        //                 final result = await Navigator.push(
-                        //                   context,
-                        //                   MaterialPageRoute(
-                        //                     builder: (context) =>
-                        //                         const ClockInPage(),
-                        //                   ),
-                        //                 );
-                        //                 if (result == true) {
-                        //                   setState(() {
-                        //                     hasClockedIn = true;
-                        //                     hasClockedOut = false;
-                        //                   });
-                        //                 }
-                        //               },
-                        //         icon: const Icon(Icons.login),
-                        //         label: const Text('Clock In'),
-                        //         style: ElevatedButton.styleFrom(
-                        //           backgroundColor:
-                        //               hasClockedIn ? Colors.grey : Colors.white,
-                        //         ),
-                        //       ),
-                        //       ElevatedButton.icon(
-                        //         onPressed: hasClockedIn && !hasClockedOut
-                        //             ? () async {
-                        //                 final result = await Navigator.push(
-                        //                   context,
-                        //                   MaterialPageRoute(
-                        //                     builder: (context) =>
-                        //                         const ClockOutScreen(),
-                        //                   ),
-                        //                 );
-                        //                 if (result == true) {
-                        //                   setState(() {
-                        //                     hasClockedOut = true;
-                        //                   });
-                        //                 }
-                        //               }
-                        //             : null,
-                        //         icon: const Icon(Icons.logout),
-                        //         label: const Text('Clock Out'),
-                        //         style: ElevatedButton.styleFrom(
-                        //           backgroundColor:
-                        //               hasClockedIn && !hasClockedOut
-                        //                   ? Colors.white
-                        //                   : Colors.grey,
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ]
                         if (userStatus == "3") ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1321,9 +1284,9 @@ class _HomePageState extends State<HomePage> {
                                     ],
                                   ),
                                 ] else
-                                  // const SizedBox(height: 10), // Jarak antar tombol
-                                  // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                                  ...[
+                                // const SizedBox(height: 10), // Jarak antar tombol
+                                // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
+                                if (!isWFHRequested) ...[
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
@@ -1395,165 +1358,6 @@ class _HomePageState extends State<HomePage> {
                             )
                           ]
                         ]
-                        //     (userStatus == "1" || userStatus == "2") ...[
-                        //   if (!hasClockedOut) ...[
-                        //     // Overtime In & Overtime Out buttons
-                        //     Row(
-                        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //       children: [
-                        //         ElevatedButton.icon(
-                        //           onPressed: hasClockedIn
-                        //               ? null
-                        //               : () async {
-                        //                   final result = await Navigator.push(
-                        //                     context,
-                        //                     MaterialPageRoute(
-                        //                       builder: (context) =>
-                        //                           const ClockInPage(),
-                        //                     ),
-                        //                   );
-                        //                   if (result == true) {
-                        //                     setState(() {
-                        //                       hasClockedIn = true;
-                        //                       hasClockedOut = false;
-                        //                     });
-                        //                   }
-                        //                 },
-                        //           icon: const Icon(Icons.login),
-                        //           label: const Text('Clock In'),
-                        //           style: ElevatedButton.styleFrom(
-                        //             backgroundColor: hasClockedIn
-                        //                 ? Colors.grey
-                        //                 : Colors.white,
-                        //           ),
-                        //         ),
-                        //         ElevatedButton.icon(
-                        //           onPressed: hasClockedIn && !hasClockedOut
-                        //               ? () async {
-                        //                   final result = await Navigator.push(
-                        //                     context,
-                        //                     MaterialPageRoute(
-                        //                       builder: (context) =>
-                        //                           const ClockOutScreen(),
-                        //                     ),
-                        //                   );
-                        //                   if (result == true) {
-                        //                     setState(() {
-                        //                       hasClockedOut = true;
-                        //                       hasClockedIn = false;
-                        //                     });
-                        //                   }
-                        //                 }
-                        //               : null,
-                        //           icon: const Icon(Icons.logout),
-                        //           label: const Text('Clock Out'),
-                        //           style: ElevatedButton.styleFrom(
-                        //             backgroundColor:
-                        //                 hasClockedIn && !hasClockedOut
-                        //                     ? Colors.white
-                        //                     : Colors.grey,
-                        //           ),
-                        //         ),
-                        //       ],
-                        //     ),
-                        //   ] else ...[
-                        //     Row(
-                        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //       children: [
-                        //         ElevatedButton.icon(
-                        //           onPressed: hasClockedInOvertime
-                        //               ? null
-                        //               : () async {
-                        //                   final result = await Navigator.push(
-                        //                     context,
-                        //                     MaterialPageRoute(
-                        //                         builder: (context) =>
-                        //                             const ClockInPage()),
-                        //                   );
-                        //                   if (result == true) {
-                        //                     setState(() {
-                        //                       hasClockedInOvertime = true;
-                        //                       hasClockedOutOvertime = false;
-                        //                     });
-                        //                   }
-                        //                 },
-                        //           icon: const Icon(Icons.login),
-                        //           label: const Text(
-                        //             'Overtime In',
-                        //             // 'Clock In',
-                        //             style: TextStyle(
-                        //               fontSize: 12,
-                        //             ),
-                        //           ),
-                        //           style: ElevatedButton.styleFrom(
-                        //             backgroundColor: hasClockedInOvertime
-                        //                 ? Colors.grey
-                        //                 : Colors.white,
-                        //           ),
-                        //         ),
-                        //         ElevatedButton.icon(
-                        //           onPressed: hasClockedInOvertime &&
-                        //                   !hasClockedOutOvertime
-                        //               ? () async {
-                        //                   final result = await Navigator.push(
-                        //                     context,
-                        //                     MaterialPageRoute(
-                        //                         builder: (context) =>
-                        //                             const ClockOutScreen()),
-                        //                   );
-                        //                   if (result == true) {
-                        //                     setState(() {
-                        //                       hasClockedOutOvertime = true;
-                        //                       hasClockedInOvertime = false;
-                        //                     });
-                        //                   }
-                        //                 }
-                        //               : null,
-                        //           icon: const Icon(Icons.logout),
-                        //           label: const Text(
-                        //             'Overtime Out',
-                        //             // 'Clock out',
-                        //             style: TextStyle(
-                        //               fontSize: 12,
-                        //             ),
-                        //           ),
-                        //           style: ElevatedButton.styleFrom(
-                        //             backgroundColor: hasClockedInOvertime &&
-                        //                     !hasClockedOutOvertime
-                        //                 ? Colors.white
-                        //                 : Colors.grey,
-                        //           ),
-                        //         ),
-                        //       ],
-                        //     ),
-                        //   ]
-                        // ] else if (isWFHRequested &&
-                        //     (userStatus == "1" || userStatus == "2")) ...[
-                        //   Row(
-                        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //     children: [
-                        //       ElevatedButton.icon(
-                        //         onPressed:
-                        //             null, // Tombol Pending selalu disabled
-                        //         icon: const Icon(Icons.hourglass_empty),
-                        //         label: const Text('Pending'),
-                        //         style: ElevatedButton.styleFrom(
-                        //           backgroundColor: Colors.grey,
-                        //           foregroundColor: Colors.white,
-                        //         ),
-                        //       ),
-                        //       ElevatedButton.icon(
-                        //         onPressed: getcancelwfh,
-                        //         icon: const Icon(Icons.cancel),
-                        //         label: const Text('Batalkan WFH'),
-                        //         style: ElevatedButton.styleFrom(
-                        //           backgroundColor: Colors.red,
-                        //           foregroundColor: Colors.white,
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   )
-                        // ]
                       ],
                     ),
                   ),
@@ -1645,38 +1449,7 @@ class _HomePageState extends State<HomePage> {
                       const Spacer(), // Tambahkan spacer biar ke kiri
                     ],
                   ),
-                  // // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
-                  // _buildMenuShortcut(
-                  //   label: 'Reimbursement',
-                  //   targetPage: const ReimbursementPage(),
-                  //   bgColor: const Color.fromARGB(
-                  //       255, 101, 19, 116), // Warna background
-                  //   iconData: Icons.receipt, // Ikon bawaan Flutter
-                  //   iconColor: Colors.white, // Warna ikon
-                  //   iconSize: 30, // Ukuran ikon
-                  //   labelStyle: const TextStyle(
-                  //     color: Colors.pink, // Warna label menjadi pink
-                  //     fontSize: 14,
-                  //   ),
-                  // ),
-                  // // Menggunakan gambar dari aset dan mengatur ukuran gambar
-                  // _buildMenuShortcut(
-                  //   label: 'History',
-                  //   targetPage: const HistoryScreen(),
-                  //   bgColor: const Color.fromARGB(
-                  //       255, 101, 19, 116), // Warna background
-                  //   imagePath:
-                  //       'assets/icon/history.png', // Path gambar aset
-                  //   iconColor:
-                  //       Colors.white, // Warna yang diterapkan ke gambar
-                  //   iconSize: 26, // Ukuran gambar
-                  //   labelStyle: const TextStyle(
-                  //     color: Colors.pink, // Warna label menjadi pink
-                  //     fontSize: 14,
-                  //   ),
-                  // ),
-                  //   ],
-                  // ),
+
                   const SizedBox(height: 20),
                   //card untuk absen biasa
                   if (isSuccess)
@@ -1899,257 +1672,7 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                   ),
-                  // Container(
-                  //   height: 150,
-                  //   decoration: BoxDecoration(
-                  //     borderRadius: BorderRadius.circular(12),
-                  //     color: Colors.grey[300],
-                  //   ),
-                  //   child: announcements.isEmpty
-                  //       ? const Center(
-                  //           child: Text(
-                  //             'Hari ini tidak ada pengumuman',
-                  //             style: TextStyle(
-                  //               fontSize: 16,
-                  //               fontWeight: FontWeight.bold,
-                  //               color: Colors.purple,
-                  //             ),
-                  //             textAlign: TextAlign.center,
-                  //           ),
-                  //         )
-                  //       : Stack(
-                  //           alignment: Alignment.bottomCenter,
-                  //           children: [
-                  //             PageView.builder(
-                  //               controller: _pageController,
-                  //               itemCount: announcements.length,
-                  //               itemBuilder: (context, index) {
-                  //                 final message = announcements[index];
 
-                  //                 return GestureDetector(
-                  //                   onTap: () {
-                  //                     Navigator.push(
-                  //                       context,
-                  //                       MaterialPageRoute(
-                  //                         builder: (context) =>
-                  //                             AnnouncementDetailPage(
-                  //                           message: message,
-                  //                         ),
-                  //                       ),
-                  //                     );
-                  //                   },
-                  //                   child: Container(
-                  //                     padding: const EdgeInsets.all(10),
-                  //                     decoration: BoxDecoration(
-                  //                       borderRadius: BorderRadius.circular(12),
-                  //                       color: Colors.white,
-                  //                     ),
-                  //                     child: Center(
-                  //                       child: Text(
-                  //                         message,
-                  //                         style: const TextStyle(
-                  //                           fontSize: 16,
-                  //                           fontWeight: FontWeight.bold,
-                  //                           color: Color.fromARGB(
-                  //                               255, 101, 19, 116),
-                  //                         ),
-                  //                         textAlign: TextAlign.center,
-                  //                       ),
-                  //                     ),
-                  //                   ),
-                  //                 );
-                  //               },
-                  //               onPageChanged: (int index) {
-                  //                 setState(() {
-                  //                   _currentPage = index;
-                  //                 });
-                  //               },
-                  //             ),
-                  //             // Tambahkan indikator
-                  //             Positioned(
-                  //               bottom: 10,
-                  //               left: 0,
-                  //               right: 0,
-                  //               child: Center(
-                  //                 child: SmoothPageIndicator(
-                  //                   controller: _pageController,
-                  //                   count: announcements.length,
-                  //                   effect: const ExpandingDotsEffect(
-                  //                     activeDotColor:
-                  //                         Color.fromARGB(255, 101, 19, 116),
-                  //                     dotColor: Colors.grey,
-                  //                     dotHeight: 8,
-                  //                     dotWidth: 8,
-                  //                   ),
-                  //                 ),
-                  //               ),
-                  //             ),
-                  //           ],
-                  //         ),
-                  // ),
-                  // ini fungsi kalo tidak ada pengumuman maka kosong
-                  // Container(
-                  //   height: 150,
-                  //   decoration: BoxDecoration(
-                  //     borderRadius: BorderRadius.circular(12),
-                  //     color: Colors.grey[300],
-                  //   ),
-                  //   child: Stack(
-                  //     alignment: Alignment.bottomCenter,
-                  //     children: [
-                  //       PageView.builder(
-                  //         controller: _pageController,
-                  //         itemCount: announcements.length,
-                  //         itemBuilder: (context, index) {
-                  //           final message = announcements[index];
-
-                  //           return GestureDetector(
-                  //             onTap: () {
-                  //               Navigator.push(
-                  //                 context,
-                  //                 MaterialPageRoute(
-                  //                   builder: (context) =>
-                  //                       AnnouncementDetailPage(
-                  //                     message: message,
-                  //                   ),
-                  //                 ),
-                  //               );
-                  //             },
-                  //             child: Container(
-                  //               padding: const EdgeInsets.all(10),
-                  //               decoration: BoxDecoration(
-                  //                 borderRadius: BorderRadius.circular(12),
-                  //                 color: Colors.white,
-                  //               ),
-                  //               child: Center(
-                  //                 child: Text(
-                  //                   message,
-                  //                   style: const TextStyle(
-                  //                     fontSize: 16,
-                  //                     fontWeight: FontWeight.bold,
-                  //                   ),
-                  //                   textAlign: TextAlign.center,
-                  //                 ),
-                  //               ),
-                  //             ),
-                  //           );
-                  //         },
-                  //         onPageChanged: (int index) {
-                  //           setState(() {
-                  //             _currentPage = index;
-                  //           });
-                  //         },
-                  //       ),
-                  //       // Tambahkan indikator
-                  //       Positioned(
-                  //         bottom: 10,
-                  //         left: 0,
-                  //         right: 0,
-                  //         child: Center(
-                  //           child: SmoothPageIndicator(
-                  //             controller: _pageController,
-                  //             count: announcements.length,
-                  //             effect: ExpandingDotsEffect(
-                  //               activeDotColor:
-                  //                   const Color.fromARGB(255, 101, 19, 116),
-                  //               dotColor: Colors.grey,
-                  //               dotHeight: 8,
-                  //               dotWidth: 8,
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
-
-//ini fungsi jika mau annoouncement nya menghilang
-                  //    if (announcements.isNotEmpty) ...[
-                  //   const Text(
-                  //     'Announcement',
-                  //     style: TextStyle(
-                  //       fontSize: 18,
-                  //       fontWeight: FontWeight.bold,
-                  //       color: Colors.purple,
-                  //     ),
-                  //   ),
-                  //   const SizedBox(height: 10),
-                  //   // Slider untuk pengumuman
-                  //   Container(
-                  //     height: 150,
-                  //     decoration: BoxDecoration(
-                  //       borderRadius: BorderRadius.circular(12),
-                  //       color: Colors.grey[300],
-                  //     ),
-                  //     child: Stack(
-                  //       alignment: Alignment.bottomCenter,
-                  //       children: [
-                  //         PageView.builder(
-                  //           controller: _pageController,
-                  //           itemCount: announcements.length,
-                  //           itemBuilder: (context, index) {
-                  //             final message = announcements[index];
-
-                  //             return GestureDetector(
-                  //               onTap: () {
-                  //                 Navigator.push(
-                  //                   context,
-                  //                   MaterialPageRoute(
-                  //                     builder: (context) =>
-                  //                         AnnouncementDetailPage(
-                  //                       message: message,
-                  //                     ),
-                  //                   ),
-                  //                 );
-                  //               },
-                  //               child: Container(
-                  //                 padding: const EdgeInsets.all(10),
-                  //                 decoration: BoxDecoration(
-                  //                   borderRadius: BorderRadius.circular(12),
-                  //                   color: Colors.white,
-                  //                 ),
-                  //                 child: Center(
-                  //                   child: Text(
-                  //                     message,
-                  //                     style: const TextStyle(
-                  //                       fontSize: 16,
-                  //                       fontWeight: FontWeight.bold,
-                  //                       color: Colors.purple,
-                  //                     ),
-                  //                     textAlign: TextAlign.center,
-                  //                   ),
-                  //                 ),
-                  //               ),
-                  //             );
-                  //           },
-                  //           onPageChanged: (int index) {
-                  //             setState(() {
-                  //               _currentPage = index;
-                  //             });
-                  //           },
-                  //         ),
-                  //         // Tambahkan indikator
-                  //         Positioned(
-                  //           bottom: 10,
-                  //           left: 0,
-                  //           right: 0,
-                  //           child: Center(
-                  //             child: SmoothPageIndicator(
-                  //               controller: _pageController,
-                  //               count: announcements.length,
-                  //               effect: ExpandingDotsEffect(
-                  //                 activeDotColor: Colors.purple,
-                  //                 dotColor: Colors.white,
-                  //                 dotHeight: 8,
-                  //                 dotWidth: 8,
-                  //               ),
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ],
                   const SizedBox(height: 20),
                   // Note Section
                   Padding(
@@ -2240,11 +1763,6 @@ class _HomePageState extends State<HomePage> {
         onTap: (index) {
           switch (index) {
             case 0:
-              // Navigator.pushAndRemoveUntil(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => const HomePage()),
-              //   (route) => false, // Menghapus semua halaman sebelumnya
-              // );
               break;
             case 1:
               Navigator.pushAndRemoveUntil(
@@ -2342,33 +1860,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// tampilan dalam announcement
-// class AnnouncementDetailPage extends StatelessWidget {
-//   final String message;
-
-//   const AnnouncementDetailPage({
-//     super.key,
-//     required this.message,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Detail Announcement'),
-//         backgroundColor: Colors.purple,
-//       ),
-//       body: SingleChildScrollView(
-//         physics:
-//             const BouncingScrollPhysics(), // Memberikan efek scroll yang halus        padding: const EdgeInsets.all(16.0),
-//         child: Text(
-//           message,
-//           style: const TextStyle(fontSize: 16, color: Colors.black87),
-//         ),
-//       ),
-//     );
-//   }
-// }
 class AnnouncementDetailPage extends StatelessWidget {
   final String message;
 
