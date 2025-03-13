@@ -6,6 +6,7 @@ import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:absen/utils/notification_helper.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
@@ -87,57 +88,6 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  // Future<void> getNotif() async {
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/other/get-self-notification');
-  //   var request = http.MultipartRequest('GET', url);
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-
-  //   try {
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (rp.statusCode == 200 && data['data'] != null) {
-  //       List<dynamic> loadedNotifications =
-  //           List.from(data['data']).map((notif) {
-  //         return {
-  //           'id': notif['id'],
-  //           'title': notif['title']?.toString(),
-  //           'description': notif['description']?.toString(),
-  //           'fileUrl': notif['file'] != null
-  //               ? "https://portal.eksam.cloud/storage/file/${notif['file']}"
-  //               : null,
-  //           'isRead': notif['is_read'] == 1,
-  //         };
-  //       }).toList();
-
-  //       // Cek status dari SharedPreferences
-  //       for (var notif in loadedNotifications) {
-  //         notif['isRead'] = await _isNotificationRead(notif['id']) ||
-  //             notif['isRead']; // Gabungkan status dari API dan lokal
-  //       }
-
-  //       setState(() {
-  //         notifications = loadedNotifications;
-  //         bool hasUnread = notifications.any((notif) => !notif['isRead']);
-  //         NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
-  //         isLoading = false;
-  //       });
-  //     } else {
-  //       setState(() {
-  //         isLoading = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-
   Future<bool> _isNotificationRead(int id) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool('notif_read_$id') ?? false;
@@ -214,19 +164,6 @@ class _NotificationPageState extends State<NotificationPage> {
                     padding: const EdgeInsets.all(16.0),
                     itemCount: notifications.length,
                     itemBuilder: (context, index) {
-                      //                 var notif = notifications[index];
-                      //                 return NotificationItem(
-                      //                   title: notif['title'] ?? '',
-                      //                   description: notif['description'] ?? '',
-                      //                   fileUrl: notif['fileUrl'],
-                      //                   isRead: notif['isRead'],
-                      //   onTap: () async {
-                      //     await putRead(notif['id']);
-                      //   },
-                      // );
-                      //               },
-                      //             ),
-                      // ),
                       var notif = notifications[index];
                       return NotificationItem(
                         title: notif['title'] ?? '',
@@ -333,11 +270,6 @@ class _NotificationPageState extends State<NotificationPage> {
               );
               break;
             case 3:
-              // Navigator.pushAndRemoveUntil(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => const NotificationPage()),
-              //   (route) => false,
-              // );
               break;
             case 4:
               Navigator.pushAndRemoveUntil(
@@ -353,57 +285,6 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 }
 
-// class NotificationItem extends StatelessWidget {
-//   final String title;
-//   final String description;
-//   final String? fileUrl;
-//   final bool isRead;
-//   final VoidCallback onTap;
-
-//   const NotificationItem({
-//     super.key,
-//     required this.title,
-//     required this.description,
-//     this.fileUrl,
-//     required this.isRead,
-//     required this.onTap,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       margin: const EdgeInsets.symmetric(vertical: 8.0),
-//       color: isRead ? Colors.grey[200] : Colors.white,
-//       child: ListTile(
-//         title: Text(
-//           title,
-//           style: TextStyle(
-//               fontWeight: isRead ? FontWeight.normal : FontWeight.bold),
-//         ),
-//         subtitle: const Text(
-//           'Click To View',
-//           style: TextStyle(color: Colors.blue),
-//         ),
-//         trailing: isRead
-//             ? null
-//             : const Icon(Icons.circle, color: Colors.red, size: 10),
-//         onTap: () {
-//           onTap();
-//           Navigator.push(
-//             context,
-//             MaterialPageRoute(
-//               builder: (context) => PayslipDetailPage(
-//                 title: title,
-//                 description: description,
-//                 fileUrl: fileUrl,
-//               ),
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
 class NotificationItem extends StatelessWidget {
   final String title;
   final String description;
@@ -570,24 +451,24 @@ class PayslipDetailPage extends StatelessWidget {
     );
   }
 
-  Future<bool> _requestStoragePermission(BuildContext context) async {
-    PermissionStatus status = await Permission.storage.request();
-    if (status.isGranted) {
+   Future<bool> _requestStoragePermission() async {
+    if (await Permission.storage.request().isGranted) {
       return true;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content:
-                Text("Storage permission is required to download the file.")),
-      );
-      return false;
+    } else if (await Permission.manageExternalStorage.request().isGranted) {
+      return true;
     }
+    return false;
   }
 
   Future<void> _downloadFile(BuildContext context, String url) async {
-    bool permissionGranted = await _requestStoragePermission(context);
+    bool permissionGranted = await _requestStoragePermission();
 
-    if (!permissionGranted) return;
+    if (!permissionGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Storage permission denied")),
+      );
+      return;
+    }
 
     try {
       final directory = Directory('/storage/emulated/0/Download');
@@ -616,41 +497,3 @@ class PayslipDetailPage extends StatelessWidget {
     }
   }
 }
-
-//   Future<void> _downloadFile(BuildContext context, String url) async {
-//     bool permissionGranted = await _requestStoragePermission();
-
-//     if (!permissionGranted) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text("Storage permission denied")),
-//       );
-//       return;
-//     }
-
-//     try {
-//       final directory = Directory('/storage/emulated/0/Download');
-//       if (!await directory.exists()) {
-//         await directory.create(recursive: true);
-//       }
-
-//       final fileName = url.split('/').last;
-//       final savePath = '${directory.path}/$fileName';
-
-//       Dio dio = Dio();
-//       await dio.download(url, savePath, onReceiveProgress: (received, total) {
-//         if (total != -1) {
-//           print(
-//               'Download progress: ${(received / total * 100).toStringAsFixed(0)}%');
-//         }
-//       });
-
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text("File downloaded to $savePath")),
-//       );
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text("Error downloading file")),
-//       );
-//     }
-//   }
-// }

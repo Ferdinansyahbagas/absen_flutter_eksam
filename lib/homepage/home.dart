@@ -1284,9 +1284,10 @@ class _HomePageState extends State<HomePage> {
                                     ],
                                   ),
                                 ] else
-                                // const SizedBox(height: 10), // Jarak antar tombol
-                                // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                                if (!isWFHRequested) ...[
+                                  // const SizedBox(height: 10), // Jarak antar tombol
+                                  // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
+                                  // if (!isWFHRequested)
+                                  ...[
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
