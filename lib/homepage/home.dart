@@ -1286,7 +1286,6 @@ class _HomePageState extends State<HomePage> {
                                 ] else
                                   // const SizedBox(height: 10), // Jarak antar tombol
                                   // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                                  // if (!isWFHRequested)
                                   ...[
                                   Row(
                                     mainAxisAlignment:
@@ -1426,28 +1425,25 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   // Menu Shortcut
                   Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.start, // Biar mulai dari kiri
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Expanded(
-                        flex: 1, // Buat lebar shortcut lebih fleksibel
-                        child: _buildMenuShortcut(
-                          label: 'Request WFA',
-                          targetPage: ClockinwfaPage(),
-                          bgColor: const Color.fromRGBO(101, 19, 116, 1),
-                          imagePath: 'assets/icon/WFA.png',
-                          iconColor: Colors.white,
-                          iconSize: 32,
-                          labelStyle: const TextStyle(
-                            color: Colors.pink,
-                            fontSize: 14,
-                          ),
+                      _buildMenuShortcut(
+                        label: 'Request WFA',
+                        targetPage: ClockinwfaPage(),
+                        bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                        imagePath: 'assets/icon/WFA.png',
+                        iconColor: Colors.white,
+                        iconSize: 32,
+                        labelStyle: const TextStyle(
+                          color: Colors.pink,
+                          fontSize: 14,
                         ),
                       ),
-                      const Spacer(), // Tambahkan spacer biar ke kiri
+                      const SizedBox(width: 75), // Spacer untuk keseimbangan
+                      const SizedBox(width: 75),
                     ],
                   ),
 
