@@ -207,7 +207,7 @@ class _TimeOffState extends State<TimeOff> {
       request.fields['notes'] = Reason.toString();
       request.fields['startdate'] = formattedStartDate;
       request.fields['enddate'] = formattedEndDate;
-      request.fields['type'] = type.toString();
+      request.fields['type'] = type!;
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);

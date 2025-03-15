@@ -1373,63 +1373,120 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Menu Shortcut
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment
-                        .spaceAround, // Memberi jarak di antara shortcut
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment
+                  //       .spaceAround, // Memberi jarak di antara shortcut
+                  //   children: [
+                  //     // Menggunakan gambar dari aset dan mengatur ukuran gambar
+                  //     _buildMenuShortcut(
+                  //       label: 'Time Off',
+                  //       targetPage: const TimeOffScreen(),
+                  //       bgColor: const Color.fromRGBO(
+                  //           101, 19, 116, 1), // Warna background
+                  //       imagePath:
+                  //           'assets/icon/timeoff.png', // Path gambar aset
+                  //       iconColor:
+                  //           Colors.white, // Warna yang diterapkan ke gambar
+                  //       iconSize: 32, // Ukuran gambar
+                  //       labelStyle: const TextStyle(
+                  //         color: Colors.pink, // Warna label menjadi pink
+                  //         fontSize: 14,
+                  //       ),
+                  //     ),
+                  //     // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
+                  //     _buildMenuShortcut(
+                  //       label: 'Reimbursement',
+                  //       targetPage: const ReimbursementPage(),
+                  //       bgColor: const Color.fromARGB(
+                  //           255, 101, 19, 116), // Warna background
+                  //       iconData: Icons.receipt, // Ikon bawaan Flutter
+                  //       iconColor: Colors.white, // Warna ikon
+                  //       iconSize: 30, // Ukuran ikon
+                  //       labelStyle: const TextStyle(
+                  //         color: Colors.pink, // Warna label menjadi pink
+                  //         fontSize: 14,
+                  //       ),
+                  //     ),
+                  //     // Menggunakan gambar dari aset dan mengatur ukuran gambar
+                  //     _buildMenuShortcut(
+                  //       label: 'History',
+                  //       targetPage: const HistoryScreen(),
+                  //       bgColor: const Color.fromARGB(
+                  //           255, 101, 19, 116), // Warna background
+                  //       imagePath:
+                  //           'assets/icon/history.png', // Path gambar aset
+                  //       iconColor:
+                  //           Colors.white, // Warna yang diterapkan ke gambar
+                  //       iconSize: 26, // Ukuran gambar
+                  //       labelStyle: const TextStyle(
+                  //         color: Colors.pink, // Warna label menjadi pink
+                  //         fontSize: 14,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  // const SizedBox(height: 20),
+                  // // Menu Shortcut
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  //   children: [
+                  //     _buildMenuShortcut(
+                  //       label: 'Request WFA',
+                  //       targetPage: ClockinwfaPage(),
+                  //       bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                  //       imagePath: 'assets/icon/WFA.png',
+                  //       iconColor: Colors.white,
+                  //       iconSize: 32,
+                  //       labelStyle: const TextStyle(
+                  //         color: Colors.pink,
+                  //         fontSize: 14,
+                  //       ),
+                  //     ),
+                  //     const SizedBox(width: 75), // Spacer untuk keseimbangan
+                  //     const SizedBox(width: 75),
+                  //   ],
+                  // ),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 20, // Jarak antar item
+                    runSpacing: 20, // Jarak antar baris
                     children: [
-                      // Menggunakan gambar dari aset dan mengatur ukuran gambar
                       _buildMenuShortcut(
                         label: 'Time Off',
                         targetPage: const TimeOffScreen(),
-                        bgColor: const Color.fromRGBO(
-                            101, 19, 116, 1), // Warna background
-                        imagePath:
-                            'assets/icon/timeoff.png', // Path gambar aset
-                        iconColor:
-                            Colors.white, // Warna yang diterapkan ke gambar
-                        iconSize: 32, // Ukuran gambar
+                        bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                        imagePath: 'assets/icon/timeoff.png',
+                        iconColor: Colors.white,
+                        iconSize: 32,
                         labelStyle: const TextStyle(
-                          color: Colors.pink, // Warna label menjadi pink
+                          color: Colors.pink,
                           fontSize: 14,
                         ),
                       ),
-                      // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
                       _buildMenuShortcut(
                         label: 'Reimbursement',
                         targetPage: const ReimbursementPage(),
-                        bgColor: const Color.fromARGB(
-                            255, 101, 19, 116), // Warna background
-                        iconData: Icons.receipt, // Ikon bawaan Flutter
-                        iconColor: Colors.white, // Warna ikon
-                        iconSize: 30, // Ukuran ikon
+                        bgColor: const Color.fromARGB(255, 101, 19, 116),
+                        iconData: Icons.receipt,
+                        iconColor: Colors.white,
+                        iconSize: 30,
                         labelStyle: const TextStyle(
-                          color: Colors.pink, // Warna label menjadi pink
+                          color: Colors.pink,
                           fontSize: 14,
                         ),
                       ),
-                      // Menggunakan gambar dari aset dan mengatur ukuran gambar
                       _buildMenuShortcut(
                         label: 'History',
                         targetPage: const HistoryScreen(),
-                        bgColor: const Color.fromARGB(
-                            255, 101, 19, 116), // Warna background
-                        imagePath:
-                            'assets/icon/history.png', // Path gambar aset
-                        iconColor:
-                            Colors.white, // Warna yang diterapkan ke gambar
-                        iconSize: 26, // Ukuran gambar
+                        bgColor: const Color.fromARGB(255, 101, 19, 116),
+                        imagePath: 'assets/icon/history.png',
+                        iconColor: Colors.white,
+                        iconSize: 26,
                         labelStyle: const TextStyle(
-                          color: Colors.pink, // Warna label menjadi pink
+                          color: Colors.pink,
                           fontSize: 14,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  // Menu Shortcut
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
                       _buildMenuShortcut(
                         label: 'Request WFA',
                         targetPage: ClockinwfaPage(),
@@ -1442,8 +1499,6 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(width: 75), // Spacer untuk keseimbangan
-                      const SizedBox(width: 75),
                     ],
                   ),
 

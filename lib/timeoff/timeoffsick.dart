@@ -238,97 +238,10 @@ class _TimeOffSickState extends State<TimeOffSick> {
   //   }
   // }
   Future<void> _submitData() async {
-  await getProfile(); // Ambil data limit cuti terbaru
+    await getProfile(); // Ambil data limit cuti terbaru
 
-  if (limit == null || limit == '0') {
-    // Jika limit cuti tidak ada atau 0, tampilkan pesan error dan pindah halaman
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cuti Anda sudah habis!'),
-        backgroundColor: Colors.red,
-      ),
-    );
-
-    // Arahkan user ke halaman failure setelah notifikasi muncul
-    Future.delayed(const Duration(seconds: 1), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Failurebatascuti()),
-      );
-    });
-
-    return;
-  }
-
-  if (_image == null) {
-    setState(() {
-      _isImageRequired = true;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please upload a photo before submitting.'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color.fromARGB(255, 101, 19, 116),
-        ),
-      );
-    },
-  );
-
-  try {
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/request-history/make-request');
-    var request = http.MultipartRequest('POST', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-    String formattedStartDate = _selectedStartDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedStartDate!)
-        : '';
-    String formattedEndDate = _selectedEndDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedEndDate!)
-        : '';
-
-    if (_selectedType == "Sick") {
-      setState(() {
-        type = '2';
-      });
-    }
-
-    if (_image != null) {
-      request.files.add(await http.MultipartFile.fromPath(
-        'surat_sakit',
-        _image!.path,
-      ));
-    }
-
-    request.headers['Authorization'] = 'Bearer ${localStorage.getString('token')}';
-    request.fields['user_id'] = iduser.toString();
-    request.fields['notes'] = Reason.toString();
-    request.fields['startdate'] = formattedStartDate;
-    request.fields['enddate'] = formattedEndDate;
-    request.fields['type'] = type.toString();
-
-    var response = await request.send();
-    var rp = await http.Response.fromStream(response);
-    var data = jsonDecode(rp.body.toString());
-
-    if (response.statusCode == 200) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SuccessPage2II()),
-      );
-    } else if (response.statusCode == 400 && data['message'] == 'Kuota Cuti belum ditentukan') {
-      // Jika API mengembalikan error kuota cuti habis
-      Navigator.pop(context); // Tutup dialog loading
+    if (limit == null || limit == '0') {
+      // Jika limit cuti tidak ada atau 0, tampilkan pesan error dan pindah halaman
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Cuti Anda sudah habis!'),
@@ -336,26 +249,116 @@ class _TimeOffSickState extends State<TimeOffSick> {
         ),
       );
 
+      // Arahkan user ke halaman failure setelah notifikasi muncul
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Failurebatascuti()),
         );
       });
-    } else {
+
+      return;
+    }
+
+    if (_image == null) {
+      setState(() {
+        _isImageRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a photo before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
+    try {
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/request-history/make-request');
+      var request = http.MultipartRequest('POST', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      String formattedStartDate = _selectedStartDate != null
+          ? DateFormat('yyyy-MM-dd').format(_selectedStartDate!)
+          : '';
+      String formattedEndDate = _selectedEndDate != null
+          ? DateFormat('yyyy-MM-dd').format(_selectedEndDate!)
+          : '';
+
+      if (_selectedType == "Sick") {
+        setState(() {
+          type = '2';
+        });
+      }
+
+      if (_image != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'surat_sakit',
+          _image!.path,
+        ));
+      }
+
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+      request.fields['user_id'] = iduser.toString();
+      request.fields['notes'] = Reason.toString();
+      request.fields['startdate'] = formattedStartDate;
+      request.fields['enddate'] = formattedEndDate;
+      request.fields['type'] = type.toString();
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (response.statusCode == 200) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SuccessPage2II()),
+        );
+      } else if (response.statusCode == 400 &&
+          data['message'] == 'Kuota Cuti belum ditentukan') {
+        // Jika API mengembalikan error kuota cuti habis
+        Navigator.pop(context); // Tutup dialog loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cuti Anda sudah habis!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Failurebatascuti()),
+          );
+        });
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const FailurePage2II()),
+        );
+      }
+    } catch (e) {
+      print(e);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const FailurePage2II()),
       );
     }
-  } catch (e) {
-    print(e);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const FailurePage2II()),
-    );
   }
-}
 
   @override
   Widget build(BuildContext context) {

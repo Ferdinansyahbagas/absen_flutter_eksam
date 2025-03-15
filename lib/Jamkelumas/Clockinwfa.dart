@@ -5,6 +5,7 @@ import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:absen/susses&failde/gagalbatascuti.dart';
 
 class ClockinwfaPage extends StatefulWidget {
   const ClockinwfaPage({super.key});
@@ -18,10 +19,9 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   TextEditingController noteController = TextEditingController();
   List<String> workTypes = []; // Dynamically set work types
   List<String> workPlaceTypes = []; // Dynamically set work types
-
+  String? bataswfh;
   String? selectedWorkType;
   String? selectedWorkPlaceType;
-
   String iduser = "";
   String? type = '1';
 
@@ -67,64 +67,6 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
       print('Terjadi kesalahan: $e');
     }
   }
-
-  // Future<void> getProfile() async {
-  //   try {
-  //     final url =
-  //         Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-
-  //     var request = http.MultipartRequest('GET', url);
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-  //     print(data);
-
-  //     if (response.statusCode == 200) {
-  //       setState(() {
-  //         iduser = data['data']['id'].toString();
-  //       });
-  //       localStorage.setString('id', data['data']['id']);
-  //     } else {
-  //       print("Error retrieving profile");
-  //     }
-  //   } catch (e) {
-  //     print("Error: $e");
-  //   }
-  // }
-
-  // Future<void> getStatus() async {
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/attendance/get-type-parameter');
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   var request = http.MultipartRequest('GET', url);
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-
-  //   try {
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (rp.statusCode == 200) {
-  //       List<String> fetchedWorkTypes = data['data']
-  //           .map<String>((item) => item['name'].toString())
-  //           .toList(); // Mengambil semua work types
-
-  //       setState(() {
-  //         workTypes = fetchedWorkTypes;
-  //         selectedWorkType = "Reguler"; // Hardcode ke "Reguler"
-  //       });
-  //     } else {
-  //       print('Error fetching work types: ${rp.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
 
   Future<void> getStatus() async {
     final url = Uri.parse(
@@ -178,71 +120,6 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     }
   }
 
-  // Future<void> _submitData() async {
-  //   if (selectedDate == null ||
-  //       selectedWorkType == null ||
-  //       noteController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Harap isi semua data sebelum submit!")),
-  //     );
-  //     return;
-  //   }
-
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (BuildContext context) {
-  //       return const Center(
-  //         child: CircularProgressIndicator(
-  //           color: Color.fromARGB(255, 101, 19, 116),
-  //         ),
-  //       );
-  //     },
-  //   );
-
-  //   try {
-  //     await getProfile();
-
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
-
-  //     var request = http.MultipartRequest('POST', url);
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate!);
-
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-  //     request.fields['user_id'] = iduser;
-  //     request.fields['notes'] = noteController.text;
-  //     request.fields['date'] = formattedDate; // Hanya mengirim startdate
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     Navigator.pop(context); // Tutup loading dialog
-
-  //     if (response.statusCode == 200) {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const SuccessPage()),
-  //       );
-  //     } else {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const FailurePage()),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     Navigator.pop(context);
-  //     print(e);
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const FailurePage()),
-  //     );
-  //   }
-  // }
   Future<void> getProfile() async {
     final url =
         Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
@@ -266,6 +143,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
         var data = jsonDecode(response.body);
         setState(() {
           iduser = data['data']['id'].toString();
+          bataswfh = (data['data']['batas_wfh'] ?? "0").toString();
         });
         localStorage.setString('id', iduser);
       } else {
@@ -276,10 +154,90 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     }
   }
 
+  // Future<void> _submitData() async {
+  //   if (selectedDate == null || noteController.text.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
+  //     );
+  //     return;
+  //   }
+
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return const Center(
+  //         child: CircularProgressIndicator(
+  //           color: Color.fromARGB(255, 101, 19, 116),
+  //         ),
+  //       );
+  //     },
+  //   );
+
+  //   try {
+  //     await getProfile();
+
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     String? token = localStorage.getString('token');
+
+  //     if (token == null || token.isEmpty) {
+  //       print("Error: Token tidak ditemukan!");
+  //       return;
+  //     }
+
+  //     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate!);
+  //     var response = await http.post(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer $token',
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: jsonEncode({
+  //         'user_id': iduser,
+  //         'notes': noteController.text,
+  //         'date': formattedDate,
+  //       }),
+  //     );
+
+  //     Navigator.pop(context);
+
+  //     if (response.statusCode == 200) {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const SuccessPage()),
+  //       );
+  //     } else {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const FailurePage()),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     Navigator.pop(context);
+  //     print(e);
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => const FailurePage()),
+  //     );
+  //   }
+  // }
+
   Future<void> _submitData() async {
     if (selectedDate == null || noteController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
+      );
+      return;
+    }
+
+    await getProfile(); // Pastikan limit WFH diperbarui sebelum submit
+
+    if (bataswfh == null || bataswfh == '0') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Failurebatascuti()),
       );
       return;
     }
@@ -297,8 +255,6 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     );
 
     try {
-      await getProfile();
-
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -323,7 +279,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
         }),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context); // Tutup loading dialog
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
@@ -331,10 +287,19 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
           MaterialPageRoute(builder: (context) => const SuccessPage()),
         );
       } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const FailurePage()),
-        );
+        var responseData = jsonDecode(response.body);
+        if (response.statusCode == 400 &&
+            responseData['message'] == "Kuota Cuti belum ditentukan") {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Failurebatascuti()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const FailurePage()),
+          );
+        }
       }
     } catch (e) {
       Navigator.pop(context);
