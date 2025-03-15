@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/susses&failde/gagalbatascuti.dart';
 
 class TimeOffSick extends StatefulWidget {
   const TimeOffSick({super.key});
@@ -146,96 +147,215 @@ class _TimeOffSickState extends State<TimeOffSick> {
     }
   }
 
-  // Function to submit data to API
+  // // Function to submit data to API
+  // Future<void> _submitData() async {
+  //   if (_image == null) {
+  //     setState(() {
+  //       _isImageRequired = true;
+  //     });
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Please upload a photo before submitting.'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false, // Prevent dismissing the dialog
+  //     builder: (BuildContext context) {
+  //       return const Center(
+  //         child: CircularProgressIndicator(
+  //           color: Color.fromARGB(255, 101, 19, 116),
+  //         ),
+  //       );
+  //     },
+  //   );
+
+  //   try {
+  //     await getProfile();
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/request-history/make-request');
+
+  //     var request = http.MultipartRequest('POST', url);
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //     String formattedStartDate = _selectedStartDate != null
+  //         ? DateFormat('yyyy-MM-dd').format(_selectedStartDate!)
+  //         : '';
+  //     String formattedEndDate = _selectedEndDate != null
+  //         ? DateFormat('yyyy-MM-dd').format(_selectedEndDate!)
+  //         : '';
+
+  //     // Sesuaikan tipe cuti
+  //     if (_selectedType == "Sick") {
+  //       setState(() {
+  //         type = '2';
+  //       });
+  //     }
+
+  //     // Add image file if selected
+  //     if (_image != null) {
+  //       request.files.add(await http.MultipartFile.fromPath(
+  //         'surat_sakit', // Field name in the API
+  //         _image!.path,
+  //       ));
+  //     }
+
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+  //     request.fields['user_id'] = iduser.toString();
+  //     request.fields['notes'] = Reason.toString();
+  //     request.fields['startdate'] = formattedStartDate;
+  //     request.fields['enddate'] = formattedEndDate;
+  //     request.fields['type'] = type.toString();
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     print(rp.body.toString());
+  //     var data = jsonDecode(rp.body.toString());
+  //     print(data);
+
+  //     if (response.statusCode == 200) {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const SuccessPage2II()),
+  //       );
+  //     } else {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const FailurePage2II()),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print(e);
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => const FailurePage2II()),
+  //     );
+  //   }
+  // }
   Future<void> _submitData() async {
-    if (_image == null) {
+  await getProfile(); // Ambil data limit cuti terbaru
+
+  if (limit == null || limit == '0') {
+    // Jika limit cuti tidak ada atau 0, tampilkan pesan error dan pindah halaman
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Cuti Anda sudah habis!'),
+        backgroundColor: Colors.red,
+      ),
+    );
+
+    // Arahkan user ke halaman failure setelah notifikasi muncul
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Failurebatascuti()),
+      );
+    });
+
+    return;
+  }
+
+  if (_image == null) {
+    setState(() {
+      _isImageRequired = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please upload a photo before submitting.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 101, 19, 116),
+        ),
+      );
+    },
+  );
+
+  try {
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/request-history/make-request');
+    var request = http.MultipartRequest('POST', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    String formattedStartDate = _selectedStartDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedStartDate!)
+        : '';
+    String formattedEndDate = _selectedEndDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedEndDate!)
+        : '';
+
+    if (_selectedType == "Sick") {
       setState(() {
-        _isImageRequired = true;
+        type = '2';
       });
+    }
+
+    if (_image != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'surat_sakit',
+        _image!.path,
+      ));
+    }
+
+    request.headers['Authorization'] = 'Bearer ${localStorage.getString('token')}';
+    request.fields['user_id'] = iduser.toString();
+    request.fields['notes'] = Reason.toString();
+    request.fields['startdate'] = formattedStartDate;
+    request.fields['enddate'] = formattedEndDate;
+    request.fields['type'] = type.toString();
+
+    var response = await request.send();
+    var rp = await http.Response.fromStream(response);
+    var data = jsonDecode(rp.body.toString());
+
+    if (response.statusCode == 200) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SuccessPage2II()),
+      );
+    } else if (response.statusCode == 400 && data['message'] == 'Kuota Cuti belum ditentukan') {
+      // Jika API mengembalikan error kuota cuti habis
+      Navigator.pop(context); // Tutup dialog loading
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please upload a photo before submitting.'),
+          content: Text('Cuti Anda sudah habis!'),
           backgroundColor: Colors.red,
         ),
       );
-      return;
-    }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog
-      builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
-
-    try {
-      await getProfile();
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/request-history/make-request');
-
-      var request = http.MultipartRequest('POST', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      String formattedStartDate = _selectedStartDate != null
-          ? DateFormat('yyyy-MM-dd').format(_selectedStartDate!)
-          : '';
-      String formattedEndDate = _selectedEndDate != null
-          ? DateFormat('yyyy-MM-dd').format(_selectedEndDate!)
-          : '';
-
-      // Sesuaikan tipe cuti
-      if (_selectedType == "Sick") {
-        setState(() {
-          type = '2';
-        });
-      }
-
-      // Add image file if selected
-      if (_image != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'surat_sakit', // Field name in the API
-          _image!.path,
-        ));
-      }
-
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-      request.fields['user_id'] = iduser.toString();
-      request.fields['notes'] = Reason.toString();
-      request.fields['startdate'] = formattedStartDate;
-      request.fields['enddate'] = formattedEndDate;
-      request.fields['type'] = type.toString();
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      print(rp.body.toString());
-      var data = jsonDecode(rp.body.toString());
-      print(data);
-
-      if (response.statusCode == 200) {
+      Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SuccessPage2II()),
+          MaterialPageRoute(builder: (context) => const Failurebatascuti()),
         );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const FailurePage2II()),
-        );
-      }
-    } catch (e) {
-      print(e);
+      });
+    } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const FailurePage2II()),
       );
     }
+  } catch (e) {
+    print(e);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const FailurePage2II()),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -555,96 +675,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                     ),
                   ),
                 ),
-//               GestureDetector(
-//                 onTap: _pickImage, // Langsung panggil kamera
-//                 child: Container(
-//                   height: 130,
-//                   width: 150,
-//                   decoration: BoxDecoration(
-//                     border: Border.all(
-//                       color: _isImageRequired
-//                           ? Colors.red
-//                           : (_image == null
-//                               ? const Color.fromRGBO(101, 19, 116, 1)
-//                               : Colors.orange), // Red if image is required
-//                       width: 2,
-//                     ),
-//                     borderRadius: BorderRadius.circular(15),
-//                   ),
-//                   child: Column(
-//                     mainAxisAlignment: MainAxisAlignment.center,
-//                     children: [
-//                       Icon(
-//                         Icons.camera_alt,
-//                         size: 35,
-//                         color: _isImageRequired
-//                             ? Colors.red
-//                             : (_image == null
-//                                 ? const Color.fromRGBO(101, 19, 116, 1)
-//                                 : Colors
-//                                     .orange), // Red icon if image is required
-//                       ),
-//                       const SizedBox(height: 3),
-//                       if (_image == null && !_isImageRequired)
-//                         const Text(
-//                           'Upload Photo Anda ',
-//                           style: TextStyle(
-//                             fontSize: 14,
-//                             color: Color.fromRGBO(101, 19, 116, 1),
-//                           ),
-//                         ),
-//                     ],
-//                   ),
-//                 ),
-//               ),
-//               const SizedBox(height: 10),
 
-// // Preview Photo Button
-//               if (_image != null)
-//                 Align(
-//                   alignment: Alignment.centerLeft, // Atur posisi teks di kiri
-//                   child: InkWell(
-//                     onTap: () {
-//                       // Show dialog to preview the photo
-//                       showDialog(
-//                         context: context,
-//                         builder: (BuildContext context) {
-//                           return Dialog(
-//                             shape: RoundedRectangleBorder(
-//                               borderRadius: BorderRadius.circular(10),
-//                             ),
-//                             child: Column(
-//                               mainAxisSize: MainAxisSize.min,
-//                               children: [
-//                                 if (kIsWeb)
-//                                   // Jika platform adalah Web
-//                                   Image.network(
-//                                     _image!.path,
-//                                     fit: BoxFit.cover,
-//                                   )
-//                                 else
-//                                   // Jika platform bukan Web (mobile)
-//                                   Image.file(
-//                                     _image!,
-//                                     fit: BoxFit.cover,
-//                                   ),
-//                               ],
-//                             ),
-//                           );
-//                         },
-//                       );
-//                     },
-//                     child: const Text(
-//                       'Lihat Photo',
-//                       style: TextStyle(
-//                         fontSize: 15,
-//                         color: Colors.orange, // Warna teks seperti hyperlink
-//                         decoration: TextDecoration
-//                             .underline, // Garis bawah untuk efek hyperlink
-//                       ),
-//                     ),
-//                   ),
-//                 ),
               const SizedBox(height: 50),
               SizedBox(
                 width: double.infinity,
