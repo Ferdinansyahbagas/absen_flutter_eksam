@@ -127,47 +127,59 @@ class _HomePageState extends State<HomePage> {
   }) {
     return Column(
       children: [
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => targetPage),
-            );
-          },
-          child: Container(
-            width: 60, // Lebar container shortcut
-            height: 60, // Tinggi container shortcut
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius:
-                  BorderRadius.circular(12), // Membuat sudut melengkung
-            ),
-            child: Center(
-              child: imagePath != null
-                  ? ColorFiltered(
-                      colorFilter: ColorFilter.mode(
-                        iconColor, // Warna filter yang diterapkan
-                        BlendMode.srcIn, // Mengatur mode blending
-                      ),
-                      child: Image.asset(
-                        imagePath,
-                        width: iconSize, // Sesuaikan ukuran gambar
-                        height: iconSize, // Sesuaikan ukuran gambar
-                        fit: BoxFit.contain,
-                      ),
-                    )
-                  : Icon(
-                      iconData,
-                      color: iconColor,
-                      size: iconSize,
-                    ),
-            ),
+        Container(
+          width: 100,
+          padding: const EdgeInsets.all(8.0), // Padding di dalam container
+          decoration: BoxDecoration(
+            color: Colors.transparent, // Warna latar belakang
+            borderRadius: BorderRadius.circular(8.0), // Sudut melengkung
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.pink, fontSize: 14),
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => targetPage),
+                  );
+                },
+                child: Container(
+                  width: 60, // Lebar container shortcut
+                  height: 60, // Tinggi container shortcut
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius:
+                        BorderRadius.circular(50), // Membuat sudut melengkung
+                  ),
+                  child: Center(
+                    child: imagePath != null
+                        ? ColorFiltered(
+                            colorFilter: ColorFilter.mode(
+                              iconColor, // Warna filter yang diterapkan
+                              BlendMode.srcIn, // Mengatur mode blending
+                            ),
+                            child: Image.asset(
+                              imagePath,
+                              width: iconSize, // Sesuaikan ukuran gambar
+                              height: iconSize, // Sesuaikan ukuran gambar
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Icon(
+                            iconData,
+                            color: iconColor,
+                            size: iconSize,
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.pink, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1422,7 +1434,7 @@ class _HomePageState extends State<HomePage> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Menu Shortcut
                   // Row(
@@ -1565,14 +1577,14 @@ class _HomePageState extends State<HomePage> {
                       //     ),
                       //   ),
                       // ),
+                      
                       Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Agar sejajar kiri
                         children: [
                           // Bagian atas (Time Off, Reimbursement, History)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment
-                                .spaceAround, // Meratakan jarak
+                          Wrap(
+                            alignment: WrapAlignment.start, // Meratakan item di tengah
+                            spacing: 15.0, // Jarak horizontal antar item
+                            runSpacing: 15.0, // Jarak vertikal antar baris
                             children: [
                               _buildMenuShortcut(
                                 label: 'Time Off',
@@ -1589,8 +1601,7 @@ class _HomePageState extends State<HomePage> {
                               _buildMenuShortcut(
                                 label: 'Reimbursement',
                                 targetPage: const ReimbursementPage(),
-                                bgColor:
-                                    const Color.fromARGB(255, 101, 19, 116),
+                                bgColor: const Color.fromARGB(255, 101, 19, 116),
                                 iconData: Icons.receipt,
                                 iconColor: Colors.white,
                                 iconSize: 30,
@@ -1602,8 +1613,7 @@ class _HomePageState extends State<HomePage> {
                               _buildMenuShortcut(
                                 label: 'History',
                                 targetPage: const HistoryScreen(),
-                                bgColor:
-                                    const Color.fromARGB(255, 101, 19, 116),
+                                bgColor: const Color.fromARGB(255, 101, 19, 116),
                                 imagePath: 'assets/icon/history.png',
                                 iconColor: Colors.white,
                                 iconSize: 26,
@@ -1612,19 +1622,6 @@ class _HomePageState extends State<HomePage> {
                                   fontSize: 14,
                                 ),
                               ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 20), // Spasi antar bagian
-
-                          // Bagian bawah: Request WFA sejajar dengan Time Off
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.start, // Sejajarkan ke kiri
-                            children: [
-                              SizedBox(
-                                  width: MediaQuery.of(context).size.width *
-                                      0.1), // Spacer agar sejajar dengan Time Off
                               _buildMenuShortcut(
                                 label: 'Request WFA',
                                 targetPage: ClockinwfaPage(),

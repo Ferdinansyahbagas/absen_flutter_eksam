@@ -2,19 +2,36 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>Aplikasi ini membutuhkan akses lokasi Anda</string>
-<key>NSLocationAlwaysUsageDescription</key>
-<string>Aplikasi ini memerlukan akses lokasi selalu</string>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>Aplikasi ini membutuhkan akses ke galeri foto</string>
-<key>NSUserNotificationUsageDescription</key>
-<string>Aplikasi ini ingin mengirimkan notifikasi</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>Izinkan aplikasi ini untuk mengirim notifikasi yang berisi pemberitahuan, informasi dan pengumuman.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoads</key>
+    	<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi ini memerlukan akses kamera untuk mengambil foto yang akan digunakan sebagai data absensi Anda.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses GPS untuk fitur absensi.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Lokasi Anda dibutuhkan untuk akurasi lokasi absensi.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Lokasi Anda dibutuhkan untuk akurasi lokasi absensi.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to add photos to your library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikasi ini memerlukan akses galeri untuk mengunggah foto yang akan digunakan sebagai data absensi Anda.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Absen</string>
+	<string>Absensi EKSAM.ID</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -50,19 +67,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSAppTransportSecurity</key>
-<dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-</dict>
-<key>UIBackgroundModes</key>
-<array>
-    <string>fetch</string>
-    <string>remote-notification</string>
-</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
