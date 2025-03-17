@@ -58,6 +58,7 @@ class _HomePageState extends State<HomePage> {
   bool isholiday = false; //status untuk card libur
   bool isovertime = false; //status untuk card lembur
   bool isWFHRequested = false; //status mengajukan WFH
+  bool isWFARequested = false; //status pengajuan WFA
   bool jarak = false;
   bool hasUnreadNotifications =
       false; //Status untuk melihat notifikasi sudah di baca atau belum
@@ -75,6 +76,7 @@ class _HomePageState extends State<HomePage> {
     getcancelwfh();
     getcekwfh();
     getNotif();
+    getcekwfa();
     // _loadToken();
     saveFirebaseToken();
     gettoken(); // Kirim token ke server setelah disimpan
@@ -553,6 +555,26 @@ class _HomePageState extends State<HomePage> {
   //     print('Error occurred: $e');
   //   }
   // }
+  Future<void> getcekwfa() async {
+    var data =
+        await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
+
+    if (data != null && data['message'] == 'User sudah mengajukan WFA') {
+      setState(() {
+        isWFARequested = true;
+        showNote = false;
+        hasClockedIn = false;
+        hasClockedOut = true;
+        wfhId = data['data']['id'].toString();
+      });
+    } else {
+      setState(() {
+        isWFARequested = false;
+        wfhId = null;
+      });
+    }
+  }
+
   // Fungsi untuk cek status WFH
   Future<void> getcekwfh() async {
     var data = await ApiService.sendRequest(endpoint: 'attendance/is-wfh');
@@ -560,6 +582,7 @@ class _HomePageState extends State<HomePage> {
     if (data != null && data['message'] == 'User mengajukan WFH') {
       setState(() {
         isWFHRequested = true;
+        showNote = false;
         wfhId = data['data']['id'].toString();
       });
     } else {
@@ -876,6 +899,36 @@ class _HomePageState extends State<HomePage> {
   //     }
   //   }
   // }
+  void _showClockInPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Clock In"),
+          content:
+              const Text("Lokasi Anda tidak dalam radius kantor. Ajukan WFH? "),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ClockInPage()),
+                );
+              },
+              child: const Text("Ajukan WFH"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1208,7 +1261,6 @@ class _HomePageState extends State<HomePage> {
                                                       ],
                                                     ),
                                                   );
-
                                                   // Jika user memilih "Clock In", baru navigasi ke halaman Clock In
                                                   if (confirm == true) {
                                                     final result =
@@ -1425,6 +1477,7 @@ class _HomePageState extends State<HomePage> {
                   //     ),
                   //   ],
                   // ),
+
                   // const SizedBox(height: 20),
                   // // Menu Shortcut
                   // Row(
@@ -1446,62 +1499,150 @@ class _HomePageState extends State<HomePage> {
                   //     const SizedBox(width: 75),
                   //   ],
                   // ),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 20, // Jarak antar item
-                    runSpacing: 20, // Jarak antar baris
+                  Column(
                     children: [
-                      _buildMenuShortcut(
-                        label: 'Time Off',
-                        targetPage: const TimeOffScreen(),
-                        bgColor: const Color.fromRGBO(101, 19, 116, 1),
-                        imagePath: 'assets/icon/timeoff.png',
-                        iconColor: Colors.white,
-                        iconSize: 32,
-                        labelStyle: const TextStyle(
-                          color: Colors.pink,
-                          fontSize: 14,
-                        ),
-                      ),
-                      _buildMenuShortcut(
-                        label: 'Reimbursement',
-                        targetPage: const ReimbursementPage(),
-                        bgColor: const Color.fromARGB(255, 101, 19, 116),
-                        iconData: Icons.receipt,
-                        iconColor: Colors.white,
-                        iconSize: 30,
-                        labelStyle: const TextStyle(
-                          color: Colors.pink,
-                          fontSize: 14,
-                        ),
-                      ),
-                      _buildMenuShortcut(
-                        label: 'History',
-                        targetPage: const HistoryScreen(),
-                        bgColor: const Color.fromARGB(255, 101, 19, 116),
-                        imagePath: 'assets/icon/history.png',
-                        iconColor: Colors.white,
-                        iconSize: 26,
-                        labelStyle: const TextStyle(
-                          color: Colors.pink,
-                          fontSize: 14,
-                        ),
-                      ),
-                      _buildMenuShortcut(
-                        label: 'Request WFA',
-                        targetPage: ClockinwfaPage(),
-                        bgColor: const Color.fromRGBO(101, 19, 116, 1),
-                        imagePath: 'assets/icon/WFA.png',
-                        iconColor: Colors.white,
-                        iconSize: 32,
-                        labelStyle: const TextStyle(
-                          color: Colors.pink,
-                          fontSize: 14,
-                        ),
+                      // Bagian atas: Time Off, Reimbursement, History
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment
+                      //       .spaceAround, // Membuat jarak rata antar shortcut
+                      //   children: [
+                      //     _buildMenuShortcut(
+                      //       label: 'Time Off',
+                      //       targetPage: const TimeOffScreen(),
+                      //       bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                      //       imagePath: 'assets/icon/timeoff.png',
+                      //       iconColor: Colors.white,
+                      //       iconSize: 32,
+                      //       labelStyle: const TextStyle(
+                      //         color: Colors.pink,
+                      //         fontSize: 14,
+                      //       ),
+                      //     ),
+                      //     _buildMenuShortcut(
+                      //       label: 'Reimbursement',
+                      //       targetPage: const ReimbursementPage(),
+                      //       bgColor: const Color.fromARGB(255, 101, 19, 116),
+                      //       iconData: Icons.receipt,
+                      //       iconColor: Colors.white,
+                      //       iconSize: 30,
+                      //       labelStyle: const TextStyle(
+                      //         color: Colors.pink,
+                      //         fontSize: 14,
+                      //       ),
+                      //     ),
+                      //     _buildMenuShortcut(
+                      //       label: 'History',
+                      //       targetPage: const HistoryScreen(),
+                      //       bgColor: const Color.fromARGB(255, 101, 19, 116),
+                      //       imagePath: 'assets/icon/history.png',
+                      //       iconColor: Colors.white,
+                      //       iconSize: 26,
+                      //       labelStyle: const TextStyle(
+                      //         color: Colors.pink,
+                      //         fontSize: 14,
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
+
+                      // const SizedBox(height: 20), // Spasi antara dua bagian
+
+                      // // Bagian bawah: Request WFA di bawah Time Off
+                      // Align(
+                      //   alignment: Alignment
+                      //       .centerLeft, // Biar Request WFA sejajar dengan Time Off
+
+                      //   child: _buildMenuShortcut(
+                      //     label: 'Request WFA',
+                      //     targetPage: ClockinwfaPage(),
+                      //     bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                      //     imagePath: 'assets/icon/WFA.png',
+                      //     iconColor: Colors.white,
+                      //     iconSize: 32,
+                      //     labelStyle: const TextStyle(
+                      //       color: Colors.pink,
+                      //       fontSize: 14,
+                      //     ),
+                      //   ),
+                      // ),
+                      Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start, // Agar sejajar kiri
+                        children: [
+                          // Bagian atas (Time Off, Reimbursement, History)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment
+                                .spaceAround, // Meratakan jarak
+                            children: [
+                              _buildMenuShortcut(
+                                label: 'Time Off',
+                                targetPage: const TimeOffScreen(),
+                                bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                                imagePath: 'assets/icon/timeoff.png',
+                                iconColor: Colors.white,
+                                iconSize: 32,
+                                labelStyle: const TextStyle(
+                                  color: Colors.pink,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              _buildMenuShortcut(
+                                label: 'Reimbursement',
+                                targetPage: const ReimbursementPage(),
+                                bgColor:
+                                    const Color.fromARGB(255, 101, 19, 116),
+                                iconData: Icons.receipt,
+                                iconColor: Colors.white,
+                                iconSize: 30,
+                                labelStyle: const TextStyle(
+                                  color: Colors.pink,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              _buildMenuShortcut(
+                                label: 'History',
+                                targetPage: const HistoryScreen(),
+                                bgColor:
+                                    const Color.fromARGB(255, 101, 19, 116),
+                                imagePath: 'assets/icon/history.png',
+                                iconColor: Colors.white,
+                                iconSize: 26,
+                                labelStyle: const TextStyle(
+                                  color: Colors.pink,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20), // Spasi antar bagian
+
+                          // Bagian bawah: Request WFA sejajar dengan Time Off
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.start, // Sejajarkan ke kiri
+                            children: [
+                              SizedBox(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.1), // Spacer agar sejajar dengan Time Off
+                              _buildMenuShortcut(
+                                label: 'Request WFA',
+                                targetPage: ClockinwfaPage(),
+                                bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                                imagePath: 'assets/icon/WFA.png',
+                                iconColor: Colors.white,
+                                iconSize: 32,
+                                labelStyle: const TextStyle(
+                                  color: Colors.pink,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 20),
                   //card untuk absen biasa
                   if (isSuccess)
@@ -1767,12 +1908,17 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ClockInPage()),
-                                    ); // Aksi ketika tombol ditekan
+                                    if (jarak) {
+                                      _showClockInPopup(
+                                          context); // Jika user di luar kantor, tampilkan pop-up
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ClockInPage()),
+                                      ); // Jika dalam kantor, langsung ke halaman Clock In
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
