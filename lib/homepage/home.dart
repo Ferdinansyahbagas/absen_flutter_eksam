@@ -14,7 +14,7 @@ import 'package:http/http.dart' as http; // menyambungakan ke API
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
-import 'package:absen/utils/preferences.dart';
+// import 'package:absen/utils/preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -49,6 +49,7 @@ class _HomePageState extends State<HomePage> {
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
   bool hasClockedIn = false; // Status clock-in biasa
   bool hasClockedOut = false; // Status clock-out biasa
+  bool isLupaClockOut = false; //status lupa clock out
   bool hasClockedInOvertime = false; // Status clock-in lembur
   bool hasClockedOutOvertime = false; // Status clock-out lembur
   bool isCuti = false; // Status untuk menampilkan card cuti
@@ -72,36 +73,34 @@ class _HomePageState extends State<HomePage> {
     getData();
     getPengumuman();
     _startClock(); // Memulai timer untuk jam
-    // _resetNoteAtFiveAM();
     getcancelwfh();
     getcekwfh();
     getNotif();
     getcekwfa();
-    // _loadToken();
     saveFirebaseToken();
     gettoken(); // Kirim token ke server setelah disimpan
     _pageController.addListener(() {
-      _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
+      // _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
       setState(() {
         _currentPage = _pageController.page!.round();
       });
     });
   }
 
-  Future<void> _fetchUserProfile() async {
-    try {
-      // Panggil API untuk mendapatkan URL avatar
-      final response = await http.get(Uri.parse('URL_API_PROFIL'));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          avatarUrl = data['avatarUrl']; // Pastikan key sesuai dengan API
-        });
-      }
-    } catch (e) {
-      print('Gagal memuat profil: $e');
-    }
-  }
+  // Future<void> _fetchUserProfile() async {
+  //   try {
+  //     // Panggil API untuk mendapatkan URL avatar
+  //     final response = await http.get(Uri.parse('URL_API_PROFIL'));
+  //     if (response.statusCode == 200) {
+  //       final data = jsonDecode(response.body);
+  //       setState(() {
+  //         avatarUrl = data['avatarUrl']; // Pastikan key sesuai dengan API
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Gagal memuat profil: $e');
+  //   }
+  // }
 
   // Fungsi untuk memulai jam dan memperbaruinya setiap detik
   void _startClock() {
@@ -176,7 +175,10 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 10),
               Text(
                 label,
-                style: const TextStyle(color: Colors.pink, fontSize: 10, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.pink,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -248,18 +250,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _updateClockInStatusRegular(bool status) {
-    setState(() {
-      hasClockedIn = status;
-    });
-  }
-
-  void _updateClockInStatusOvertime(bool status) {
-    setState(() {
-      hasClockedInOvertime = status;
-    });
-  }
-
 // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
     var data =
@@ -308,6 +298,8 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+  //notif read sampai sini
+
   // Future<void> getNotif() async {
   //   final url = Uri.parse(
   //       'https://portal.eksam.cloud/api/v1/other/get-self-notification');
@@ -711,6 +703,14 @@ class _HomePageState extends State<HomePage> {
           hasClockedOut = clockOutData['message'] == 'sudah clock-out';
         });
       }
+      // Cek status clock-out-lupa
+      var clockOutlupaData =
+          await ApiService.sendRequest(endpoint: 'attendance/is-clock-out');
+      if (clockOutlupaData != null) {
+        setState(() {
+          isLupaClockOut = clockOutlupaData['data']['lupa'];
+        });
+      }
 
       // Cek status lembur masuk
       if (userStatus == "1" || userStatus == "2") {
@@ -728,7 +728,6 @@ class _HomePageState extends State<HomePage> {
             }
           });
         }
-
         // Cek status lembur keluar
         var overtimeOutData =
             await ApiService.sendRequest(endpoint: 'attendance/is-lembur-out');
@@ -993,9 +992,6 @@ class _HomePageState extends State<HomePage> {
                               ? const NetworkImage('avatarUrl')
                               : const AssetImage('assets/image/logo_circle.png')
                                   as ImageProvider,
-                          // child: avatarUrl == null
-                          //     ? Icon(Icons.person, color: Colors.grey)
-                          //     : null,
                         ),
                       ),
                       // Menampilkan waktu yang di-update setiap detik
@@ -1577,12 +1573,13 @@ class _HomePageState extends State<HomePage> {
                       //     ),
                       //   ),
                       // ),
-                      
+
                       Column(
                         children: [
                           // Bagian atas (Time Off, Reimbursement, History)
                           Wrap(
-                            alignment: WrapAlignment.start, // Meratakan item di tengah
+                            alignment:
+                                WrapAlignment.start, // Meratakan item di tengah
                             spacing: 15.0, // Jarak horizontal antar item
                             runSpacing: 15.0, // Jarak vertikal antar baris
                             children: [
@@ -1601,7 +1598,8 @@ class _HomePageState extends State<HomePage> {
                               _buildMenuShortcut(
                                 label: 'Reimbursement',
                                 targetPage: const ReimbursementPage(),
-                                bgColor: const Color.fromARGB(255, 101, 19, 116),
+                                bgColor:
+                                    const Color.fromARGB(255, 101, 19, 116),
                                 iconData: Icons.receipt,
                                 iconColor: Colors.white,
                                 iconSize: 30,
@@ -1613,7 +1611,8 @@ class _HomePageState extends State<HomePage> {
                               _buildMenuShortcut(
                                 label: 'History',
                                 targetPage: const HistoryScreen(),
-                                bgColor: const Color.fromARGB(255, 101, 19, 116),
+                                bgColor:
+                                    const Color.fromARGB(255, 101, 19, 116),
                                 imagePath: 'assets/icon/history.png',
                                 iconColor: Colors.white,
                                 iconSize: 26,
@@ -1905,7 +1904,9 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    if (jarak) {
+                                    if (jarak ||
+                                        userStatus == "1" ||
+                                        userStatus == "2") {
                                       _showClockInPopup(
                                           context); // Jika user di luar kantor, tampilkan pop-up
                                     } else {
