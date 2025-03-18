@@ -30,7 +30,7 @@ class _TimeOffState extends State<TimeOff> {
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
   // List<String> _typeOptions = [];
-  List<String> _typeOptions = ['Cuti', 'Izin'];
+  List<String> _typeOptions = [];
   final _reasonController = TextEditingController();
   // final _formKey = GlobalKey<FormState>();
 

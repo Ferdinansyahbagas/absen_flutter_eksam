@@ -676,8 +676,9 @@ class _HomePageState extends State<HomePage> {
               userLatitude, userLongitude, officeLatitude, officeLongitude);
 
           print("Jarak dari kantor: $distance meter");
-
-          jarak = distance > 500;
+          if (userStatus == "1" || userStatus == "2") {
+            jarak = distance > 500;
+          }
         });
       }
 
