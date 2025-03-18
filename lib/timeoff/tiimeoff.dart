@@ -146,26 +146,6 @@ class _TimeOffState extends State<TimeOff> {
   Future<void> _submitData() async {
     await getProfile(); // Ambil data limit cuti terbaru
 
-    if (limit == null || limit == '0') {
-      // Jika limit cuti tidak ada atau 0, tampilkan pesan error dan pindah halaman
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cuti Anda sudah habis!'),
-          backgroundColor: Colors.red,
-        ),
-      );
-
-      // Arahkan user ke halaman failure setelah notifikasi muncul
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Failurebatascuti()),
-        );
-      });
-
-      return;
-    }
-
     showDialog(
       context: context,
       barrierDismissible: false,
