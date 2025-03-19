@@ -1237,7 +1237,23 @@ class _HomePageState extends State<HomePage> {
                                         onPressed: hasClockedIn
                                             ? null
                                             : () async {
-                                                if (jarak) {
+                                                if (isWFARequested) {
+                                                  // Jika sudah mengajukan WFA, langsung masuk ke halaman Clock In
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const ClockInPage(),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    setState(() {
+                                                      hasClockedIn = true;
+                                                      hasClockedOut = false;
+                                                    });
+                                                  }
+                                                } else if (jarak) {
                                                   // Jika user WFH, tampilkan pop-up konfirmasi
                                                   bool? confirm =
                                                       await showDialog(
@@ -1904,10 +1920,23 @@ class _HomePageState extends State<HomePage> {
                                   style: TextStyle(fontSize: 11),
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    if (jarak ||
-                                        userStatus == "1" ||
-                                        userStatus == "2") {
+                                  onPressed: () async {
+                                    if (isWFARequested) {
+                                      // Jika sudah mengajukan WFA, langsung masuk ke halaman Clock In
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ClockInPage(),
+                                        ),
+                                      );
+                                      if (result == true) {
+                                        setState(() {
+                                          hasClockedIn = true;
+                                          hasClockedOut = false;
+                                        });
+                                      }
+                                    } else if (jarak) {
                                       _showClockInPopup(
                                           context); // Jika user di luar kantor, tampilkan pop-up
                                     } else {

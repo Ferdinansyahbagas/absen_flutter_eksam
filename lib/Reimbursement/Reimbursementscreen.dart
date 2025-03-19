@@ -6,6 +6,7 @@ import 'package:absen/timeoff/TimeoffScreen.dart';
 import 'package:absen/Reimbursement/requestReimbursement.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:absen/utils/notification_helper.dart';
+import 'package:absen/service/api_service.dart'; // Import ApiService
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:convert';
@@ -21,6 +22,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
   List<dynamic> historyData = [];
   List<dynamic> notifications = [];
   bool isLoading = true; // Menambahkan status loading
+    bool hasUnreadNotifications = false;
 
   @override
   void initState() {
@@ -29,50 +31,28 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
     getNotif();
   }
 
+// fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/other/get-self-notification');
-    var request = http.MultipartRequest('GET', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
+    var data =
+        await ApiService.sendRequest(endpoint: "other/get-self-notification");
+    if (data == null || data['data'] == null) return;
 
-    try {
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+    List<dynamic> loadedNotifications = List.from(data['data']).map((notif) {
+      return {
+        'id': notif['id'],
+        'isRead': notif['isRead'] ?? false,
+      };
+    }).toList();
 
-      if (rp.statusCode == 200 && data['data'] != null) {
-        List<dynamic> loadedNotifications =
-            List.from(data['data']).map((notif) {
-          return {
-            // 'id': notif['id'],
-            // 'title': notif['title']?.toString(),
-            // 'description': notif['description']?.toString(),
-            // 'fileUrl': notif['file'] != null
-            //     ? "https://dev-portal.eksam.cloud/storage/file/${notif['file']}"
-            //     : null,
-            'isRead': notif['isRead'] ?? false,
-          };
-        }).toList();
-
-        // Cek status dari SharedPreferences
-        for (var notif in loadedNotifications) {
-          notif['isRead'] = await _isNotificationRead(notif['id']) ||
-              notif['isRead']; // Gabungkan status dari API dan lokal
-        }
-
-        setState(() {
-          notifications = loadedNotifications;
-          bool hasUnread = notifications.any((notif) => !notif['isRead']);
-          NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
-        });
-      } else {
-        setState(() {});
-      }
-    } catch (e) {
-      setState(() {});
+    for (var notif in loadedNotifications) {
+      notif['isRead'] =
+          await _isNotificationRead(notif['id']) || notif['isRead'];
     }
+
+    setState(() {
+      notifications = loadedNotifications;
+      hasUnreadNotifications = notifications.any((notif) => !notif['isRead']);
+    });
   }
 
   Future<bool> _isNotificationRead(int id) async {
@@ -86,34 +66,17 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
   }
 
   Future<void> putRead(int id) async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
-    var request = http.MultipartRequest('PUT', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
-
-    try {
-      var response = await request.send();
-      if (response.statusCode == 200) {
-        // Tandai sebagai dibaca
-        await _markNotificationAsRead(id);
-
-        // Update status unread
-        bool hasUnread = notifications.any((notif) => !notif['isRead']);
-        await NotificationHelper.setUnreadNotifications(hasUnread);
-
-        setState(() {
-          notifications = notifications.map((notif) {
-            if (notif['id'] == id) {
-              notif['isRead'] = true;
-            }
-            return notif;
-          }).toList();
-        });
-      }
-    } catch (e) {
-      print('Error occurred: $e');
+    var response = await ApiService.sendRequest(
+        endpoint: "other/read-notification/$id", method: 'PUT');
+    if (response != null) {
+      await _markNotificationAsRead(id);
+      setState(() {
+        notifications = notifications.map((notif) {
+          if (notif['id'] == id) notif['isRead'] = true;
+          return notif;
+        }).toList();
+        hasUnreadNotifications = notifications.any((notif) => !notif['isRead']);
+      });
     }
   }
 

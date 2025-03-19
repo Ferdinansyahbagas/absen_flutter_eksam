@@ -89,31 +89,6 @@ class _TimeOffState extends State<TimeOff> {
   //   }
   // }
 
-  // Future<void> getData() async {
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/request-history/get-type-parameter');
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   try {
-  //     var response = await http.get(
-  //       url,
-  //       headers: {
-  //         'Authorization': 'Bearer ${localStorage.getString('token')}',
-  //       },
-  //     );
-  //     if (response.statusCode == 200) {
-  //       var data = jsonDecode(response.body);
-  //       setState(() {
-  //         _typeOptions =
-  //             List<String>.from(data['data'].map((item) => item['name']));
-  //       });
-  //     } else {
-  //       print('Gagal mengambil data: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('Terjadi kesalahan: $e');
-  //   }
-  // }
-
   Future<void> getData() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/request-history/get-type-parameter');
