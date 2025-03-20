@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/susses&failde/gagalV1.dart';
-import 'package:absen/susses&failde/berhasilV1.dart';
+import 'package:absen/susses&failde/berhasilV1II.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -341,7 +341,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const SuccessPage()));
+            MaterialPageRoute(builder: (context) => const SuccessPageII()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

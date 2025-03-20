@@ -312,13 +312,6 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
       );
       break;
     case 2:
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => const ReimbursementPage()),
-      //   (route) => false,
-      // );
-                    // This is the current screen, so no action needed
-
       break;
     case 3:
       Navigator.pushAndRemoveUntil(
@@ -336,36 +329,6 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
       break;
   }
 },
-        //     case 0:
-        //       Navigator.pushReplacement(
-        //         context,
-        //         MaterialPageRoute(builder: (context) => const HomePage()),
-        //       );
-        //       break;
-        //     case 1:
-        //       Navigator.push(
-        //         context,
-        //         MaterialPageRoute(builder: (context) => const TimeOffScreen()),
-        //       );
-        //       break;
-        //     case 2:
-        //       // This is the current screen, so no action needed
-        //       break;
-        //     case 3:
-        //       Navigator.push(
-        //         context,
-        //         MaterialPageRoute(
-        //             builder: (context) => const NotificationPage()),
-        //       );
-        //       break;
-        //     case 4:
-        //       Navigator.push(
-        //         context,
-        //         MaterialPageRoute(builder: (context) => const ProfileScreen()),
-        //       );
-        //       break;
-        //   }
-        // },
       ),
     );
   }

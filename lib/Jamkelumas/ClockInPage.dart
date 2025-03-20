@@ -38,7 +38,7 @@ class _ClockInPageState extends State<ClockInPage> {
   @override
   void initState() {
     super.initState();
-    // _setWorkTypesBasedOnDay();
+    _setWorkTypesBasedOnDay();
     _setWorkTypeLembur();
     getStatus();
     getLocation();
@@ -100,30 +100,6 @@ class _ClockInPageState extends State<ClockInPage> {
       print('Error occurred: $e');
     }
   }
-
-  // Future<void> getcekwfh() async {
-  //   final url =
-  //       Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
-  //   var request = http.MultipartRequest('GET', url);
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-
-  //   try {
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (rp.statusCode == 200) {
-  //       setState(() {});
-  //     } else {
-  //       print('Error fetching history data: ${rp.statusCode}');
-  //       print(rp.body);
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
 
   Future getcekwfh() async {
     final url =
@@ -220,8 +196,6 @@ class _ClockInPageState extends State<ClockInPage> {
               double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
           double officeLongitude =
               double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
-
-          // _compareDistance(officeLongitude, officeLatitude);
 
           // Hitung jarak antara user dan kantor
           double distance = Geolocator.distanceBetween(
@@ -328,75 +302,75 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-  // Future<void> _setWorkTypesBasedOnDay() async {
-  //   if (userStatus == '3') {
-  //     setState(() {
-  //       workTypes = ['Reguler'];
-  //       _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-  //     });
-  //     return; //
-  //   }
-  //   try {
-  //     // Get current day
-  //     final int currentDay = DateTime.now().weekday;
-  //     // Check if today is a weekend
-  //     if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
-  //       setState(() {
-  //         _isHoliday = true;
-  //         workTypes = ['Lembur'];
-  //         _selectedWorkType = 'Lembur';
-  //       });
-  //       return;
-  //     }
+  Future<void> _setWorkTypesBasedOnDay() async {
+    if (userStatus == '3') {
+      setState(() {
+        workTypes = ['Reguler'];
+        _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+      });
+      return; //
+    }
+    try {
+      // Get current day
+      final int currentDay = DateTime.now().weekday;
+      // Check if today is a weekend
+      if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
+        setState(() {
+          _isHoliday = true;
+          workTypes = ['Lembur'];
+          _selectedWorkType = 'Lembur';
+        });
+        return;
+      }
 
-  //     // Fetch holiday data from API
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
+      // Fetch holiday data from API
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
 
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
 
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
-  //     print(data);
-  //     if (response.statusCode == 200) {
-  //       setState(() {
-  //         _isHoliday = data['data']['libur'];
-  //         // _isHoliday = data['data']['attendance_status_id'];
-  //       });
+      print(data);
+      if (response.statusCode == 200) {
+        setState(() {
+          _isHoliday = data['data']['libur'];
+          // _isHoliday = data['data']['attendance_status_id'];
+        });
 
-  //       // Check if today is in the holiday list
-  //       if (_isHoliday) {
-  //         setState(() {
-  //           workTypes = ['Lembur'];
-  //           _selectedWorkType = 'Lembur';
-  //         });
-  //       } else {
-  //         setState(() {
-  //           _isHoliday = false;
-  //           workTypes = ['Reguler', 'Lembur'];
-  //           _selectedWorkType = 'Reguler';
-  //         });
-  //       }
-  //     } else {
-  //       // Handle API error
-  //       print('Failed to fetch holidays: ${response.statusCode}');
-  //       setState(() {
-  //         workTypes = ['Reguler', 'Lembur']; // Default options
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print('Error checking holidays: $e');
-  //     setState(() {
-  //       workTypes = ['Reguler', 'Lembur']; // Default options
-  //     });
-  //   }
-  // }
+        // Check if today is in the holiday list
+        if (_isHoliday) {
+          setState(() {
+            workTypes = ['Lembur'];
+            _selectedWorkType = 'Lembur';
+          });
+        } else {
+          setState(() {
+            _isHoliday = false;
+            workTypes = ['Reguler', 'Lembur'];
+            _selectedWorkType = 'Reguler';
+          });
+        }
+      } else {
+        // Handle API error
+        print('Failed to fetch holidays: ${response.statusCode}');
+        setState(() {
+          workTypes = ['Reguler', 'Lembur']; // Default options
+        });
+      }
+    } catch (e) {
+      print('Error checking holidays: $e');
+      setState(() {
+        workTypes = ['Reguler', 'Lembur']; // Default options
+      });
+    }
+  }
 
   Future<void> _pickImage() async {
     final XFile? pickedFile =

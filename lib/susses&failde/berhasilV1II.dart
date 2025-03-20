@@ -1,4 +1,4 @@
-//Clock In and Out SuccessPage
+//Clock Out SuccessPage
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,7 +70,7 @@ class _SuccessPageIIState extends State<SuccessPageII> {
             children: [
               const SizedBox(height: 150),
               const Text(
-                'Your Absence Was',
+                'Absen keluar Anda Telah',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -79,7 +79,7 @@ class _SuccessPageIIState extends State<SuccessPageII> {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Successful✨​ ',
+                'Berhasil Di Rekam✨​ ',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class _SuccessPageIIState extends State<SuccessPageII> {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Great, now You Can Start Working 👍​',
+                'Kerja selesai, saatnya istirahat! 🔥✅​',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.white70,

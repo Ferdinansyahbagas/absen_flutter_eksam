@@ -19,8 +19,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String menitTelat = '';
   String? lastClockOutDate;
   List<dynamic> lupaClockOutList = [];
-  // bool isClockedIn = false;
-  // bool hasClockedOut = false;
   bool isLupaClockOut = false; // Tambahkan variabel untuk cek lupa clock out
 
   @override
@@ -48,13 +46,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       setState(() {
         isLupaClockOut = data['lupa']; // Ambil status lupa dari API
-        // lastClockOutDate = data['data']['date']; // Ambil tanggal dari API
-
-        // if (lastClockOutDate != null) {
-        //   DateTime parsedDate = DateTime.parse(lastClockOutDate!);
-        //   lastClockOutDate =
-        //       DateFormat('dd MMM yyyy').format(parsedDate); // Format tanggal
-        // }
         lupaClockOutList = data['data'] ?? [];
       });
     } catch (e) {

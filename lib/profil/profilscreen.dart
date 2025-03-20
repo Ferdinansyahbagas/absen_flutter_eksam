@@ -45,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _ProfilImage;
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
-      bool hasUnreadNotifications = false;
+  bool hasUnreadNotifications = false;
   final ImagePicker _picker = ImagePicker();
   List<String> pendidikanOptions = [];
   List<String> bankOptions = [];
@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
- // fungsi untuk memanggil bacaan notifikasi
+  // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
     var data =
         await ApiService.sendRequest(endpoint: "other/get-self-notification");
@@ -228,8 +228,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       final response = await request.send();
       if (response.statusCode == 200) {
-        // final responseBody = await http.Response.fromStream(response);
-        // final data = jsonDecode(responseBody.body);
       } else {}
     } catch (e) {
       print("Error: $e");
@@ -298,11 +296,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         setState(() {
           switch (imageType) {
-            // case 'Profile':
-            //   profileImage = resizedFile;
-            //   profileImageUrl = resizedFile.path;
-            //   saveImageUrls(profileUrl: profileImageUrl);
-            //   break;
             case 'ID CARD':
               _idCardImage = resizedFile;
               idCardImageUrl = resizedFile.path;
@@ -338,21 +331,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         setState(() {
           switch (imageType) {
-            // case 'Profile':
-            //   profileImage = resizedFile;
-            //   profileImageUrl = resizedFile.path;
-            //   saveImageUrls(profileUrl: profileImageUrl);
-            //   break;
             case 'ID CARD':
               _idCardImage = resizedFile;
               idCardImageUrl = resizedFile.path;
               saveImageUrls(idCardUrl: idCardImageUrl);
-            //   break;
-            // case 'CV':
-            //   _cvImage = resizedFile;
-            //   cvImageUrl = resizedFile.path;
-            //   saveImageUrls(cvUrl: cvImageUrl);
-            //   break;
           }
         });
 
@@ -592,17 +574,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  // if (errorText != null) // Tampilkan pesan error jika ada
-                  //   Padding(
-                  //     padding: const EdgeInsets.only(top: 5),
-                  //     child: Text(
-                  //       "Wajib diisi!!!",
-                  //       style: TextStyle(
-                  //         color: Colors.red,
-                  //         fontSize: 12,
-                  //       ),
-                  //     ),
-                  //   ),
                 ],
               ),
               actions: [
@@ -690,17 +661,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  // if (errorText != null) // Tampilkan pesan error jika ada
-                  //   Padding(
-                  //     padding: const EdgeInsets.only(top: 5),
-                  //     child: Text(
-                  //       "Wajib diisi!!!",
-                  //       style: TextStyle(
-                  //         color: Colors.red,
-                  //         fontSize: 12,
-                  //       ),
-                  //     ),
-                  //   ),
                 ],
               ),
               actions: [
@@ -907,6 +867,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _logout(BuildContext context) async {
+//       final prefs = await SharedPreferences.getInstance();
+
+//   // Hapus token dan device_id dari SharedPreferences
+//   await prefs.remove('token');
+//   await prefs.remove('device_id');
+
+//   // Pindah ke halaman login tanpa bisa kembali ke Home
+//   Navigator.pushAndRemoveUntil(
+//     context,
+//     MaterialPageRoute(builder: (context) => const LoginScreen()),
+//     (route) => false,
+//   );
+// }
     // Hapus token dari SharedPreferences
     await Preferences.clearToken();
 
@@ -986,13 +959,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Hello!',
                           style: TextStyle(fontSize: 20),
                         ),
-                        // Text(
-                        //   name,
-                        //   style: const TextStyle(
-                        //       fontSize: 24,
-                        //       fontWeight: FontWeight.bold,
-                        //       color: Colors.white),
-                        // ),
                       ],
                     ),
                   ),
@@ -1317,11 +1283,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
               break;
             case 4:
-              // Navigator.pushAndRemoveUntil(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              //   (route) => false,
-              // );
               break;
           }
         },

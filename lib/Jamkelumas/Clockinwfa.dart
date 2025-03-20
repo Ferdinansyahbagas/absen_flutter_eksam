@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:absen/susses&failde/berhasilV1.dart';
-import 'package:absen/susses&failde/gagalV1.dart';
+import 'package:absen/susses&failde/berhasilWFA&WFH.dart';
+import 'package:absen/susses&failde/gagalV2I.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -154,90 +154,10 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     }
   }
 
-  Future<void> _submitData() async {
-    if (selectedDate == null || noteController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
-
-    try {
-      await getProfile();
-
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      String? token = localStorage.getString('token');
-
-      if (token == null || token.isEmpty) {
-        print("Error: Token tidak ditemukan!");
-        return;
-      }
-
-      String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate!);
-      var response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'user_id': iduser,
-          'notes': noteController.text,
-          'date': formattedDate,
-        }),
-      );
-
-      Navigator.pop(context);
-
-      if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SuccessPage()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const FailurePage()),
-        );
-      }
-    } catch (e) {
-      Navigator.pop(context);
-      print(e);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FailurePage()),
-      );
-    }
-  }
-
   // Future<void> _submitData() async {
   //   if (selectedDate == null || noteController.text.isEmpty) {
   //     ScaffoldMessenger.of(context).showSnackBar(
   //       const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
-  //     );
-  //     return;
-  //   }
-
-  //   await getProfile(); // Pastikan limit WFH diperbarui sebelum submit
-
-  //   if (bataswfh == null || bataswfh == '0') {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const Failurebatascuti()),
   //     );
   //     return;
   //   }
@@ -255,6 +175,8 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   //   );
 
   //   try {
+  //     await getProfile();
+
   //     final url = Uri.parse(
   //         'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
   //     SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -279,7 +201,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   //       }),
   //     );
 
-  //     Navigator.pop(context); // Tutup loading dialog
+  //     Navigator.pop(context);
 
   //     if (response.statusCode == 200) {
   //       Navigator.pushReplacement(
@@ -287,19 +209,10 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   //         MaterialPageRoute(builder: (context) => const SuccessPage()),
   //       );
   //     } else {
-  //       var responseData = jsonDecode(response.body);
-  //       if (response.statusCode == 400 &&
-  //           responseData['message'] == "Kuota Cuti belum ditentukan") {
-  //         Navigator.pushReplacement(
-  //           context,
-  //           MaterialPageRoute(builder: (context) => const Failurebatascuti()),
-  //         );
-  //       } else {
-  //         Navigator.pushReplacement(
-  //           context,
-  //           MaterialPageRoute(builder: (context) => const FailurePage()),
-  //         );
-  //       }
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const FailurePage()),
+  //       );
   //     }
   //   } catch (e) {
   //     Navigator.pop(context);
@@ -310,6 +223,93 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   //     );
   //   }
   // }
+
+  Future<void> _submitData() async {
+    if (selectedDate == null || noteController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
+      );
+      return;
+    }
+
+    await getProfile(); // Pastikan limit WFH diperbarui sebelum submit
+
+    if (bataswfh == null || bataswfh == '0') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Failurebatascuti()),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
+    try {
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      String? token = localStorage.getString('token');
+
+      if (token == null || token.isEmpty) {
+        print("Error: Token tidak ditemukan!");
+        return;
+      }
+
+      String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate!);
+      var response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'user_id': iduser,
+          'notes': noteController.text,
+          'date': formattedDate,
+        }),
+      );
+
+      Navigator.pop(context); // Tutup loading dialog
+
+      if (response.statusCode == 200) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SuccessPageWFA()),
+        );
+      } else {
+        var responseData = jsonDecode(response.body);
+        if (response.statusCode == 400 &&
+            responseData['message'] == "Kuota Cuti belum ditentukan") {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Failurebatascuti()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const FailurePage2I()),
+          );
+        }
+      }
+    } catch (e) {
+      Navigator.pop(context);
+      print(e);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePage2I()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -360,15 +360,8 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
                   );
                 }).toList(),
                 onChanged: null,
-                // (String? newValue) {
-                //   // Aktifkan pemilihan work type
-                //   setState(() {
-                //     selectedWorkType = newValue;
-                //   });
-                // },
               ),
               const SizedBox(height: 20),
-
               // Workplace Type Dropdown
               const Text(
                 'Workplace Type',
@@ -396,11 +389,6 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
                       value: type, child: Text(type));
                 }).toList(),
                 onChanged: null,
-                //(String? newValue) {
-                //   setState(() {
-                //     selectedWorkPlaceType = newValue;
-                //   });
-                // },
               ),
               const SizedBox(height: 20),
 // Tanggal (Date Picker)
@@ -445,7 +433,6 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
                 ),
               ),
               const SizedBox(height: 20),
-
 // Note (Catatan)
               const Text(
                 'Note',

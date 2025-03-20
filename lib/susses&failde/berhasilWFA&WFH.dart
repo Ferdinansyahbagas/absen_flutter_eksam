@@ -1,58 +1,12 @@
-//Clock In SuccessPage
+//Time Off (Sakit) SuccessPage2II
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
-import 'dart:convert';
-import 'package:intl/intl.dart'; // Package to format the date and time
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
-class SuccessPage extends StatefulWidget {
-  const SuccessPage({super.key});
-
-  @override
-  _SuccessPageState createState() => _SuccessPageState();
-}
-
-class _SuccessPageState extends State<SuccessPage> {
-  String datetime = '';
-
-  @override
-  void initState() {
-    super.initState();
-    getData();
-  }
-
-  Future<void> getData() async {
-    try {
-      final url = Uri.parse('https://portal.eksam.cloud/api/v1/get-time');
-      var request = http.MultipartRequest('GET', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      if (rp.statusCode == 200) {
-        setState(() {
-          datetime = data['data']['time'];
-        });
-      } else {
-        print('Error fetching history data: ${rp.statusCode}');
-        print(rp.body);
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
+class SuccessPageWFA extends StatelessWidget {
+  const SuccessPageWFA({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Get current date and time
-    DateTime now = DateTime.now();
-    String formattedDate = DateFormat('d MMMM yyyy').format(now);
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -70,9 +24,9 @@ class _SuccessPageState extends State<SuccessPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 150),
+              const SizedBox(height: 220),
               const Text(
-                'Absen Anda Telah',
+                'Berhasil Mengirim',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -81,7 +35,7 @@ class _SuccessPageState extends State<SuccessPage> {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Berhasil Di Rekam✨​ ',
+                'Pengajuan',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -90,31 +44,14 @@ class _SuccessPageState extends State<SuccessPage> {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Bagus, Sekarang Kamu Bisa Bekerja👍​',
+                '​Kerja dari manapun, harus tetap semangat dan produktif! 💻✨',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.white70,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 60),
-              Text(
-                formattedDate,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                datetime,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 200),
+              const SizedBox(height: 240),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
@@ -130,7 +67,8 @@ class _SuccessPageState extends State<SuccessPage> {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    MaterialPageRoute(
+                        builder: (context) => const HomePage()),
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },

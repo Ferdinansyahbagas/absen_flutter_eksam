@@ -14,7 +14,7 @@ import 'package:http/http.dart' as http; // menyambungakan ke API
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
-// import 'package:absen/utils/preferences.dart';
+import 'package:absen/utils/preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -43,12 +43,12 @@ class _HomePageState extends State<HomePage> {
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   int currentIndex = 0; // Default to the home page
   int _currentIndex = 0;
-  int _currentPage = 0;
-  // Variable to keep track of the current page
+  int _currentPage = 0; // Variable to keep track of the current page
   int? userId;
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
   bool hasClockedIn = false; // Status clock-in biasa
   bool hasClockedOut = false; // Status clock-out biasa
+  bool hasCuti = false; // Status clock-out biasa
   bool isLupaClockOut = false; //status lupa clock out
   bool hasClockedInOvertime = false; // Status clock-in lembur
   bool hasClockedOutOvertime = false; // Status clock-out lembur
@@ -80,27 +80,11 @@ class _HomePageState extends State<HomePage> {
     saveFirebaseToken();
     gettoken(); // Kirim token ke server setelah disimpan
     _pageController.addListener(() {
-      // _fetchUserProfile(); // Ambil data profil saat widget diinisialisasi
       setState(() {
         _currentPage = _pageController.page!.round();
       });
     });
   }
-
-  // Future<void> _fetchUserProfile() async {
-  //   try {
-  //     // Panggil API untuk mendapatkan URL avatar
-  //     final response = await http.get(Uri.parse('URL_API_PROFIL'));
-  //     if (response.statusCode == 200) {
-  //       final data = jsonDecode(response.body);
-  //       setState(() {
-  //         avatarUrl = data['avatarUrl']; // Pastikan key sesuai dengan API
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print('Gagal memuat profil: $e');
-  //   }
-  // }
 
   // Fungsi untuk memulai jam dan memperbaruinya setiap detik
   void _startClock() {
@@ -110,6 +94,68 @@ class _HomePageState extends State<HomePage> {
         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
       });
     });
+  }
+
+  void _showClockInPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Clock In"),
+          content:
+              const Text("Lokasi Anda tidak dalam radius kantor. Ajukan WFH? "),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ClockInPage()),
+                );
+              },
+              child: const Text("Ajukan WFH"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showClockInPopupWFA(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Clock In"),
+          content:
+              const Text("Lokasi Anda tidak dalam radius kantor. Ajukan WFA? "),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Tutup pop-up
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ClockInPage()),
+                );
+              },
+              child: const Text("Ajukan WFA"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Fungsi untuk membuat menu shortcut dengan warna ikon dan latar belakang yang bisa disesuaikan
@@ -300,116 +346,6 @@ class _HomePageState extends State<HomePage> {
   }
   //notif read sampai sini
 
-  // Future<void> getNotif() async {
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/other/get-self-notification');
-  //   var request = http.MultipartRequest('GET', url);
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-
-  //   try {
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (rp.statusCode == 200 && data['data'] != null) {
-  //       List<dynamic> loadedNotifications =
-  //           List.from(data['data']).map((notif) {
-  //         return {
-  //           'isRead': notif['isRead'] ?? false,
-  //         };
-  //       }).toList();
-
-  //       // Cek status dari SharedPreferences
-  //       for (var notif in loadedNotifications) {
-  //         notif['isRead'] = await _isNotificationRead(notif['id']) ||
-  //             notif['isRead']; // Gabungkan status dari API dan lokal
-  //       }
-
-  //       setState(() {
-  //         notifications = loadedNotifications;
-  //         bool hasUnread = notifications.any((notif) => !notif['isRead']);
-  //         NotificationHelper.setUnreadNotifications(hasUnread); // Simpan status
-  //       });
-  //     } else {
-  //       setState(() {});
-  //     }
-  //   } catch (e) {
-  //     setState(() {});
-  //   }
-  // }
-
-  // Future<bool> _isNotificationRead(int id) async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   return prefs.getBool('notif_read_$id') ?? false;
-  // }
-
-  // Future<void> _markNotificationAsRead(int id) async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   await prefs.setBool('notif_read_$id', true);
-  // }
-
-  // Future<void> putRead(int id) async {
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/other/read-notification/$id');
-  //   var request = http.MultipartRequest('PUT', url);
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-
-  //   try {
-  //     var response = await request.send();
-  //     if (response.statusCode == 200) {
-  //       // Tandai sebagai dibaca
-  //       await _markNotificationAsRead(id);
-
-  //       // Update status unread
-  //       bool hasUnread = notifications.any((notif) => !notif['isRead']);
-  //       await NotificationHelper.setUnreadNotifications(hasUnread);
-
-  //       setState(() {
-  //         notifications = notifications.map((notif) {
-  //           if (notif['id'] == id) {
-  //             notif['isRead'] = true;
-  //           }
-  //           return notif;
-  //         }).toList();
-  //       });
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
-  //sampai sini buat notifikasi
-
-  // Future<void> getPengumuman() async {
-  //   final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/get-th');
-  //   var request = http.MultipartRequest('GET', url);
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-
-  //   try {
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (rp.statusCode == 200) {
-  //       setState(() {
-  //         announcements = List<String>.from(data['data']
-  //             .where((item) => item['status']['id'] == 1)
-  //             .map((item) => item['message']));
-  //       });
-  //       _startAutoSlide();
-  //     } else {
-  //       print('Error fetching announcements: ${rp.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
-
   Future<void> getPengumuman() async {
     var data = await ApiService.sendRequest(endpoint: "other/get-th");
     if (data == null) return;
@@ -478,87 +414,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Future<void> _loadToken() async {
-  //   String? token = await Preferences.getToken();
-  //   setState(() {
-  //     _token = token;
-  //   });
-  // }
-
-  // void saveFirebaseToken() async {
-  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
-  //   String? token = await messaging.getToken(); // Ambil token Firebase
-
-  //   if (token != null) {
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //     await localStorage.setString('firebase_token', token);
-  //     print("Token Firebase disimpan: $token");
-
-  //     gettoken(); // Kirim token ke server setelah disimpan
-  //   }
-  // }
-
-  // Future<void> gettoken() async {
-  //   final url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
-
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   String? token = localStorage
-  //       .getString('firebase_token'); // Ambil token Firebase dari local storage
-
-  //   if (token == null || token.isEmpty) {
-  //     print("Token Firebase tidak ditemukan!");
-  //     return;
-  //   }
-
-  //   var request = http.MultipartRequest('POST', url);
-  //   request.headers['Authorization'] =
-  //       'Bearer ${localStorage.getString('token')}';
-  //   request.fields['firebase_token'] = token; // Kirim token Firebase ke API
-
-  //   try {
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (rp.statusCode == 200) {
-  //       print("Token Firebase berhasil dikirim: $token");
-  //     } else {
-  //       print("Error mengirim token Firebase: ${rp.statusCode}");
-  //       print(rp.body);
-  //     }
-  //   } catch (e) {
-  //     print("Error occurred: $e");
-  //   }
-  // }
-
-  // Future<void> getcekwfh() async {
-  //   final url =
-  //       Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   var headers = {
-  //     'Authorization': 'Bearer ${localStorage.getString('token')}'
-  //   };
-
-  //   try {
-  //     var response = await http.get(url, headers: headers);
-  //     var data = jsonDecode(response.body.toString());
-  //     print("Response API is-wfh: $data");
-
-  //     setState(() {
-  //       if (response.statusCode == 200 &&
-  //           data['message'] == 'User mengajukan WFH') {
-  //         isWFHRequested = true;
-  //         wfhId =
-  //             data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
-  //       } else {
-  //         isWFHRequested = false;
-  //         wfhId = null;
-  //       }
-  //     });
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
   Future<void> getcekwfa() async {
     var data =
         await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
@@ -739,207 +594,25 @@ class _HomePageState extends State<HomePage> {
           });
         }
       }
+
+      var cutiData =
+          await ApiService.sendRequest(endpoint: 'attendance/is-cuti');
+      if (cutiData != null && cutiData['message'] == 'sedang cuti') {
+        setState(() {
+          hasCuti = true;
+          showNote = false;
+          isholiday = true;
+          isSuccess = false;
+          isovertime = false;
+        });
+      } else {
+        setState(() {
+          hasCuti = false;
+        });
+      }
     } catch (e) {
-      print("Error mengambil data: $e");
+      print("Error saat cek cuti: $e");
     }
-  }
-
-  // Future<void> getData() async {
-  //   // Ambil profil pengguna
-  //   try {
-  //     // Ambil lokasi user
-  //     Position position = await Geolocator.getCurrentPosition(
-  //         desiredAccuracy: LocationAccuracy.high);
-  //     double userLatitude = position.latitude;
-  //     double userLongitude = position.longitude;
-
-  //     final url =
-  //         Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (rp.statusCode == 200) {
-  //       setState(() {
-  //         userStatus = data['data']['user_level_id'].toString();
-  //         name = data['data']['name'];
-  //         wfhId =
-  //             data['data']['id'].toString(); // Simpan ID WFH untuk pembatalan
-
-  //         double officeLatitude =
-  //             double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
-  //         double officeLongitude =
-  //             double.tryParse(data['data']['longitude'].toString()) ?? 0.0;
-
-  //         // _compareDistance(officeLongitude, officeLatitude);
-
-  //         // Hitung jarak antara user dan kantor
-  //         double distance = Geolocator.distanceBetween(
-  //             userLatitude, userLongitude, officeLatitude, officeLongitude);
-
-  //         print("Jarak dari kantor: $distance meter");
-  //         print("Lokasi User: $userLatitude, $userLongitude");
-  //         print("Lokasi Kantor: $officeLatitude, $officeLongitude");
-  //         print("Jarak antara User dan Kantor: $distance meter");
-
-  //         print("Jarak dari kantor: $distance meter");
-  //         print("User level: $userStatus");
-
-  //         if (distance > 500) {
-  //           // Jika lebih dari 500 meter, hanya munculkan WFH
-  //           jarak = true;
-  //         } else {
-  //           // Jika kurang dari 500 meter, munculkan semua opsi
-  //           jarak = false;
-  //         }
-  //       });
-  //     } else {
-  //       print("Error mengambil profil pengguna: ${rp.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     print("Error mengambil data lokasi: $e");
-  //   }
-
-  //   // Cek status clock-in
-  //   try {
-  //     final url =
-  //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     setState(() {
-  //       // Status clock-in diambil dari respons API
-  //       hasClockedIn = data['message'] != 'belum clock-in';
-  //       print(data['data']);
-  //       if (hasClockedIn) {
-  //         showNote = false;
-
-  //         final hasHoliday = data['data']['attendance_status_id'] ?? false;
-  //         if (hasHoliday == 5) {
-  //           isholiday = true;
-  //         } else {
-  //           isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
-  //         }
-  //       }
-  //     });
-  //   } catch (e) {
-  //     print("Error mengecek status clock-in: $e");
-  //   }
-
-  //   // Cek status clock-out
-  //   try {
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/attendance/is-clock-out');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     setState(() {
-  //       print(hasClockedOut);
-  //       hasClockedOut = data['message'] == 'sudah clock-out';
-  //     });
-  //   } catch (e) {
-  //     print("Error mengecek status clock-out: $e");
-  //   }
-
-  //   // Cek status lembur masuk
-  //   if (userStatus == "1" || userStatus == "2"
-  //       // userStatus != "3"
-  //       ) {
-  //     try {
-  //       final url = Uri.parse(
-  //           'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
-  //       SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //       var request = http.MultipartRequest('GET', url);
-  //       request.headers['Authorization'] =
-  //           'Bearer ${localStorage.getString('token')}';
-
-  //       var response = await request.send();
-  //       var rp = await http.Response.fromStream(response);
-  //       var data = jsonDecode(rp.body.toString());
-
-  //       setState(() {
-  //         hasClockedInOvertime = data['message'] != 'belum clock-in';
-  //         if (hasClockedInOvertime) {
-  //           showNote = false;
-  //           isSuccess = false;
-  //           isholiday = false;
-  //           isovertime = true;
-  //         }
-  //       });
-  //     } catch (e) {
-  //       print("Error mengecek status clock-out: $e");
-  //     }
-  //     // Cek status lembur keluar
-  //     try {
-  //       final url = Uri.parse(
-  //           'https://portal.eksam.cloud/api/v1/attendance/is-lembur-out');
-  //       SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //       var request = http.MultipartRequest('GET', url);
-  //       request.headers['Authorization'] =
-  //           'Bearer ${localStorage.getString('token')}';
-
-  //       var response = await request.send();
-  //       var rp = await http.Response.fromStream(response);
-  //       var data = jsonDecode(rp.body.toString());
-
-  //       setState(() {
-  //         hasClockedOutOvertime = data['message'] != 'belum clock-out';
-  //       });
-  //     } catch (e) {
-  //       print("Error mengecek status clock-out: $e");
-  //     }
-  //   }
-  // }
-  void _showClockInPopup(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Konfirmasi Clock In"),
-          content:
-              const Text("Lokasi Anda tidak dalam radius kantor. Ajukan WFH? "),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Tutup pop-up
-              },
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Tutup pop-up
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ClockInPage()),
-                );
-              },
-              child: const Text("Ajukan WFH"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -1085,12 +758,12 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (userStatus == "3") ...[
+                        if (userStatus == "3" && !hasCuti) ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               ElevatedButton.icon(
-                                onPressed: hasClockedIn
+                                onPressed: (hasClockedIn || hasCuti)
                                     ? null
                                     : () async {
                                         final result = await Navigator.push(
@@ -1110,12 +783,15 @@ class _HomePageState extends State<HomePage> {
                                 icon: const Icon(Icons.login),
                                 label: const Text('Clock In'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      hasClockedIn ? Colors.grey : Colors.white,
+                                  backgroundColor: (hasClockedIn || hasCuti)
+                                      ? Colors.grey
+                                      : Colors.white,
                                 ),
                               ),
                               ElevatedButton.icon(
-                                onPressed: hasClockedIn && !hasClockedOut
+                                onPressed: (hasClockedIn &&
+                                        !hasClockedOut &&
+                                        !hasCuti)
                                     ? () async {
                                         final result = await Navigator.push(
                                           context,
@@ -1146,17 +822,19 @@ class _HomePageState extends State<HomePage> {
                                 icon: const Icon(Icons.logout),
                                 label: const Text('Clock Out'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      hasClockedIn && !hasClockedOut
-                                          ? Colors.white
-                                          : Colors.grey,
+                                  backgroundColor: (hasClockedIn &&
+                                          !hasClockedOut &&
+                                          !hasCuti)
+                                      ? Colors.white
+                                      : Colors.grey,
                                 ),
                               ),
                             ],
                           ),
                         ] else if
                             // hasClockedOut &&
-                            (userStatus == "1" || userStatus == "2") ...[
+                            (userStatus == "1" ||
+                                userStatus == "2" && !hasCuti) ...[
                           if (isWFHRequested) ...[
                             // Jika user level 1 atau 2 telah request WFH
                             Row(
@@ -1173,24 +851,28 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final success =
-                                        await getcancelwfh(); // Fungsi untuk membatalkan WFH
-                                    if (success) {
-                                      setState(() {
-                                        isWFHRequested = false;
-                                        hasClockedIn =
-                                            false; // Clock In aktif kembali
-                                        hasClockedInOvertime = false;
-                                        hasClockedOutOvertime = false;
-                                        hasClockedOut = false; // Clock Out mati
-                                      });
-                                    }
-                                  },
+                                  onPressed: hasCuti
+                                      ? null
+                                      : () async {
+                                          final success =
+                                              await getcancelwfh(); // Fungsi untuk membatalkan WFH
+                                          if (success) {
+                                            setState(() {
+                                              isWFHRequested = false;
+                                              hasClockedIn =
+                                                  false; // Clock In aktif kembali
+                                              hasClockedInOvertime = false;
+                                              hasClockedOutOvertime = false;
+                                              hasClockedOut =
+                                                  false; // Clock Out mati
+                                            });
+                                          }
+                                        },
                                   icon: const Icon(Icons.cancel),
                                   label: const Text('Batalkan'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
+                                    backgroundColor:
+                                        hasCuti ? Colors.grey : Colors.red,
                                     foregroundColor: Colors.white,
                                   ),
                                 ),
@@ -1206,103 +888,15 @@ class _HomePageState extends State<HomePage> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      // ElevatedButton.icon(
-                                      //   onPressed: hasClockedIn
-                                      //       ? null
-                                      //       : () async {
-                                      //           final result =
-                                      //               await Navigator.push(
-                                      //             context,
-                                      //             MaterialPageRoute(
-                                      //               builder: (context) =>
-                                      //                   const ClockInPage(),
-                                      //             ),
-                                      //           );
-                                      //           if (result == true) {
-                                      //             setState(() {
-                                      //               hasClockedIn = true;
-                                      //               hasClockedOut = false;
-                                      //             });
-                                      //           }
-                                      //         },
-                                      //   icon: const Icon(Icons.login),
-                                      //   label: const Text('Clock In'),
-                                      //   style: ElevatedButton.styleFrom(
-                                      //     backgroundColor: hasClockedIn
-                                      //         ? Colors.grey
-                                      //         : Colors.white,
-                                      //   ),
-                                      // ),
                                       ElevatedButton.icon(
-                                        onPressed: hasClockedIn
+                                        onPressed: (hasClockedIn || hasCuti)
                                             ? null
                                             : () async {
                                                 if (isWFARequested) {
-                                                  // Jika sudah mengajukan WFA, langsung masuk ke halaman Clock In
-                                                  final result =
-                                                      await Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const ClockInPage(),
-                                                    ),
-                                                  );
-                                                  if (result == true) {
-                                                    setState(() {
-                                                      hasClockedIn = true;
-                                                      hasClockedOut = false;
-                                                    });
-                                                  }
+                                                  _showClockInPopupWFA(context);
                                                 } else if (jarak) {
-                                                  // Jika user WFH, tampilkan pop-up konfirmasi
-                                                  bool? confirm =
-                                                      await showDialog(
-                                                    context: context,
-                                                    builder: (context) =>
-                                                        AlertDialog(
-                                                      title: const Text(
-                                                          "Konfirmasi Clock In"),
-                                                      content: const Text(
-                                                          "Lokasi Anda tidak dalam radius kantor. Ajukan WFH? "),
-                                                      actions: [
-                                                        ElevatedButton(
-                                                          onPressed: () {
-                                                            Navigator.pop(
-                                                                context,
-                                                                false); // Tutup pop-up
-                                                          },
-                                                          child: const Text(
-                                                              "Cancel"),
-                                                        ),
-                                                        ElevatedButton(
-                                                          onPressed: () {
-                                                            Navigator.pop(
-                                                                context,
-                                                                true); // Lanjut Clock In
-                                                          },
-                                                          child: const Text(
-                                                              "Ajukan WFH"),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                  // Jika user memilih "Clock In", baru navigasi ke halaman Clock In
-                                                  if (confirm == true) {
-                                                    final result =
-                                                        await Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const ClockInPage(),
-                                                      ),
-                                                    );
-                                                    if (result == true) {
-                                                      setState(() {
-                                                        hasClockedIn = true;
-                                                        hasClockedOut = false;
-                                                      });
-                                                    }
-                                                  }
+                                                  _showClockInPopup(
+                                                      context); // Jika user di luar kantor, tampilkan pop-up
                                                 } else {
                                                   // Jika tidak WFH, langsung Clock In tanpa pop-up
                                                   final result =
@@ -1324,44 +918,46 @@ class _HomePageState extends State<HomePage> {
                                         icon: const Icon(Icons.login),
                                         label: const Text('Clock In'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: hasClockedIn
-                                              ? Colors.grey
-                                              : Colors.white,
+                                          backgroundColor:
+                                              (hasClockedIn || hasCuti)
+                                                  ? Colors.grey
+                                                  : Colors.white,
                                         ),
                                       ),
                                       ElevatedButton.icon(
-                                        onPressed:
-                                            hasClockedIn && !hasClockedOut
-                                                ? () async {
-                                                    final result =
-                                                        await Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const ClockOutScreen(),
-                                                      ),
-                                                    );
-                                                    if (result == true) {
-                                                      setState(() {
-                                                        hasClockedOut = true;
-                                                        hasClockedIn = false;
-                                                      });
-                                                    }
-                                                  }
-                                                : null,
+                                        onPressed: (hasClockedIn &&
+                                                !hasClockedOut &&
+                                                !hasCuti)
+                                            ? () async {
+                                                final result =
+                                                    await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const ClockOutScreen(),
+                                                  ),
+                                                );
+                                                if (result == true) {
+                                                  setState(() {
+                                                    hasClockedOut = true;
+                                                    hasClockedIn = false;
+                                                  });
+                                                }
+                                              }
+                                            : null,
                                         icon: const Icon(Icons.logout),
                                         label: const Text('Clock Out'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              hasClockedIn && !hasClockedOut
-                                                  ? Colors.white
-                                                  : Colors.grey,
+                                          backgroundColor: (hasClockedIn &&
+                                                  !hasClockedOut &&
+                                                  !hasCuti)
+                                              ? Colors.white
+                                              : Colors.grey,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ] else
-                                  // const SizedBox(height: 10), // Jarak antar tombol
                                   // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
                                   ...[
                                   Row(
@@ -1369,7 +965,8 @@ class _HomePageState extends State<HomePage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       ElevatedButton.icon(
-                                        onPressed: hasClockedInOvertime
+                                        onPressed: (hasClockedInOvertime ||
+                                                hasCuti)
                                             ? null
                                             : () async {
                                                 final result =
@@ -1391,14 +988,16 @@ class _HomePageState extends State<HomePage> {
                                         icon: const Icon(Icons.timer),
                                         label: const Text('Overtime In'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: hasClockedInOvertime
-                                              ? Colors.grey
-                                              : Colors.white,
+                                          backgroundColor:
+                                              (hasClockedInOvertime || hasCuti)
+                                                  ? Colors.grey
+                                                  : Colors.white,
                                         ),
                                       ),
                                       ElevatedButton.icon(
-                                        onPressed: hasClockedInOvertime &&
-                                                !hasClockedOutOvertime
+                                        onPressed: (hasClockedInOvertime &&
+                                                !hasClockedOutOvertime &&
+                                                !hasCuti)
                                             ? () async {
                                                 final result =
                                                     await Navigator.push(
@@ -1422,8 +1021,9 @@ class _HomePageState extends State<HomePage> {
                                         label: const Text('Overtime Out'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
-                                              hasClockedInOvertime &&
-                                                      !hasClockedOutOvertime
+                                              (hasClockedInOvertime &&
+                                                      !hasClockedOutOvertime &&
+                                                      !hasCuti)
                                                   ? Colors.white
                                                   : Colors.grey,
                                         ),
@@ -1449,148 +1049,8 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Menu Shortcut
-                  // Row(
-                  //   mainAxisAlignment: MainAxisAlignment
-                  //       .spaceAround, // Memberi jarak di antara shortcut
-                  //   children: [
-                  //     // Menggunakan gambar dari aset dan mengatur ukuran gambar
-                  //     _buildMenuShortcut(
-                  //       label: 'Time Off',
-                  //       targetPage: const TimeOffScreen(),
-                  //       bgColor: const Color.fromRGBO(
-                  //           101, 19, 116, 1), // Warna background
-                  //       imagePath:
-                  //           'assets/icon/timeoff.png', // Path gambar aset
-                  //       iconColor:
-                  //           Colors.white, // Warna yang diterapkan ke gambar
-                  //       iconSize: 32, // Ukuran gambar
-                  //       labelStyle: const TextStyle(
-                  //         color: Colors.pink, // Warna label menjadi pink
-                  //         fontSize: 14,
-                  //       ),
-                  //     ),
-                  //     // Menggunakan ikon bawaan Flutter dengan ukuran yang sama
-                  //     _buildMenuShortcut(
-                  //       label: 'Reimbursement',
-                  //       targetPage: const ReimbursementPage(),
-                  //       bgColor: const Color.fromARGB(
-                  //           255, 101, 19, 116), // Warna background
-                  //       iconData: Icons.receipt, // Ikon bawaan Flutter
-                  //       iconColor: Colors.white, // Warna ikon
-                  //       iconSize: 30, // Ukuran ikon
-                  //       labelStyle: const TextStyle(
-                  //         color: Colors.pink, // Warna label menjadi pink
-                  //         fontSize: 14,
-                  //       ),
-                  //     ),
-                  //     // Menggunakan gambar dari aset dan mengatur ukuran gambar
-                  //     _buildMenuShortcut(
-                  //       label: 'History',
-                  //       targetPage: const HistoryScreen(),
-                  //       bgColor: const Color.fromARGB(
-                  //           255, 101, 19, 116), // Warna background
-                  //       imagePath:
-                  //           'assets/icon/history.png', // Path gambar aset
-                  //       iconColor:
-                  //           Colors.white, // Warna yang diterapkan ke gambar
-                  //       iconSize: 26, // Ukuran gambar
-                  //       labelStyle: const TextStyle(
-                  //         color: Colors.pink, // Warna label menjadi pink
-                  //         fontSize: 14,
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-
-                  // const SizedBox(height: 20),
-                  // // Menu Shortcut
-                  // Row(
-                  //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  //   children: [
-                  //     _buildMenuShortcut(
-                  //       label: 'Request WFA',
-                  //       targetPage: ClockinwfaPage(),
-                  //       bgColor: const Color.fromRGBO(101, 19, 116, 1),
-                  //       imagePath: 'assets/icon/WFA.png',
-                  //       iconColor: Colors.white,
-                  //       iconSize: 32,
-                  //       labelStyle: const TextStyle(
-                  //         color: Colors.pink,
-                  //         fontSize: 14,
-                  //       ),
-                  //     ),
-                  //     const SizedBox(width: 75), // Spacer untuk keseimbangan
-                  //     const SizedBox(width: 75),
-                  //   ],
-                  // ),
                   Column(
                     children: [
-                      // Bagian atas: Time Off, Reimbursement, History
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment
-                      //       .spaceAround, // Membuat jarak rata antar shortcut
-                      //   children: [
-                      //     _buildMenuShortcut(
-                      //       label: 'Time Off',
-                      //       targetPage: const TimeOffScreen(),
-                      //       bgColor: const Color.fromRGBO(101, 19, 116, 1),
-                      //       imagePath: 'assets/icon/timeoff.png',
-                      //       iconColor: Colors.white,
-                      //       iconSize: 32,
-                      //       labelStyle: const TextStyle(
-                      //         color: Colors.pink,
-                      //         fontSize: 14,
-                      //       ),
-                      //     ),
-                      //     _buildMenuShortcut(
-                      //       label: 'Reimbursement',
-                      //       targetPage: const ReimbursementPage(),
-                      //       bgColor: const Color.fromARGB(255, 101, 19, 116),
-                      //       iconData: Icons.receipt,
-                      //       iconColor: Colors.white,
-                      //       iconSize: 30,
-                      //       labelStyle: const TextStyle(
-                      //         color: Colors.pink,
-                      //         fontSize: 14,
-                      //       ),
-                      //     ),
-                      //     _buildMenuShortcut(
-                      //       label: 'History',
-                      //       targetPage: const HistoryScreen(),
-                      //       bgColor: const Color.fromARGB(255, 101, 19, 116),
-                      //       imagePath: 'assets/icon/history.png',
-                      //       iconColor: Colors.white,
-                      //       iconSize: 26,
-                      //       labelStyle: const TextStyle(
-                      //         color: Colors.pink,
-                      //         fontSize: 14,
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
-
-                      // const SizedBox(height: 20), // Spasi antara dua bagian
-
-                      // // Bagian bawah: Request WFA di bawah Time Off
-                      // Align(
-                      //   alignment: Alignment
-                      //       .centerLeft, // Biar Request WFA sejajar dengan Time Off
-
-                      //   child: _buildMenuShortcut(
-                      //     label: 'Request WFA',
-                      //     targetPage: ClockinwfaPage(),
-                      //     bgColor: const Color.fromRGBO(101, 19, 116, 1),
-                      //     imagePath: 'assets/icon/WFA.png',
-                      //     iconColor: Colors.white,
-                      //     iconSize: 32,
-                      //     labelStyle: const TextStyle(
-                      //       color: Colors.pink,
-                      //       fontSize: 14,
-                      //     ),
-                      //   ),
-                      // ),
-
                       Column(
                         children: [
                           // Bagian atas (Time Off, Reimbursement, History)
@@ -1878,7 +1338,6 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                   ),
-
                   const SizedBox(height: 20),
                   // Note Section
                   Padding(
@@ -1922,20 +1381,7 @@ class _HomePageState extends State<HomePage> {
                                 ElevatedButton(
                                   onPressed: () async {
                                     if (isWFARequested) {
-                                      // Jika sudah mengajukan WFA, langsung masuk ke halaman Clock In
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ClockInPage(),
-                                        ),
-                                      );
-                                      if (result == true) {
-                                        setState(() {
-                                          hasClockedIn = true;
-                                          hasClockedOut = false;
-                                        });
-                                      }
+                                      _showClockInPopupWFA(context);
                                     } else if (jarak) {
                                       _showClockInPopup(
                                           context); // Jika user di luar kantor, tampilkan pop-up
