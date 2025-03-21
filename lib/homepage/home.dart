@@ -545,8 +545,10 @@ class _HomePageState extends State<HomePage> {
           hasClockedIn = clockInData['message'] != 'belum clock-in';
           if (hasClockedIn) {
             showNote = false;
-            isholiday = clockInData['data']['attendance_status_id'] == 5;
-            isSuccess = !isholiday; // Clock-in berhasil sebelum jam 8
+            isholiday = false;
+            //  clockInData['data']['attendance_status_id'] == 5;
+            isSuccess = true; // Clock-in berhasil sebelum jam 8
+            isovertime = false;
           }
         });
       }
@@ -599,13 +601,18 @@ class _HomePageState extends State<HomePage> {
 
       var cutiData =
           await ApiService.sendRequest(endpoint: 'attendance/is-cuti');
-      if (cutiData != null && cutiData['message'] == 'sedang cuti') {
+      if (cutiData != null
+          // && cutiData['message'] == 'sedang cuti'
+          ) {
         setState(() {
-          hasCuti = true;
-          showNote = false;
-          isholiday = true;
-          isSuccess = false;
-          isovertime = false;
+          // hasCuti = true;
+          hasCuti = cutiData['message'] != 'belum clock-in';
+          if (hasCuti) {
+            showNote = false;
+            isholiday = true;
+            isSuccess = false;
+            isovertime = false;
+          }
         });
       } else {
         setState(() {
