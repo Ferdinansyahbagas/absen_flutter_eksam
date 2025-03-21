@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "722975212095",
-    "project_id": "absensi-eksam",
-    "storage_bucket": "absensi-eksam.firebasestorage.app"
+    "project_number": "288980404325",
+    "project_id": "eksam-att",
+    "storage_bucket": "eksam-att.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:722975212095:android:169bf23d0e952b725f6e8a",
+        "mobilesdk_app_id": "1:288980404325:android:138147859644e0296b1e8c",
         "android_client_info": {
           "package_name": "id.eksam.absensi_eksam"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBx_5_gaRhmnEFCoudRWSf5ThTiipSTFTg"
+          "current_key": "AIzaSyBwSfAJoMFkAvqV9iYwrezX-JU-8El8kMc"
         }
       ],
       "services": {
