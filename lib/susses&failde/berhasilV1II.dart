@@ -4,6 +4,7 @@ import 'package:absen/homepage/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // Package to format the date and time
+import 'dart:convert';
 
 class SuccessPageII extends StatefulWidget {
   const SuccessPageII({super.key});
@@ -13,7 +14,7 @@ class SuccessPageII extends StatefulWidget {
 }
 
 class _SuccessPageIIState extends State<SuccessPageII> {
-  String? datetime;
+  String datetime = ''; 
 
   @override
   void initState() {
@@ -22,19 +23,20 @@ class _SuccessPageIIState extends State<SuccessPageII> {
   }
 
   Future<void> getData() async {
-    final url = Uri.parse('https://portal.eksam.cloud/api/v1/get-time');
-    var request = http.MultipartRequest('GET', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
-
     try {
+      final url = Uri.parse('https://portal.eksam.cloud/api/v1/get-time');
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
       if (rp.statusCode == 200) {
         setState(() {
-          datetime.toString;
+          datetime = data['data']['time'];
         });
       } else {
         print('Error fetching history data: ${rp.statusCode}');
@@ -105,7 +107,7 @@ class _SuccessPageIIState extends State<SuccessPageII> {
                 ),
               ),
               Text(
-                datetime.toString(),
+                datetime,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

@@ -867,29 +867,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _logout(BuildContext context) async {
-//       final prefs = await SharedPreferences.getInstance();
-
-//   // Hapus token dan device_id dari SharedPreferences
-//   await prefs.remove('token');
-//   await prefs.remove('device_id');
-
-//   // Pindah ke halaman login tanpa bisa kembali ke Home
-//   Navigator.pushAndRemoveUntil(
-//     context,
-//     MaterialPageRoute(builder: (context) => const LoginScreen()),
-//     (route) => false,
-//   );
-// }
-    // Hapus token dari SharedPreferences
+    // Hapus token dan device_id dari SharedPreferences
     await Preferences.clearToken();
+    await Preferences.clearDeviceId();
 
-    // Navigasi kembali ke WelcomeScreen
+    // Pindah ke halaman login tanpa bisa kembali ke Home
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),
       (route) => false,
     );
   }
+  // Hapus token dari SharedPreferences
+  //   await Preferences.clearToken();
+
+  //   // Navigasi kembali ke WelcomeScreen
+  //   Navigator.pushAndRemoveUntil(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => const LoginScreen()),
+  //     (route) => false,
+  //   );
+  // }
 
   final TextStyle titleStyle =
       const TextStyle(fontSize: 14, color: Colors.black54);

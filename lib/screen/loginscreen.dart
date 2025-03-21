@@ -6,6 +6,7 @@ import 'package:absen/utils/preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -65,6 +66,8 @@ class _LoginScreenState extends State<LoginScreen> {
         // Simpan token Firebase
         saveFirebaseToken();
 
+        saveDeviceId(); // Kirim Device ID setelah login
+
         // Pindah ke halaman Home
         Navigator.pushAndRemoveUntil(
           context,
@@ -82,6 +85,43 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = false;
         _errorMessage = "Terjadi kesalahan. Coba lagi nanti.";
       });
+    }
+  }
+
+  void saveDeviceId() async {
+    String? userToken = await Preferences.getToken();
+
+    if (userToken == null) return;
+
+    try {
+      // Ambil device ID
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      String deviceId;
+
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+        deviceId = androidInfo.id; // ID perangkat Android
+      } else {
+        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+        deviceId = iosInfo.identifierForVendor ?? "Unknown"; // ID perangkat iOS
+      }
+
+      final response = await http.post(
+        Uri.parse('https://portal.eksam.cloud/api/v1/other/send-device-id'),
+        headers: {
+          'Authorization': 'Bearer $userToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'device_id': deviceId}),
+      );
+
+      if (response.statusCode == 200) {
+        print("Device ID berhasil dikirim!");
+      } else {
+        print("Gagal mengirim Device ID: ${response.body}");
+      }
+    } catch (e) {
+      print("Error mengirim Device ID: $e");
     }
   }
 
@@ -168,7 +208,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
-                    errorText: _isPasswordValid ? null : 'Password minimal 6 karakter',
+                    errorText:
+                        _isPasswordValid ? null : 'Password minimal 6 karakter',
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showPassword ? Icons.visibility : Icons.visibility_off,

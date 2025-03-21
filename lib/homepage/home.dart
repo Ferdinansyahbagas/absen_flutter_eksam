@@ -560,11 +560,13 @@ class _HomePageState extends State<HomePage> {
         });
       }
       // Cek status clock-out-lupa
-      var clockOutlupaData =
-          await ApiService.sendRequest(endpoint: 'attendance/is-clock-out');
-      if (clockOutlupaData != null) {
+      var clockOutLupaData = await ApiService.sendRequest(
+          endpoint: 'attendance/is-lupa'); // Ganti endpoint jika perlu
+
+      if (clockOutLupaData != null && clockOutLupaData['lupa'] != null) {
         setState(() {
-          isLupaClockOut = clockOutlupaData['data']['lupa'];
+          isLupaClockOut =
+              clockOutLupaData['lupa']; // true jika lupa, false jika tidak
         });
       }
 
@@ -763,35 +765,38 @@ class _HomePageState extends State<HomePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               ElevatedButton.icon(
-                                onPressed: (hasClockedIn || hasCuti)
-                                    ? null
-                                    : () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const ClockInPage(),
-                                          ),
-                                        );
-                                        if (result == true) {
-                                          setState(() {
-                                            hasClockedIn = true;
-                                            hasClockedOut = false;
-                                          });
-                                        }
-                                      },
+                                onPressed:
+                                    (hasClockedIn || hasCuti) && !isLupaClockOut
+                                        ? null
+                                        : () async {
+                                            final result = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const ClockInPage(),
+                                              ),
+                                            );
+                                            if (result == true) {
+                                              setState(() {
+                                                hasClockedIn = true;
+                                                hasClockedOut = false;
+                                              });
+                                            }
+                                          },
                                 icon: const Icon(Icons.login),
                                 label: const Text('Clock In'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: (hasClockedIn || hasCuti)
+                                  backgroundColor: (hasClockedIn || hasCuti) &&
+                                          !isLupaClockOut
                                       ? Colors.grey
                                       : Colors.white,
                                 ),
                               ),
                               ElevatedButton.icon(
                                 onPressed: (hasClockedIn &&
-                                        !hasClockedOut &&
-                                        !hasCuti)
+                                            !hasClockedOut &&
+                                            !hasCuti) ||
+                                        isLupaClockOut
                                     ? () async {
                                         final result = await Navigator.push(
                                           context,
@@ -823,8 +828,9 @@ class _HomePageState extends State<HomePage> {
                                 label: const Text('Clock Out'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: (hasClockedIn &&
-                                          !hasClockedOut &&
-                                          !hasCuti)
+                                              !hasClockedOut &&
+                                              !hasCuti) ||
+                                          isLupaClockOut
                                       ? Colors.white
                                       : Colors.grey,
                                 ),
@@ -889,7 +895,8 @@ class _HomePageState extends State<HomePage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       ElevatedButton.icon(
-                                        onPressed: (hasClockedIn || hasCuti)
+                                        onPressed: (hasClockedIn || hasCuti) &&
+                                                !isLupaClockOut
                                             ? null
                                             : () async {
                                                 if (isWFARequested) {
@@ -919,15 +926,17 @@ class _HomePageState extends State<HomePage> {
                                         label: const Text('Clock In'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
-                                              (hasClockedIn || hasCuti)
+                                              (hasClockedIn || hasCuti) &&
+                                                      !isLupaClockOut
                                                   ? Colors.grey
                                                   : Colors.white,
                                         ),
                                       ),
                                       ElevatedButton.icon(
                                         onPressed: (hasClockedIn &&
-                                                !hasClockedOut &&
-                                                !hasCuti)
+                                                    !hasClockedOut &&
+                                                    !hasCuti) ||
+                                                isLupaClockOut
                                             ? () async {
                                                 final result =
                                                     await Navigator.push(
@@ -949,8 +958,9 @@ class _HomePageState extends State<HomePage> {
                                         label: const Text('Clock Out'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: (hasClockedIn &&
-                                                  !hasClockedOut &&
-                                                  !hasCuti)
+                                                      !hasClockedOut &&
+                                                      !hasCuti) ||
+                                                  isLupaClockOut
                                               ? Colors.white
                                               : Colors.grey,
                                         ),
@@ -966,7 +976,8 @@ class _HomePageState extends State<HomePage> {
                                     children: [
                                       ElevatedButton.icon(
                                         onPressed: (hasClockedInOvertime ||
-                                                hasCuti)
+                                                    hasCuti) &&
+                                                !isLupaClockOut
                                             ? null
                                             : () async {
                                                 final result =
@@ -989,15 +1000,18 @@ class _HomePageState extends State<HomePage> {
                                         label: const Text('Overtime In'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
-                                              (hasClockedInOvertime || hasCuti)
+                                              (hasClockedInOvertime ||
+                                                          hasCuti) &&
+                                                      !isLupaClockOut
                                                   ? Colors.grey
                                                   : Colors.white,
                                         ),
                                       ),
                                       ElevatedButton.icon(
                                         onPressed: (hasClockedInOvertime &&
-                                                !hasClockedOutOvertime &&
-                                                !hasCuti)
+                                                    !hasClockedOutOvertime &&
+                                                    !hasCuti) ||
+                                                isLupaClockOut
                                             ? () async {
                                                 final result =
                                                     await Navigator.push(
@@ -1020,12 +1034,12 @@ class _HomePageState extends State<HomePage> {
                                         icon: const Icon(Icons.timer_off),
                                         label: const Text('Overtime Out'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              (hasClockedInOvertime &&
+                                          backgroundColor: (hasClockedInOvertime &&
                                                       !hasClockedOutOvertime &&
-                                                      !hasCuti)
-                                                  ? Colors.white
-                                                  : Colors.grey,
+                                                      !hasCuti) ||
+                                                  isLupaClockOut
+                                              ? Colors.white
+                                              : Colors.grey,
                                         ),
                                       ),
                                     ],
