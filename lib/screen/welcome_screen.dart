@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'loginscreen.dart';
 import 'package:absen/utils/preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -11,21 +13,59 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  bool _hasToken = false;
+  // bool _hasToken = false;
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _checkToken();
+  // }
+
+  // void _checkToken() async {
+  //   String? token = await Preferences.getToken();
+  //   if (token != null) {
+  //     // Jika token tersedia, set state
+  //     setState(() {
+  //       _hasToken = true;
+  //     });
+  //   }
+  // }
+
+  bool _hasDeviceId = false;
 
   @override
   void initState() {
     super.initState();
-    _checkToken();
+    _checkDeviceId();
   }
 
-  void _checkToken() async {
-    String? token = await Preferences.getToken();
-    if (token != null) {
-      // Jika token tersedia, set state
-      setState(() {
-        _hasToken = true;
-      });
+  // ✅ Cek apakah device ID tersedia di API
+  void _checkDeviceId() async {
+    String? token = await Preferences.getToken(); // Ambil token dari storage
+
+    try {
+      final response = await http.get(
+        Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profil'),
+        headers: {
+          'Authorization': 'Bearer $token', // Kirim token di header
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        bool hasDeviceId = data['device_id'] != null;
+
+        setState(() {
+          _hasDeviceId = hasDeviceId;
+        });
+
+        print("✅ Device ID ditemukan: ${data['device_id']}");
+      } else {
+        print("⚠️ Gagal mendapatkan Device ID: ${response.body}");
+      }
+    } catch (e) {
+      print("❌ Error mendapatkan Device ID: $e");
     }
   }
 
@@ -81,7 +121,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (_hasToken) {
+                    if (_hasDeviceId) {
                       // Jika token ada, langsung ke HomePage
                       Navigator.pushReplacement(
                         context,

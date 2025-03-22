@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
     _getCurrentLocation();
     getData();
     getPengumuman();
-    _startClock(); // Memulai timer untuk jam
+    startClock(); // Memulai timer untuk jam
     getcancelwfh();
     getcekwfh();
     getNotif();
@@ -86,10 +86,9 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Fungsi untuk memulai jam dan memperbaruinya setiap detik
-  void _startClock() {
-    _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+  // Fungsi untuk memperbarui jam setiap detik
+  void startClock() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       setState(() {
         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
       });
@@ -599,26 +598,26 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
-      var cutiData =
-          await ApiService.sendRequest(endpoint: 'attendance/is-cuti');
-      if (cutiData != null
-          // && cutiData['message'] == 'sedang cuti'
-          ) {
-        setState(() {
-          // hasCuti = true;
-          hasCuti = cutiData['message'] != 'belum clock-in';
-          if (hasCuti) {
-            showNote = false;
-            isholiday = true;
-            isSuccess = false;
-            isovertime = false;
-          }
-        });
-      } else {
-        setState(() {
-          hasCuti = false;
-        });
-      }
+      //     var cutiData =
+      //         await ApiService.sendRequest(endpoint: 'attendance/is-cuti');
+      //     if (cutiData != null
+      //         // && cutiData['message'] == 'sedang cuti'
+      //         ) {
+      //       setState(() {
+      //         // hasCuti = true;
+      //         hasCuti = cutiData['message'] != 'sedang cuti';
+      //         if (hasCuti) {
+      //           showNote = false;
+      //           isholiday = true;
+      //           isSuccess = false;
+      //           isovertime = false;
+      //         }
+      //       });
+      //     } else {
+      //       setState(() {
+      //         hasCuti = false;
+      //       });
+      //     }
     } catch (e) {
       print("Error saat cek cuti: $e");
     }
@@ -767,7 +766,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (userStatus == "3" && !hasCuti) ...[
+                        if (userStatus == "3") ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -846,8 +845,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ] else if
                             // hasClockedOut &&
-                            (userStatus == "1" ||
-                                userStatus == "2" && !hasCuti) ...[
+                            (userStatus == "1" || userStatus == "2") ...[
                           if (isWFHRequested) ...[
                             // Jika user level 1 atau 2 telah request WFH
                             Row(

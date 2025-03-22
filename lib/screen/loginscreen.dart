@@ -7,6 +7,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/service/api_service.dart'; // Import ApiService
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -126,30 +128,33 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void saveFirebaseToken() async {
-    String? fcmToken = await FirebaseMessaging.instance.getToken();
-    String? userToken = await Preferences.getToken();
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    String? token = await messaging.getToken();
 
-    if (fcmToken != null && userToken != null) {
-      try {
-        final response = await http.post(
-          Uri.parse('https://portal.eksam.cloud/api/v1/auth/save-token'),
-          headers: {
-            'Authorization': 'Bearer $userToken',
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({'firebase_token': fcmToken}),
-        );
+    if (token != null) {
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      await localStorage.setString('firebase_token', token);
+      gettoken();
+    }
+  }
 
-        if (response.statusCode == 200) {
-          print("FCM Token berhasil disimpan!");
-        } else {
-          print("Gagal menyimpan FCM Token: ${response.body}");
-        }
-      } catch (e) {
-        print("Error menyimpan FCM Token: $e");
-      }
-    } else {
-      print("FCM Token atau User Token tidak tersedia");
+  Future<void> gettoken() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('firebase_token');
+
+    if (token == null || token.isEmpty) {
+      print("Token Firebase tidak ditemukan!");
+      return;
+    }
+
+    var response = await ApiService.sendRequest(
+      endpoint: "other/send-token",
+      method: 'POST',
+      body: {'firebase_token': token},
+    );
+
+    if (response != null) {
+      print("Token Firebase berhasil dikirim: $token");
     }
   }
 
