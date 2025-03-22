@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'loginscreen.dart';
-import 'package:absen/utils/preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -31,7 +31,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   //   }
   // }
 
-  bool _hasDeviceId = false;
+  String? _hasDeviceId;
 
   @override
   void initState() {
@@ -39,33 +39,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     _checkDeviceId();
   }
 
-  // ✅ Cek apakah device ID tersedia di API
-  void _checkDeviceId() async {
-    String? token = await Preferences.getToken(); // Ambil token dari storage
-
+  Future<void> _checkDeviceId() async {
     try {
-      final response = await http.get(
-        Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profil'),
-        headers: {
-          'Authorization': 'Bearer $token', // Kirim token di header
-          'Content-Type': 'application/json',
-        },
-      );
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        bool hasDeviceId = data['device_id'] != null;
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
 
-        setState(() {
-          _hasDeviceId = hasDeviceId;
-        });
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
 
-        print("✅ Device ID ditemukan: ${data['device_id']}");
-      } else {
-        print("⚠️ Gagal mendapatkan Device ID: ${response.body}");
-      }
+      setState(() {
+        print(data['data']['device_id']);
+        print(_hasDeviceId);
+        _hasDeviceId = data['data']['device_id'];
+      });
+
+      print("Profil pengguna: ${data['data']}");
     } catch (e) {
-      print("❌ Error mendapatkan Device ID: $e");
+      print("Error mengambil profil pengguna: $e");
     }
   }
 
@@ -121,7 +117,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (_hasDeviceId) {
+                    if (_hasDeviceId != null) {
                       // Jika token ada, langsung ke HomePage
                       Navigator.pushReplacement(
                         context,

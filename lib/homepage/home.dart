@@ -14,7 +14,6 @@ import 'package:http/http.dart' as http; // menyambungakan ke API
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
-import 'package:absen/utils/preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -37,7 +36,6 @@ class _HomePageState extends State<HomePage> {
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
   String? userStatus;
   String? wfhId; // Simpan ID WFH jika ada
-  String? _token;
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
@@ -70,25 +68,32 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _getCurrentLocation();
-    getData();
-    getPengumuman();
-    startClock(); // Memulai timer untuk jam
-    getcancelwfh();
-    getcekwfh();
-    getNotif();
-    getcekwfa();
-    saveFirebaseToken();
-    gettoken(); // Kirim token ke server setelah disimpan
+    _startClock(); // Memulai timer untuk jam
+    Future.delayed(Duration(milliseconds: 500), () {
+      getData(); // Panggil API setelah sedikit delay
+      getPengumuman();
+      getcancelwfh();
+      getcekwfh();
+      getNotif();
+      getcekwfa();
+      saveFirebaseToken();
+      gettoken(); // Kirim token ke server setelah disimpan
+    });
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page!.round();
       });
     });
+    print(_startClock);
   }
 
-  // Fungsi untuk memperbarui jam setiap detik
-  void startClock() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+// Fungsi untuk memperbarui waktu setiap detik
+  void _startClock() {
+    _timer?.cancel(); // Pastikan timer lama dihentikan sebelum buat baru
+    _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
+
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      if (!mounted) return; // Cegah update jika widget sudah dihapus
       setState(() {
         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
       });
@@ -297,6 +302,8 @@ class _HomePageState extends State<HomePage> {
 
 // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     var data =
         await ApiService.sendRequest(endpoint: "other/get-self-notification");
     if (data == null || data['data'] == null) return;
@@ -330,6 +337,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> putRead(int id) async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     var response = await ApiService.sendRequest(
         endpoint: "other/read-notification/$id", method: 'PUT');
     if (response != null) {
@@ -346,6 +355,8 @@ class _HomePageState extends State<HomePage> {
   //notif read sampai sini
 
   Future<void> getPengumuman() async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     var data = await ApiService.sendRequest(endpoint: "other/get-th");
     if (data == null) return;
 
@@ -383,6 +394,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void saveFirebaseToken() async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     FirebaseMessaging messaging = FirebaseMessaging.instance;
     String? token = await messaging.getToken();
 
@@ -414,6 +427,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> getcekwfa() async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     var data =
         await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
 
@@ -435,6 +450,8 @@ class _HomePageState extends State<HomePage> {
 
   // Fungsi untuk cek status WFH
   Future<void> getcekwfh() async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     var data = await ApiService.sendRequest(endpoint: 'attendance/is-wfh');
 
     if (data != null && data['message'] == 'User mengajukan WFH') {
@@ -452,6 +469,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<bool> getcancelwfh() async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     if (wfhId == null) {
       print("Gagal membatalkan WFH: wfhId tidak ditemukan");
       return false;
@@ -502,6 +521,9 @@ class _HomePageState extends State<HomePage> {
 
   // Fungsi untuk mengambil data dari API
   Future<void> getData() async {
+    await Future.delayed(
+        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
+
     try {
       // Ambil lokasi user
       Position position = await Geolocator.getCurrentPosition(
@@ -545,7 +567,7 @@ class _HomePageState extends State<HomePage> {
           if (hasClockedIn) {
             showNote = false;
             isholiday = false;
-            //  clockInData['data']['attendance_status_id'] == 5;
+            clockInData['data']['attendance_status_id'] == 5;
             isSuccess = true; // Clock-in berhasil sebelum jam 8
             isovertime = false;
           }
@@ -771,38 +793,32 @@ class _HomePageState extends State<HomePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               ElevatedButton.icon(
-                                onPressed:
-                                    (hasClockedIn || hasCuti) && !isLupaClockOut
-                                        ? null
-                                        : () async {
-                                            final result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const ClockInPage(),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              setState(() {
-                                                hasClockedIn = true;
-                                                hasClockedOut = false;
-                                              });
-                                            }
-                                          },
+                                onPressed: (hasClockedIn)
+                                    ? null
+                                    : () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ClockInPage(),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          setState(() {
+                                            hasClockedIn = true;
+                                            hasClockedOut = false;
+                                          });
+                                        }
+                                      },
                                 icon: const Icon(Icons.login),
                                 label: const Text('Clock In'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: (hasClockedIn || hasCuti) &&
-                                          !isLupaClockOut
-                                      ? Colors.grey
-                                      : Colors.white,
+                                  backgroundColor:
+                                      hasClockedIn ? Colors.grey : Colors.white,
                                 ),
                               ),
                               ElevatedButton.icon(
-                                onPressed: (hasClockedIn &&
-                                            !hasClockedOut &&
-                                            !hasCuti) ||
-                                        isLupaClockOut
+                                onPressed: (hasClockedIn && !hasClockedOut)
                                     ? () async {
                                         final result = await Navigator.push(
                                           context,
@@ -833,12 +849,10 @@ class _HomePageState extends State<HomePage> {
                                 icon: const Icon(Icons.logout),
                                 label: const Text('Clock Out'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: (hasClockedIn &&
-                                              !hasClockedOut &&
-                                              !hasCuti) ||
-                                          isLupaClockOut
-                                      ? Colors.white
-                                      : Colors.grey,
+                                  backgroundColor:
+                                      (hasClockedIn && !hasClockedOut)
+                                          ? Colors.white
+                                          : Colors.grey,
                                 ),
                               ),
                             ],
@@ -862,28 +876,24 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed: hasCuti
-                                      ? null
-                                      : () async {
-                                          final success =
-                                              await getcancelwfh(); // Fungsi untuk membatalkan WFH
-                                          if (success) {
-                                            setState(() {
-                                              isWFHRequested = false;
-                                              hasClockedIn =
-                                                  false; // Clock In aktif kembali
-                                              hasClockedInOvertime = false;
-                                              hasClockedOutOvertime = false;
-                                              hasClockedOut =
-                                                  false; // Clock Out mati
-                                            });
-                                          }
-                                        },
+                                  onPressed: () async {
+                                    final success =
+                                        await getcancelwfh(); // Fungsi untuk membatalkan WFH
+                                    if (success) {
+                                      setState(() {
+                                        isWFHRequested = false;
+                                        hasClockedIn =
+                                            false; // Clock In aktif kembali
+                                        hasClockedInOvertime = false;
+                                        hasClockedOutOvertime = false;
+                                        hasClockedOut = false; // Clock Out mati
+                                      });
+                                    }
+                                  },
                                   icon: const Icon(Icons.cancel),
                                   label: const Text('Batalkan'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        hasCuti ? Colors.grey : Colors.red,
+                                    backgroundColor: Colors.red,
                                     foregroundColor: Colors.white,
                                   ),
                                 ),
@@ -900,8 +910,7 @@ class _HomePageState extends State<HomePage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       ElevatedButton.icon(
-                                        onPressed: (hasClockedIn || hasCuti) &&
-                                                !isLupaClockOut
+                                        onPressed: hasClockedIn
                                             ? null
                                             : () async {
                                                 if (isWFARequested) {
@@ -930,44 +939,38 @@ class _HomePageState extends State<HomePage> {
                                         icon: const Icon(Icons.login),
                                         label: const Text('Clock In'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              (hasClockedIn || hasCuti) &&
-                                                      !isLupaClockOut
-                                                  ? Colors.grey
-                                                  : Colors.white,
+                                          backgroundColor: hasClockedIn
+                                              ? Colors.grey
+                                              : Colors.white,
                                         ),
                                       ),
                                       ElevatedButton.icon(
-                                        onPressed: (hasClockedIn &&
-                                                    !hasClockedOut &&
-                                                    !hasCuti) ||
-                                                isLupaClockOut
-                                            ? () async {
-                                                final result =
-                                                    await Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const ClockOutScreen(),
-                                                  ),
-                                                );
-                                                if (result == true) {
-                                                  setState(() {
-                                                    hasClockedOut = true;
-                                                    hasClockedIn = false;
-                                                  });
-                                                }
-                                              }
-                                            : null,
+                                        onPressed:
+                                            (hasClockedIn && !hasClockedOut)
+                                                ? () async {
+                                                    final result =
+                                                        await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const ClockOutScreen(),
+                                                      ),
+                                                    );
+                                                    if (result == true) {
+                                                      setState(() {
+                                                        hasClockedOut = true;
+                                                        hasClockedIn = false;
+                                                      });
+                                                    }
+                                                  }
+                                                : null,
                                         icon: const Icon(Icons.logout),
                                         label: const Text('Clock Out'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: (hasClockedIn &&
-                                                      !hasClockedOut &&
-                                                      !hasCuti) ||
-                                                  isLupaClockOut
-                                              ? Colors.white
-                                              : Colors.grey,
+                                          backgroundColor:
+                                              (hasClockedIn && !hasClockedOut)
+                                                  ? Colors.white
+                                                  : Colors.grey,
                                         ),
                                       ),
                                     ],
@@ -980,9 +983,7 @@ class _HomePageState extends State<HomePage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       ElevatedButton.icon(
-                                        onPressed: (hasClockedInOvertime ||
-                                                    hasCuti) &&
-                                                !isLupaClockOut
+                                        onPressed: hasClockedInOvertime
                                             ? null
                                             : () async {
                                                 final result =
@@ -1004,19 +1005,14 @@ class _HomePageState extends State<HomePage> {
                                         icon: const Icon(Icons.timer),
                                         label: const Text('Overtime In'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              (hasClockedInOvertime ||
-                                                          hasCuti) &&
-                                                      !isLupaClockOut
-                                                  ? Colors.grey
-                                                  : Colors.white,
+                                          backgroundColor: hasClockedInOvertime
+                                              ? Colors.grey
+                                              : Colors.white,
                                         ),
                                       ),
                                       ElevatedButton.icon(
                                         onPressed: (hasClockedInOvertime &&
-                                                    !hasClockedOutOvertime &&
-                                                    !hasCuti) ||
-                                                isLupaClockOut
+                                                !hasClockedOutOvertime)
                                             ? () async {
                                                 final result =
                                                     await Navigator.push(
@@ -1039,12 +1035,11 @@ class _HomePageState extends State<HomePage> {
                                         icon: const Icon(Icons.timer_off),
                                         label: const Text('Overtime Out'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: (hasClockedInOvertime &&
-                                                      !hasClockedOutOvertime &&
-                                                      !hasCuti) ||
-                                                  isLupaClockOut
-                                              ? Colors.white
-                                              : Colors.grey,
+                                          backgroundColor:
+                                              (hasClockedInOvertime &&
+                                                      !hasClockedOutOvertime)
+                                                  ? Colors.white
+                                                  : Colors.grey,
                                         ),
                                       ),
                                     ],

@@ -26,6 +26,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    saveFirebaseToken();
+    gettoken(); // Kirim token ke server setelah disimpan
+  }
+
   void _togglePasswordVisibility() {
     setState(() {
       _showPassword = !_showPassword;
