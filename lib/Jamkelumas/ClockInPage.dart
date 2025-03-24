@@ -125,8 +125,8 @@ class _ClockInPageState extends State<ClockInPage> {
 
           if (distance > 500) {
             // Jika lebih dari 500 meter, hanya munculkan WFH
-            workplaceTypes = ['WFH'];
-            _selectedWorkplaceType = 'WFH';
+            workplaceTypes = ['WFA'];
+            _selectedWorkplaceType = 'WFA';
           } else {
             // Jika kurang dari 500 meter, munculkan semua opsi
             workplaceTypes
@@ -312,6 +312,8 @@ class _ClockInPageState extends State<ClockInPage> {
       );
       return;
     }
+
+    
 
     // Show loading dialog
     showDialog(
