@@ -8,9 +8,7 @@ import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clockou
 import 'package:absen/Jamkelumas/Clockinwfa.dart';
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
 import 'dart:async'; // Untuk timer
-import 'dart:convert';
 import 'package:intl/intl.dart'; //unntuk format tanggal
-import 'package:http/http.dart' as http; // menyambungakan ke API
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
@@ -50,6 +48,7 @@ class _HomePageState extends State<HomePage> {
   bool isLupaClockOut = false; //status lupa clock out
   bool hasClockedInOvertime = false; // Status clock-in lembur
   bool hasClockedOutOvertime = false; // Status clock-out lembur
+  bool hasholiday = false; //status untuk libur holiday
   bool isCuti = false; // Status untuk menampilkan card cuti
   bool showNote = true; // Status untuk menampilkan note
   bool isSuccess = false; // Status untuk menampilkan card berhasil absen
@@ -59,6 +58,8 @@ class _HomePageState extends State<HomePage> {
   bool isWFHRequested = false; //status mengajukan WFH
   bool isWFARequested = false; //status pengajuan WFA
   bool jarak = false;
+  bool _isApiLoaded = false; // Status apakah API sudah selesai dimuat
+
   bool hasUnreadNotifications =
       false; //Status untuk melihat notifikasi sudah di baca atau belum
   List<dynamic> notifications = []; //variabel noifiaksi
@@ -72,8 +73,7 @@ class _HomePageState extends State<HomePage> {
     Future.delayed(Duration(milliseconds: 500), () {
       getData(); // Panggil API setelah sedikit delay
       getPengumuman();
-      getcancelwfh();
-      getcekwfh();
+     
       getNotif();
       getcekwfa();
       saveFirebaseToken();
@@ -98,37 +98,6 @@ class _HomePageState extends State<HomePage> {
         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
       });
     });
-  }
-
-  void _showClockInPopup(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Konfirmasi Clock In"),
-          content:
-              const Text("Lokasi Anda tidak dalam radius kantor. Ajukan WFH? "),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Tutup pop-up
-              },
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Tutup pop-up
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ClockInPage()),
-                );
-              },
-              child: const Text("Ajukan WFH"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _showClockInPopupWFA(BuildContext context) {
@@ -302,8 +271,11 @@ class _HomePageState extends State<HomePage> {
 
 // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
+    await Future.delayed(const Duration(seconds: 3)); // Simulasi loading API
+    setState(() {
+      _isApiLoaded = true; // API selesai dimuat
+    });
+    _startClock(); // Mulai jam setelah API selesai
     var data =
         await ApiService.sendRequest(endpoint: "other/get-self-notification");
     if (data == null || data['data'] == null) return;
@@ -337,8 +309,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> putRead(int id) async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
+    await Future.delayed(const Duration(seconds: 3)); // Simulasi loading API
+    setState(() {
+      _isApiLoaded = true; // API selesai dimuat
+    });
+    _startClock(); // Mulai jam setelah API selesai
     var response = await ApiService.sendRequest(
         endpoint: "other/read-notification/$id", method: 'PUT');
     if (response != null) {
@@ -355,8 +330,11 @@ class _HomePageState extends State<HomePage> {
   //notif read sampai sini
 
   Future<void> getPengumuman() async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
+    await Future.delayed(const Duration(seconds: 3)); // Simulasi loading API
+    setState(() {
+      _isApiLoaded = true; // API selesai dimuat
+    });
+    _startClock(); // Mulai jam setelah API selesai
     var data = await ApiService.sendRequest(endpoint: "other/get-th");
     if (data == null) return;
 
@@ -427,16 +405,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> getcekwfa() async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
     var data =
         await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
 
     if (data != null && data['message'] == 'User sudah mengajukan WFA') {
       setState(() {
         isWFARequested = true;
-        showNote = false;
-        hasClockedIn = false;
         hasClockedOut = true;
         wfhId = data['data']['id'].toString();
       });
@@ -448,82 +422,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Fungsi untuk cek status WFH
-  Future<void> getcekwfh() async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
-    var data = await ApiService.sendRequest(endpoint: 'attendance/is-wfh');
-
-    if (data != null && data['message'] == 'User mengajukan WFH') {
-      setState(() {
-        isWFHRequested = true;
-        showNote = false;
-        wfhId = data['data']['id'].toString();
-      });
-    } else {
-      setState(() {
-        isWFHRequested = false;
-        wfhId = null;
-      });
-    }
-  }
-
-  Future<bool> getcancelwfh() async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
-    if (wfhId == null) {
-      print("Gagal membatalkan WFH: wfhId tidak ditemukan");
-      return false;
-    }
-
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/attendance/cancel-wfh/$wfhId');
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    var headers = {
-      'Authorization': 'Bearer ${localStorage.getString('token')}',
-      'Accept':
-          'application/json', // Tambahkan ini untuk memastikan format JSON
-    };
-
-    try {
-      var response = await http.delete(url, headers: headers);
-
-      // Debugging output
-      print("Response Status Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        print("Response API cancel-wfh: $data");
-
-        setState(() {
-          isWFHRequested = false;
-          wfhId = null;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('WFH berhasil dibatalkan'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        return true;
-      } else {
-        print("Gagal membatalkan WFH. Status Code: ${response.statusCode}");
-        print("Response Body: ${response.body}");
-        return false;
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-      return false;
-    }
-  }
-
   // Fungsi untuk mengambil data dari API
   Future<void> getData() async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
-
     try {
       // Ambil lokasi user
       Position position = await Geolocator.getCurrentPosition(
@@ -552,9 +452,17 @@ class _HomePageState extends State<HomePage> {
               userLatitude, userLongitude, officeLatitude, officeLongitude);
 
           print("Jarak dari kantor: $distance meter");
-          if (userStatus == "1" || userStatus == "2") {
-            jarak = distance > 500;
-          }
+         if (userStatus == "1" || userStatus == "2") {
+  if (!isWFARequested) { // Jika tidak request WFA, cek jarak
+    double distance = Geolocator.distanceBetween(
+      userLatitude, userLongitude, officeLatitude, officeLongitude
+    );
+    print("Jarak dari kantor: $distance meter");
+    jarak = distance > 500;
+  } else {
+    jarak = false; // Jika user request WFA, jarak tidak berjalan
+  }
+}
         });
       }
 
@@ -619,27 +527,21 @@ class _HomePageState extends State<HomePage> {
           });
         }
       }
+      // Cek status clock-out-lupa
+      var liburData = await ApiService.sendRequest(
+          endpoint: 'other/cek-libur'); // Ganti endpoint jika perlu
 
-      //     var cutiData =
-      //         await ApiService.sendRequest(endpoint: 'attendance/is-cuti');
-      //     if (cutiData != null
-      //         // && cutiData['message'] == 'sedang cuti'
-      //         ) {
-      //       setState(() {
-      //         // hasCuti = true;
-      //         hasCuti = cutiData['message'] != 'sedang cuti';
-      //         if (hasCuti) {
-      //           showNote = false;
-      //           isholiday = true;
-      //           isSuccess = false;
-      //           isovertime = false;
-      //         }
-      //       });
-      //     } else {
-      //       setState(() {
-      //         hasCuti = false;
-      //       });
-      //     }
+      if (liburData != null && liburData['libur'] != null) {
+        setState(() {
+          hasholiday = liburData['libur']; // true jika lupa, false jika tidak
+        });
+      }
+
+      // Setelah semua API selesai, baru mulai timer
+      setState(() {
+        _isApiLoaded = true;
+        _startClock(); // Mulai timer hanya setelah data selesai di-load
+      });
     } catch (e) {
       print("Error saat cek cuti: $e");
     }
@@ -860,46 +762,8 @@ class _HomePageState extends State<HomePage> {
                         ] else if
                             // hasClockedOut &&
                             (userStatus == "1" || userStatus == "2") ...[
-                          if (isWFHRequested) ...[
                             // Jika user level 1 atau 2 telah request WFH
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed:
-                                      null, // Tombol Pending selalu disabled
-                                  icon: const Icon(Icons.hourglass_empty),
-                                  label: const Text('Pending'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final success =
-                                        await getcancelwfh(); // Fungsi untuk membatalkan WFH
-                                    if (success) {
-                                      setState(() {
-                                        isWFHRequested = false;
-                                        hasClockedIn =
-                                            false; // Clock In aktif kembali
-                                        hasClockedInOvertime = false;
-                                        hasClockedOutOvertime = false;
-                                        hasClockedOut = false; // Clock Out mati
-                                      });
-                                    }
-                                  },
-                                  icon: const Icon(Icons.cancel),
-                                  label: const Text('Batalkan'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ] else ...[
+                        
                             // Jika belum request WFH, cek apakah sudah clock out
                             Column(
                               children: [
@@ -915,9 +779,6 @@ class _HomePageState extends State<HomePage> {
                                             : () async {
                                                 if (isWFARequested) {
                                                   _showClockInPopupWFA(context);
-                                                } else if (jarak) {
-                                                  _showClockInPopup(
-                                                      context); // Jika user di luar kantor, tampilkan pop-up
                                                 } else {
                                                   // Jika tidak WFH, langsung Clock In tanpa pop-up
                                                   final result =
@@ -1049,7 +910,6 @@ class _HomePageState extends State<HomePage> {
                             )
                           ]
                         ]
-                      ],
                     ),
                   ),
                 ],
@@ -1396,9 +1256,6 @@ class _HomePageState extends State<HomePage> {
                                   onPressed: () async {
                                     if (isWFARequested) {
                                       _showClockInPopupWFA(context);
-                                    } else if (jarak) {
-                                      _showClockInPopup(
-                                          context); // Jika user di luar kantor, tampilkan pop-up
                                     } else {
                                       Navigator.push(
                                         context,

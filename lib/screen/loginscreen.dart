@@ -145,23 +145,60 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Future<void> gettoken() async {
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   String? token = localStorage.getString('firebase_token');
+
+  //   if (token == null || token.isEmpty) {
+  //     print("Token Firebase tidak ditemukan!");
+  //     return;
+  //   }
+
+  //   var response = await ApiService.sendRequest(
+  //     endpoint: "other/send-token",
+  //     method: 'POST',
+  //     body: {'firebase_token': token},
+  //   );
+
+  //   if (response != null) {
+  //     print("Token Firebase berhasil dikirim: $token");
+  //   }
+  // }
+
   Future<void> gettoken() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
-    String? token = localStorage.getString('firebase_token');
+    String? tokenFirebase = localStorage.getString('firebase_token');
+    String? userToken =
+        await Preferences.getToken(); // Ambil token user dari SharedPreferences
 
-    if (token == null || token.isEmpty) {
+    if (tokenFirebase == null || tokenFirebase.isEmpty) {
       print("Token Firebase tidak ditemukan!");
       return;
     }
 
-    var response = await ApiService.sendRequest(
-      endpoint: "other/send-token",
-      method: 'POST',
-      body: {'firebase_token': token},
+    if (userToken == null) {
+      print("Token autentikasi tidak ditemukan!");
+      return;
+    }
+
+    // Kirim request dengan headers manual menggunakan http
+    var url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
+    var response = await http.post(
+      url,
+      headers: {
+        'Authorization':
+            'Bearer $userToken', // Authorization header untuk autentikasi
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'firebase_token': tokenFirebase, // Token Firebase yang ingin diupdate
+      }),
     );
 
-    if (response != null) {
-      print("Token Firebase berhasil dikirim: $token");
+    if (response.statusCode == 200) {
+      print("Token Firebase berhasil dikirim: $tokenFirebase");
+    } else {
+      print("Gagal mengirim token Firebase!");
     }
   }
 

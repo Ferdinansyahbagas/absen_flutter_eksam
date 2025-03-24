@@ -225,23 +225,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   // }
 
   Future<void> _submitData() async {
-    if (selectedDate == null || noteController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
-      );
-      return;
-    }
-
-    await getProfile(); // Pastikan limit WFH diperbarui sebelum submit
-
-    if (bataswfh == null || bataswfh == '0') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Failurebatascuti()),
-      );
-      return;
-    }
-
+  
     showDialog(
       context: context,
       barrierDismissible: false,
