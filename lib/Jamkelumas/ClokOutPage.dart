@@ -148,17 +148,17 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
         print("Jarak dari kantor: $distance meter");
 
-        if (distance > 500) {
-          // // Jika user memilih WFO dan jaraknya lebih dari 500m, pindah ke FailurePage
-          // Navigator.pushReplacement(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => const FailurePage()),
-          // );
-        } else {
-          setState(() {
-            isWithinRange = true;
-          });
-        }
+        // if (distance > 500) {
+        //   // // Jika user memilih WFO dan jaraknya lebih dari 500m, pindah ke FailurePage
+        //   // Navigator.pushReplacement(
+        //   //   context,
+        //   //   MaterialPageRoute(builder: (context) => const FailurePage()),
+        //   // );
+        // } else {
+        //   setState(() {
+        //     isWithinRange = true;
+        //   });
+        // }
       } else {
         print("Error mengambil profil pengguna: ${rp.statusCode}");
       }
@@ -188,9 +188,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
         });
 
         // Jika user memilih WFO, lakukan validasi jarak
-        if (_selectedWorkplaceType == "WFO") {
-          getProfil();
-        }
+    
       } else {
         print('Error fetching history data: ${rp.statusCode}');
       }
@@ -270,14 +268,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   }
 
   Future<void> _submitData() async {
-    if (_selectedWorkplaceType == "WFO" && !isWithinRange) {
-      // Jika user WFO dan di luar jangkauan, arahkan ke FailurePage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FailurePage()),
-      );
-      return;
-    }
 
     if (_noteController.text.isEmpty) {
       setState(() {

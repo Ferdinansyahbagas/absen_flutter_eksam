@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:absen/service/api_service.dart'; // Import ApiService
 
-
 class ClockInPage extends StatefulWidget {
   const ClockInPage({super.key});
 
@@ -27,7 +26,8 @@ class _ClockInPageState extends State<ClockInPage> {
   String? _selectedWorkplaceType = 'WFO';
   String? userStatus;
   String? bataswfh;
-  bool isWFHRequested = false;
+  String? Id; // Simpan ID WFH jika ada
+  bool isWFARequested = false;
   File? _image; // To store the image file
   List<String> workTypes = []; // Dynamically set work types
   bool _isImageRequired = false; // Flag to indicate if image is required
@@ -47,7 +47,7 @@ class _ClockInPageState extends State<ClockInPage> {
   //   _startLoading();
   // }
 
-@override
+  @override
   void initState() {
     super.initState();
     _initializeData();
@@ -92,8 +92,6 @@ class _ClockInPageState extends State<ClockInPage> {
   //     print('Error occurred: $e');
   //   }
   // }
-
-  
 
   // Future<void> getData() async {
   //   try {
@@ -441,7 +439,6 @@ class _ClockInPageState extends State<ClockInPage> {
   //     String type = (_selectedWorkType == "Lembur") ? '2' : '1';
   //     String location = (_selectedWorkplaceType == "WFH") ? '2' : '1';
 
-
   //     // Siapkan request ke API clock-in
   //     final url =
   //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
@@ -498,25 +495,45 @@ class _ClockInPageState extends State<ClockInPage> {
   //   }
   // }
 
+  Future<void> getcekwfa() async {
+    var data =
+        await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
+    if (data != null && data['message'] == 'User sudah mengajukan WFA') {
+      setState(() {
+        isWFARequested = true;
+        Id = data['data']['id'].toString();
+      });
+    } else {
+      setState(() {
+        isWFARequested = false;
+        Id = null;
+      });
+    }
+  }
+
   Future<void> getStatus() async {
-    var response = await ApiService.sendRequest(endpoint: 'attendance/get-type-parameter');
+    var response =
+        await ApiService.sendRequest(endpoint: 'attendance/get-type-parameter');
     if (response != null) {
       setState(() {
-        workTypes = List<String>.from(response['data'].map((item) => item['name']));
+        workTypes =
+            List<String>.from(response['data'].map((item) => item['name']));
       });
     }
   }
 
-    Future<void> getLocation() async {
-    var response = await ApiService.sendRequest(endpoint: 'attendance/get-location-parameter');
+  Future<void> getLocation() async {
+    var response = await ApiService.sendRequest(
+        endpoint: 'attendance/get-location-parameter');
     if (response != null) {
       setState(() {
-        workplaceTypes = List<String>.from(response['data'].map((item) => item['name']));
+        workplaceTypes =
+            List<String>.from(response['data'].map((item) => item['name']));
       });
     }
   }
 
-    Future<void> _setWorkTypeLembur() async {
+  Future<void> _setWorkTypeLembur() async {
     if (userStatus == '3') {
       setState(() {
         workTypes = ['Reguler'];
@@ -525,7 +542,8 @@ class _ClockInPageState extends State<ClockInPage> {
       return;
     }
 
-    var response = await ApiService.sendRequest(endpoint: 'attendance/is-clock-in');
+    var response =
+        await ApiService.sendRequest(endpoint: 'attendance/is-clock-in');
     if (response != null) {
       bool hasClockedIn = response['message'] != 'belum clock-in';
       setState(() {
@@ -564,24 +582,29 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-Future<void> getData() async {
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  Future<void> getData() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     if (position.isMocked) {
       _showSnackbar('Clock In gagal! Fake GPS terdeteksi.', Colors.red);
       return;
     }
 
-    var response = await ApiService.sendRequest(endpoint: 'karyawan/get-profile');
+    var response =
+        await ApiService.sendRequest(endpoint: 'karyawan/get-profile');
     if (response != null) {
       setState(() {
         userStatus = response['data']['user_level_id'].toString();
         bataswfh = (response['data']['batas_wfh'] ?? "0").toString();
+        Id = response['data']['id'].toString(); // ID WFH
 
-        double officeLatitude = double.tryParse(response['data']['latitude'].toString()) ?? 0.0;
-        double officeLongitude = double.tryParse(response['data']['longitude'].toString()) ?? 0.0;
+        double officeLatitude =
+            double.tryParse(response['data']['latitude'].toString()) ?? 0.0;
+        double officeLongitude =
+            double.tryParse(response['data']['longitude'].toString()) ?? 0.0;
 
-        double distance = Geolocator.distanceBetween(
-            position.latitude, position.longitude, officeLatitude, officeLongitude);
+        double distance = Geolocator.distanceBetween(position.latitude,
+            position.longitude, officeLatitude, officeLongitude);
 
         workplaceTypes = (distance > 500) ? ['WFA'] : ['WFO', 'WFA'];
         _selectedWorkplaceType = workplaceTypes.first;
@@ -596,24 +619,27 @@ Future<void> getData() async {
     }
 
     _showLoadingDialog();
-    
+
     try {
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
       if (position.isMocked) {
         _dismissLoadingDialog();
         _showSnackbar('Clock In gagal! Fake GPS terdeteksi.', Colors.red);
         return;
       }
 
-      var request = http.MultipartRequest('POST', Uri.parse('${ApiService.baseUrl}attendance/clock-in'))
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('${ApiService.baseUrl}attendance/clock-in'))
         ..headers['Authorization'] = 'Bearer ${await _getToken()}'
         ..fields['type'] = (_selectedWorkType == "Lembur") ? '2' : '1'
         ..fields['status'] = '1'
-        ..fields['location'] = (_selectedWorkplaceType == "WFH") ? '2' : '1'
+        ..fields['location'] = (_selectedWorkplaceType == "WFA") ? '2' : '1'
         ..fields['geolocation'] = "Unknown City"
         ..fields['latitude'] = position.latitude.toString()
         ..fields['longitude'] = position.longitude.toString()
-        ..files.add(await http.MultipartFile.fromPath('foto', _image!.path, contentType: MediaType('image', 'jpg')));
+        ..files.add(await http.MultipartFile.fromPath('foto', _image!.path,
+            contentType: MediaType('image', 'jpg')));
 
       var response = await request.send();
       var responseData = await http.Response.fromStream(response);
@@ -639,14 +665,17 @@ Future<void> getData() async {
   }
 
   void _showSnackbar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   void _showLoadingDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 101, 19, 116))),
+      builder: (_) => const Center(
+          child: CircularProgressIndicator(
+              color: Color.fromARGB(255, 101, 19, 116))),
     );
   }
 
@@ -655,15 +684,14 @@ Future<void> getData() async {
   }
 
   void _navigateTo(Widget page) {
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => page));
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => page));
   }
 
   void _setImageRequiredError() {
     setState(() => _isImageRequired = true);
     _showSnackbar('Harap unggah foto sebelum submit.', Colors.red);
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -758,18 +786,6 @@ Future<void> getData() async {
                 },
               ),
               const SizedBox(height: 10),
-
-              // Tampilkan batas WFH jika user memilih WFH
-              // if (_selectedWorkplaceType == "WFH") ...[
-              //   Text(
-              //     "Sisa WFH Anda: $bataswfh hari",
-              //     style: const TextStyle(
-              //         fontSize: 14,
-              //         fontWeight: FontWeight.w500,
-              //         color: Colors.red),
-              //   ),
-              //   const SizedBox(height: 10),
-              // ],
               // if (_selectedWorkplaceType == "WFH" &&
               //     _selectedWorkType == "Reguler" &&
               //     (userStatus == "1" || userStatus == "2")) ...[
@@ -827,7 +843,6 @@ Future<void> getData() async {
                 ),
               ),
               const SizedBox(height: 10),
-
 // Preview Photo Button
               if (_image != null)
                 Align(
@@ -876,105 +891,27 @@ Future<void> getData() async {
                 ),
               const SizedBox(height: 160),
               // Submit Button
-              // Center(
-              //   child:
-              //   ElevatedButton(
-              //     onPressed: _submitData, // Call the function to submit data
-              //     style: ElevatedButton.styleFrom(
-              //       backgroundColor: Colors.orange,
-              //       iconColor: Colors.white,
-              //       padding: const EdgeInsets.symmetric(
-              //         horizontal: 120,
-              //         vertical: 15,
-              //       ),
-              //     ),
-              //     child: const Text(
-              //       'Submit',
-              //       style: TextStyle(fontSize: 15, color: Colors.white),
-              //     ),
-              //   ),
-              // ),
-              // Column(
-              //   children: [
-              //     ElevatedButton(
-              //       onPressed: isWFHRequested
-              //           ? null
-              //           : _submitData, // Disabled jika WFH pending
-              //       style: ElevatedButton.styleFrom(
-              //         backgroundColor:
-              //             isWFHRequested ? Colors.grey : Colors.orange,
-              //       ),
-              //       child: const Text('Clock In',
-              //           style: TextStyle(color: Colors.white)),
-              //     ),
-              //     if (isWFHRequested)
-              //       ElevatedButton(
-              //         onPressed: getcancelwfh, // Batalkan WFH
-              //         style:
-              //             ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              //         child: const Text('Batalkan WFH',
-              //             style: TextStyle(color: Colors.white)),
-              //       ),
-              //   ],
-              // )
-
-              // if (isWFHRequested &&
-              //     (userStatus == "1" || userStatus == "2")) ...[
-              //   ElevatedButton(
-              //     onPressed: null, // Tombol Pending selalu disabled
-              //     style: ElevatedButton.styleFrom(
-              //       backgroundColor: Colors.grey,
-              //       iconColor: Colors.white,
-              //       padding: const EdgeInsets.symmetric(
-              //         horizontal: 120,
-              //         vertical: 15,
-              //       ),
-              //     ),
-              //     child: const Text(
-              //       'Pading',
-              //       style: TextStyle(fontSize: 15, color: Colors.white),
-              //     ),
-              //   ),
-              //   SizedBox(height: 10),
-              //   ElevatedButton(
-              //     onPressed: getcancelwfh,
-              //     style: ElevatedButton.styleFrom(
-              //       backgroundColor: Colors.red,
-              //       iconColor: Colors.white,
-              //       padding: const EdgeInsets.symmetric(
-              //         horizontal: 120,
-              //         vertical: 15,
-              //       ),
-              //     ),
-              //     child: const Text(
-              //       'Batalkan WFH',
-              //       style: TextStyle(fontSize: 15, color: Colors.white),
-              //     ),
-              //   ),
-              // ] else ...[
-
-              // if (_selectedWorkplaceType == "WFH" &&
-              //     _selectedWorkType == "Reguler" &&
-              //     (userStatus == "1" || userStatus == "2")) ...[
-              //   Center(
-              //     child: ElevatedButton(
-              //       onPressed: _submitData,
-              //       style: ElevatedButton.styleFrom(
-              //         backgroundColor: Colors.orange,
-              //         iconColor: Colors.white,
-              //         padding: const EdgeInsets.symmetric(
-              //           horizontal: 120,
-              //           vertical: 15,
-              //         ),
-              //       ),
-              //       child: const Text(
-              //         'Ajukan WFA',
-              //         style: TextStyle(fontSize: 15, color: Colors.white),
-              //       ),
-              //     ),
-              //   )
-              // ] else
-              if (userStatus == "1" ||
+              if (_selectedWorkplaceType == "WFA" &&
+                  _selectedWorkType == "Reguler" &&
+                  (userStatus == "1" || userStatus == "2")) ...[
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitData,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      iconColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Ajukan WFA',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
+                    ),
+                  ),
+                )
+              ] else if (userStatus == "1" ||
                   userStatus == "2" ||
                   userStatus == "3") ...[
                 Center(
@@ -994,28 +931,7 @@ Future<void> getData() async {
                     ),
                   ),
                 )
-                // ] else if (userStatus == "3") ...[
-                //   Center(
-                //     child: ElevatedButton(
-                //       onPressed: _submitData,
-                //       style: ElevatedButton.styleFrom(
-                //         backgroundColor: Colors.orange,
-                //         iconColor: Colors.white,
-                //         padding: const EdgeInsets.symmetric(
-                //           horizontal: 120,
-                //           vertical: 15,
-                //         ),
-                //       ),
-                //       child: const Text(
-                //         'Submit',
-                //         style: TextStyle(fontSize: 15, color: Colors.white),
-                //       ),
-                //     ),
-                //   )
               ],
-
-              //   ]
-              // ])
             ],
           ),
         ),

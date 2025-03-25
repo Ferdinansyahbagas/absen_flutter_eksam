@@ -6,13 +6,13 @@ import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
 import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clockout
 import 'package:absen/Jamkelumas/Clockinwfa.dart';
+import 'package:absen/Jamkelumas/ClockoutLupa.dart';
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
 import 'dart:async'; // Untuk timer
 import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
-// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -57,9 +57,9 @@ class _HomePageState extends State<HomePage> {
   bool isovertime = false; //status untuk card lembur
   bool isWFHRequested = false; //status mengajukan WFH
   bool isWFARequested = false; //status pengajuan WFA
-  bool jarak = false;
+  bool jarak = false; // status untuk jarak kantor
+  bool jarakclockout = false; // status untuk jarak kantor
   bool _isApiLoaded = false; // Status apakah API sudah selesai dimuat
-
   bool hasUnreadNotifications =
       false; //Status untuk melihat notifikasi sudah di baca atau belum
   List<dynamic> notifications = []; //variabel noifiaksi
@@ -73,11 +73,8 @@ class _HomePageState extends State<HomePage> {
     Future.delayed(Duration(milliseconds: 500), () {
       getData(); // Panggil API setelah sedikit delay
       getPengumuman();
-
       getNotif();
       getcekwfa();
-      // saveFirebaseToken();
-      // gettoken(); // Kirim token ke server setelah disimpan
     });
     _pageController.addListener(() {
       setState(() {
@@ -97,6 +94,84 @@ class _HomePageState extends State<HomePage> {
         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
       });
     });
+  }
+
+  void _showClockInPopupWFA(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Clock In WFA"),
+          content: const Text(
+              "Anda berada di luar jangkauan kantor. Apakah ingin mengajukan WFA?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ClockinwfaPage(),
+                  ),
+                );
+                if (result == true) {
+                  setState(() {
+                    hasClockedIn = true;
+                    hasClockedOut = false;
+                  });
+                }
+              },
+              child: const Text("Ajukan WFA"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showClockoutPopupjarak(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Clock out"),
+          content: const Text(
+              "Anda berada di luar jangkauan kantor. Clock out sekarang?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ClockOutLupaScreen(),
+                  ),
+                );
+                if (result == true) {
+                  setState(() {
+                    hasClockedIn = true;
+                    hasClockedOut = false;
+                  });
+                }
+              },
+              child: const Text("Clock Out"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Fungsi untuk membuat menu shortcut dengan warna ikon dan latar belakang yang bisa disesuaikan
@@ -311,6 +386,8 @@ class _HomePageState extends State<HomePage> {
           .where((item) => item['status']['id'] == 1)
           .map((item) => item['message']));
       _startAutoSlide();
+      _isApiLoaded = true;
+      _startClock(); // Mulai timer hanya setelah data selesai di-load
     });
   }
 
@@ -339,53 +416,20 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // void saveFirebaseToken() async {
-  //   await Future.delayed(
-  //       Duration(milliseconds: 200)); // Biarkan UI tetap responsif
-  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
-  //   String? token = await messaging.getToken();
-
-  //   if (token != null) {
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //     await localStorage.setString('firebase_token', token);
-  //     gettoken();
-  //   }
-  // }
-
-  // Future<void> gettoken() async {
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   String? token = localStorage.getString('firebase_token');
-
-  //   if (token == null || token.isEmpty) {
-  //     print("Token Firebase tidak ditemukan!");
-  //     return;
-  //   }
-
-  //   var response = await ApiService.sendRequest(
-  //     endpoint: "other/send-token",
-  //     method: 'POST',
-  //     body: {'firebase_token': token},
-  //   );
-
-  //   if (response != null) {
-  //     print("Token Firebase berhasil dikirim: $token");
-  //   }
-  // }
-
   Future<void> getcekwfa() async {
     var data =
         await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
-
     if (data != null && data['message'] == 'User sudah mengajukan WFA') {
       setState(() {
         isWFARequested = true;
-        hasClockedOut = true;
         Id = data['data']['id'].toString();
       });
     } else {
       setState(() {
         isWFARequested = false;
         Id = null;
+        _isApiLoaded = true;
+        _startClock(); // Mulai timer hanya setelah data selesai di-load
       });
     }
   }
@@ -423,13 +467,12 @@ class _HomePageState extends State<HomePage> {
           if (userStatus == "1" || userStatus == "2") {
             if (!isWFARequested) {
               // Jika tidak request WFA, cek jarak
-              double distance = Geolocator.distanceBetween(
-                  userLatitude, userLongitude, officeLatitude, officeLongitude);
               print("Jarak dari kantor: $distance meter");
-              jarak = distance > 500;
+              jarak = distance > 500; // Jarak untuk Clock In dihitung
             } else {
               jarak = false; // Jika user request WFA, jarak tidak berjalan
             }
+            jarakclockout = distance > 500;  // Jarak untuk Clock Out selalu dihitung
           }
         });
       }
@@ -495,6 +538,16 @@ class _HomePageState extends State<HomePage> {
           });
         }
       }
+
+      // Cek status cuti
+      var cutiData =
+          await ApiService.sendRequest(endpoint: 'attendance/is-cuti');
+      if (cutiData != null && cutiData['message'] != null) {
+        setState(() {
+          hasCuti = cutiData['message'] == 'sedang cuti';
+        });
+      }
+     
       // Cek status clock-out-lupa
       var liburData = await ApiService.sendRequest(
           endpoint: 'other/cek-libur'); // Ganti endpoint jika perlu
@@ -740,21 +793,28 @@ class _HomePageState extends State<HomePage> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   ElevatedButton.icon(
-                                    onPressed: (hasClockedIn)
+                                    onPressed: hasClockedIn
                                         ? null
                                         : () async {
-                                            final result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const ClockInPage(),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              setState(() {
-                                                hasClockedIn = true;
-                                                hasClockedOut = false;
-                                              });
+                                            if (jarak) {
+                                              _showClockInPopupWFA(
+                                                  context); // Tampilkan pop-up WFA jika request WFA
+                                            } else {
+                                              // Jika tidak WFH/WFA, langsung Clock In tanpa pop-up
+                                              final result =
+                                                  await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const ClockInPage(),
+                                                ),
+                                              );
+                                              if (result == true) {
+                                                setState(() {
+                                                  hasClockedIn = true;
+                                                  hasClockedOut = false;
+                                                });
+                                              }
                                             }
                                           },
                                     icon: const Icon(Icons.login),
@@ -768,30 +828,35 @@ class _HomePageState extends State<HomePage> {
                                   ElevatedButton.icon(
                                     onPressed: (hasClockedIn && !hasClockedOut)
                                         ? () async {
-                                            final result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const ClockOutScreen(),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              setState(() {
-                                                hasClockedOut = true;
-                                                hasClockedIn = false;
-                                              });
+                                            if (jarakclockout) {
+                                              _showClockoutPopupjarak(context);
+                                            } else {
+                                              final result =
+                                                  await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const ClockOutScreen(),
+                                                ),
+                                              );
+                                              if (result == true) {
+                                                setState(() {
+                                                  hasClockedOut = true;
+                                                  hasClockedIn = false;
+                                                });
 
-                                              // Reset tombol setelah 1 detik
-                                              Future.delayed(
-                                                  const Duration(seconds: 1),
-                                                  () {
-                                                if (mounted) {
-                                                  setState(() {
-                                                    hasClockedIn = false;
-                                                    hasClockedOut = false;
-                                                  });
-                                                }
-                                              });
+                                                // Reset tombol setelah 1 detik
+                                                Future.delayed(
+                                                    const Duration(seconds: 1),
+                                                    () {
+                                                  if (mounted) {
+                                                    setState(() {
+                                                      hasClockedIn = false;
+                                                      hasClockedOut = false;
+                                                    });
+                                                  }
+                                                });
+                                              }
                                             }
                                           }
                                         : null,
