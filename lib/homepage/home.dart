@@ -12,7 +12,7 @@ import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -76,15 +76,14 @@ class _HomePageState extends State<HomePage> {
 
       getNotif();
       getcekwfa();
-      saveFirebaseToken();
-      gettoken(); // Kirim token ke server setelah disimpan
+      // saveFirebaseToken();
+      // gettoken(); // Kirim token ke server setelah disimpan
     });
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page!.round();
       });
     });
-    print(_startClock);
   }
 
 // Fungsi untuk memperbarui waktu setiap detik
@@ -340,38 +339,38 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void saveFirebaseToken() async {
-    await Future.delayed(
-        Duration(milliseconds: 200)); // Biarkan UI tetap responsif
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    String? token = await messaging.getToken();
+  // void saveFirebaseToken() async {
+  //   await Future.delayed(
+  //       Duration(milliseconds: 200)); // Biarkan UI tetap responsif
+  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  //   String? token = await messaging.getToken();
 
-    if (token != null) {
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      await localStorage.setString('firebase_token', token);
-      gettoken();
-    }
-  }
+  //   if (token != null) {
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     await localStorage.setString('firebase_token', token);
+  //     gettoken();
+  //   }
+  // }
 
-  Future<void> gettoken() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    String? token = localStorage.getString('firebase_token');
+  // Future<void> gettoken() async {
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   String? token = localStorage.getString('firebase_token');
 
-    if (token == null || token.isEmpty) {
-      print("Token Firebase tidak ditemukan!");
-      return;
-    }
+  //   if (token == null || token.isEmpty) {
+  //     print("Token Firebase tidak ditemukan!");
+  //     return;
+  //   }
 
-    var response = await ApiService.sendRequest(
-      endpoint: "other/send-token",
-      method: 'POST',
-      body: {'firebase_token': token},
-    );
+  //   var response = await ApiService.sendRequest(
+  //     endpoint: "other/send-token",
+  //     method: 'POST',
+  //     body: {'firebase_token': token},
+  //   );
 
-    if (response != null) {
-      print("Token Firebase berhasil dikirim: $token");
-    }
-  }
+  //   if (response != null) {
+  //     print("Token Firebase berhasil dikirim: $token");
+  //   }
+  // }
 
   Future<void> getcekwfa() async {
     var data =

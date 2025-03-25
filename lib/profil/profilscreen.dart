@@ -14,6 +14,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:absen/utils/notification_helper.dart';
 import 'package:absen/service/api_service.dart'; // Import ApiService
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -58,6 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _getBank();
     loadProfileImage();
     getProfile();
+    deleteToken();
   }
 
   Future<void> saveImageUrls({
@@ -866,10 +869,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+Future<void> deleteToken() async {
+  await FirebaseMessaging.instance.deleteToken();
+  print("Token Firebase dihapus");
+}
+
   void _logout(BuildContext context) async {
     // Hapus token dan device_id dari SharedPreferences
     await Preferences.clearToken();
     await Preferences.clearDeviceId();
+    await Preferences.clearFirebaseToken(); // Hapus token Firebase
+     await deleteToken(); // Hapus token dari perangkat
+      await Preferences.clearAll();         // Atau bisa pakai ini langsung
+
+  print("✅ Logout selesai, semua data lokal dihapus.");
+
 
     // Pindah ke halaman login tanpa bisa kembali ke Home
     Navigator.pushAndRemoveUntil(
@@ -878,16 +892,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       (route) => false,
     );
   }
-  // Hapus token dari SharedPreferences
-  //   await Preferences.clearToken();
+//   void logout() async {
+//   await Preferences.clearToken();       // Hapus token
+//   await Preferences.clearDeviceId();    // Hapus device ID
+//   await Preferences.clearAll();         // Atau bisa pakai ini langsung
 
-  //   // Navigasi kembali ke WelcomeScreen
-  //   Navigator.pushAndRemoveUntil(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => const LoginScreen()),
-  //     (route) => false,
-  //   );
-  // }
+//   // Kalo kamu juga simpan firebase_token di SharedPreferences manual
+//   SharedPreferences prefs = await SharedPreferences.getInstance();
+//   await prefs.remove('firebase_token');
+
+//   print("✅ Logout selesai. Semua data lokal dihapus.");
+
+//   // Navigasi ke halaman login atau welcome screen
+//   Navigator.pushAndRemoveUntil(
+//     context,
+//     MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+//     (route) => false,
+//   );
+// }
 
   final TextStyle titleStyle =
       const TextStyle(fontSize: 14, color: Colors.black54);

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class Preferences {
   static const String _tokenKey = 'token';
   static const String _deviceIdKey = 'device_id';
+  static const String _firebaseTokenKey = 'firebase_token';
 
   // Simpan token
   static Future<void> setToken(String token) async {
@@ -40,6 +41,13 @@ class Preferences {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove(_deviceIdKey);
     print("✅ Device ID berhasil dihapus");
+  }
+
+  // Hapus token Firebase
+  static Future<void> clearFirebaseToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_firebaseTokenKey);
+    print("✅ Token Firebase berhasil dihapus");
   }
 
   // Hapus semua data (untuk logout)

@@ -29,7 +29,7 @@ class _TimeOffState extends State<TimeOff> {
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
-  // List<String> _typeOptions = [];
+  List<String> _quotaOptions = [];
   List<String> _typeOptions = [''];
   final _reasonController = TextEditingController();
   // final _formKey = GlobalKey<FormState>();
@@ -38,7 +38,8 @@ class _TimeOffState extends State<TimeOff> {
   void initState() {
     super.initState();
     getProfile();
-    getData();
+    // getData();
+    getDatakuota();
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
@@ -63,9 +64,55 @@ class _TimeOffState extends State<TimeOff> {
     }
   }
 
+  Future<void> getDatakuota() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    try {
+      var response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${localStorage.getString('token')}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        print("Response API Kuota: ${jsonEncode(data)}");
+
+        if (data['data'] == null || (data['data'] as List).isEmpty) {
+          print("Data kuota kosong");
+          setState(() {
+            _quotaOptions = ["Tidak ada kuota tersedia"];
+            _selectedType = _quotaOptions.first;
+          });
+          return;
+        }
+
+        setState(() {
+          _quotaOptions = (data['data'] as List).map<String>((item) {
+            String typeName = item['type']['name'].toString();
+            String remaining = item['kuota'].toString();
+            String maxQuota = item['type']['max_quota'].toString();
+            return "$typeName ($remaining/$maxQuota)";
+          }).toList();
+
+          if (_quotaOptions.isNotEmpty) {
+            _selectedType = _quotaOptions.first;
+          }
+        });
+      } else {
+        print('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
+    }
+  }
+
   // Future<void> getData() async {
-  //   final url =
-  //       Uri.parse('https://portal.eksam.cloud/api/v1/request-history/get-type');
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/request-history/get-type-parameter');
   //   SharedPreferences localStorage = await SharedPreferences.getInstance();
   //   try {
   //     var response = await http.get(
@@ -79,46 +126,20 @@ class _TimeOffState extends State<TimeOff> {
   //       setState(() {
   //         _typeOptions =
   //             List<String>.from(data['data'].map((item) => item['name']));
+
+  //         // Jika _selectedType tidak ada di daftar, atur ulang ke nilai pertama yang valid
+  //         if (_typeOptions.isNotEmpty &&
+  //             !_typeOptions.contains(_selectedType)) {
+  //           _selectedType = _typeOptions.first;
+  //         }
   //       });
   //     } else {
   //       print('Gagal mengambil data: ${response.statusCode}');
-  //       print(response.body);
   //     }
   //   } catch (e) {
   //     print('Terjadi kesalahan: $e');
   //   }
   // }
-
-  Future<void> getData() async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/request-history/get-type-parameter');
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    try {
-      var response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer ${localStorage.getString('token')}',
-        },
-      );
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        setState(() {
-          _typeOptions =
-              List<String>.from(data['data'].map((item) => item['name']));
-
-          // Jika _selectedType tidak ada di daftar, atur ulang ke nilai pertama yang valid
-          if (_typeOptions.isNotEmpty &&
-              !_typeOptions.contains(_selectedType)) {
-            _selectedType = _typeOptions.first;
-          }
-        });
-      } else {
-        print('Gagal mengambil data: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Terjadi kesalahan: $e');
-    }
-  }
 
   Future<void> getProfile() async {
     try {
@@ -277,14 +298,6 @@ class _TimeOffState extends State<TimeOff> {
           DateFormat('yyyy-MM-dd').format(_selectedStartDate!);
       String formattedEndDate =
           DateFormat('yyyy-MM-dd').format(_selectedEndDate!);
-
-      if (_selectedType == "Izin") {
-        type = '3';
-      } else if (_selectedType == "Sakit") {
-        type = '2';
-      } else {
-        type = '1';
-      }
 
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
@@ -448,18 +461,39 @@ class _TimeOffState extends State<TimeOff> {
               //     });
               //   },
               // ),
+              // DropdownButtonFormField<String>(
+              //   value:
+              //       _typeOptions.contains(_selectedType) ? _selectedType : null,
+              //   decoration: InputDecoration(
+              //     border: OutlineInputBorder(
+              //       borderRadius: BorderRadius.circular(10),
+              //     ),
+              //   ),
+              //   items: _typeOptions.map((String typeOptions) {
+              //     return DropdownMenuItem<String>(
+              //       value: typeOptions,
+              //       child: Text(typeOptions),
+              //     );
+              //   }).toList(),
+              //   onChanged: (String? newValue) {
+              //     setState(() {
+              //       _selectedType = newValue;
+              //     });
+              //   },
+              // ),
               DropdownButtonFormField<String>(
-                value:
-                    _typeOptions.contains(_selectedType) ? _selectedType : null,
+                value: _quotaOptions.contains(_selectedType)
+                    ? _selectedType
+                    : null,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                items: _typeOptions.map((String typeOptions) {
+                items: _quotaOptions.map((String quota) {
                   return DropdownMenuItem<String>(
-                    value: typeOptions,
-                    child: Text(typeOptions),
+                    value: quota,
+                    child: Text(quota),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {

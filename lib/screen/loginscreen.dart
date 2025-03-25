@@ -27,12 +27,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    saveFirebaseToken();
-    gettoken(); // Kirim token ke server setelah disimpan
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   saveFirebaseToken();
+  // }
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -74,8 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await Preferences.setToken(token);
 
         // Simpan token Firebase
-        saveFirebaseToken();
-        gettoken();
+        await saveAndSendFirebaseToken();
         saveDeviceId(); // Kirim Device ID setelah login
 
         // Pindah ke halaman Home
@@ -135,37 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void saveFirebaseToken() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-    String? token = await messaging.getToken();
-
-    if (token != null) {
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      await localStorage.setString('firebase_token', token);
-      gettoken();
-    }
-  }
-
-  // Future<void> gettoken() async {
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //   String? token = localStorage.getString('firebase_token');
-
-  //   if (token == null || token.isEmpty) {
-  //     print("Token Firebase tidak ditemukan!");
-  //     return;
-  //   }
-
-  //   var response = await ApiService.sendRequest(
-  //     endpoint: "other/send-token",
-  //     method: 'POST',
-  //     body: {'firebase_token': token},
-  //   );
-
-  //   if (response != null) {
-  //     print("Token Firebase berhasil dikirim: $token");
-  //   }
-  // }
-
   Future<void> getProfil() async {
     try {
       final url =
@@ -190,6 +157,59 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// *Menyimpan Token Firebase & Mengirim ke API*
+  Future<void> saveAndSendFirebaseToken() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    String? tokenFirebase = await messaging.getToken();
+    String? userToken = await Preferences.getToken(); // Token user untuk auth
+
+    if (tokenFirebase == null) {
+      print("❌ Token Firebase tidak ditemukan!");
+      return;
+    }
+
+    if (userToken == null) {
+      print("❌ Token autentikasi tidak ditemukan!");
+      return;
+    }
+
+    // Simpan token Firebase ke SharedPreferences
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    await localStorage.setString('firebase_token', tokenFirebase);
+
+    var url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
+
+    try {
+      var response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $userToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'firebase_token': tokenFirebase}),
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Token Firebase berhasil dikirim ke server!");
+      } else {
+        print("❌ Gagal mengirim Token Firebase: ${response.body}");
+      }
+    } catch (e) {
+      print("❌ Error saat mengirim Token Firebase: $e");
+    }
+  }
+
+  // void saveFirebaseToken() async {
+  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  //   String? token = await messaging.getToken();
+
+  //   if (token != null) {
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     await localStorage.setString('firebase_token', token);
+  //     gettoken();
+  //   }
+  // }
+
   // Future<void> gettoken() async {
   //   SharedPreferences localStorage = await SharedPreferences.getInstance();
   //   String? tokenFirebase = localStorage.getString('firebase_token');
@@ -207,78 +227,156 @@ class _LoginScreenState extends State<LoginScreen> {
   //   }
 
   //   var url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
-  //   var response = await http.post(
-  //     url,
-  //     headers: {
-  //       'Authorization':
-  //           'Bearer $userToken', // Authorization header untuk autentikasi
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: jsonEncode({
-  //       'firebase_token': tokenFirebase, // Token Firebase yang ingin diupdate
-  //     }),
-  //   );
 
-  //   if (response.statusCode == 200) {
+  //   try {
+  //     var response = await http.post(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer $userToken',
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: jsonEncode({
+  //         'firebase_token': tokenFirebase,
+  //         'user_id':
+  //             null, // Jika user_id diperlukan, bisa diganti dengan nilai yang sesuai
+  //       }),
+  //     );
+
   //     var responseData = jsonDecode(response.body);
-  //     print("Token Firebase berhasil dikirim: $tokenFirebase");
-  //     print("Response dari server: ${responseData['message']}");
-  //   } else {
-  //     print(
-  //         "Gagal mengirim token Firebase! Status Code: ${response.statusCode}");
-  //     print("Response dari server: ${response.body}");
+
+  //     if (response.statusCode == 200) {
+  //       String message = responseData['message'] ?? 'Sukses';
+  //       String updatedToken = responseData['token'] ?? tokenFirebase;
+
+  //       print("✅ Token Firebase berhasil diperbarui!");
+  //       print("🔹 Pesan dari server: $message");
+  //       print("🔹 Token terbaru: $updatedToken");
+  //     } else {
+  //       print(
+  //           "❌ Gagal memperbarui token Firebase! Status Code: ${response.statusCode}");
+  //       print("❌ Response dari server: ${response.body}");
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error saat mengirim token Firebase: $e");
   //   }
   // }
-  Future<void> gettoken() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    String? tokenFirebase = localStorage.getString('firebase_token');
-    String? userToken =
-        await Preferences.getToken(); // Ambil token user dari SharedPreferences
+  // Future<void> saveFirebaseToken() async {
+  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-    if (tokenFirebase == null || tokenFirebase.isEmpty) {
-      print("Token Firebase tidak ditemukan!");
-      return;
-    }
+  //   // Hapus token lama
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   await localStorage.remove('firebase_token');
 
-    if (userToken == null) {
-      print("Token autentikasi tidak ditemukan!");
-      return;
-    }
+  //   String? token = await messaging.getToken();
+  //   print("🔹 FCM Token didapat: $token");
 
-    var url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
+  //   if (token != null) {
+  //     await localStorage.setString('firebase_token', token);
+  //     gettoken();
+  //   } else {
+  //     print("❌ Gagal mendapatkan token Firebase");
+  //   }
+  // }
 
-    try {
-      var response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $userToken',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'firebase_token': tokenFirebase,
-          'user_id':
-              null, // Jika user_id diperlukan, bisa diganti dengan nilai yang sesuai
-        }),
-      );
+  // Future<void> gettoken() async {
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //   String? tokenFirebase = localStorage.getString('firebase_token');
+  //   String? userToken = await Preferences.getToken();
 
-      var responseData = jsonDecode(response.body);
+  //   if (tokenFirebase == null || tokenFirebase.isEmpty) {
+  //     print("❌ Token Firebase tidak ditemukan!");
+  //     return;
+  //   }
 
-      if (response.statusCode == 200) {
-        String message = responseData['message'] ?? 'Sukses';
-        String updatedToken = responseData['token'] ?? tokenFirebase;
+  //   if (userToken == null) {
+  //     print("❌ Token autentikasi tidak ditemukan!");
+  //     return;
+  //   }
 
-        print("✅ Token Firebase berhasil diperbarui!");
-        print("🔹 Pesan dari server: $message");
-        print("🔹 Token terbaru: $updatedToken");
-      } else {
-        print(
-            "❌ Gagal memperbarui token Firebase! Status Code: ${response.statusCode}");
-        print("❌ Response dari server: ${response.body}");
-      }
-    } catch (e) {
-      print("❌ Error saat mengirim token Firebase: $e");
-    }
-  }
+  //   var url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
+
+  //   try {
+  //     var response = await http.post(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer $userToken',
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: jsonEncode({
+  //         'firebase_token': tokenFirebase,
+  //       }),
+  //     );
+
+  //     String? cekToken = await FirebaseMessaging.instance.getToken();
+  //     print("🔍 Token setelah logout: $cekToken"); // Harusnya null atau berubah
+
+  //     print("🔹 Response status: ${response.statusCode}");
+  //     print("🔹 Response body: ${response.body}");
+
+  //     if (response.statusCode == 200) {
+  //       print("✅ Token Firebase berhasil dikirim ke server!");
+  //     } else {
+  //       print("❌ Gagal memperbarui token Firebase!");
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error saat mengirim token Firebase: $e");
+  //   }
+  // }
+  // void saveFirebaseToken() async {
+  //   FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  //   try {
+  //     String? token = await messaging.getToken();
+  //     if (token == null) {
+  //       print("🔴 Gagal mendapatkan token Firebase, mencoba refresh...");
+  //       messaging.onTokenRefresh.listen((newToken) async {
+  //         await gettoken(newToken);
+  //       });
+  //       return;
+  //     }
+
+  //     await gettoken(token);
+  //   } catch (e) {
+  //     print("🔴 Error saat mengambil token Firebase: $e");
+  //   }
+  // }
+
+  // Future<void> gettoken(String token) async {
+  //   try {
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     await localStorage.setString('firebase_token', token);
+
+  //     String? userToken = await Preferences.getToken();
+  //     if (userToken == null || userToken.isEmpty) {
+  //       print(
+  //           "🔴 Token user tidak ditemukan, tidak bisa mengirim Firebase Token!");
+  //       return;
+  //     }
+
+  //     var url = Uri.parse('https://portal.eksam.cloud/api/v1/other/send-token');
+  //     var response = await http.post(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer $userToken',
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: jsonEncode({
+  //         'firebase_token': token,
+  //         'user_id': null, // Bisa diganti jika user_id diperlukan
+  //       }),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       print("✅ Token Firebase berhasil dikirim ke server!");
+  //     } else {
+  //       print(
+  //           "❌ Gagal mengirim token Firebase! Status Code: ${response.statusCode}");
+  //       print("❌ Response dari server: ${response.body}");
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error saat mengirim token Firebase: $e");
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
