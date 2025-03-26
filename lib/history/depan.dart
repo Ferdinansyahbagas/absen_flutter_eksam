@@ -52,7 +52,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       print("Error mengecek status clock-in: $e");
     }
   }
-  
+
   void _showLupaClockOutModal() {
     showModalBottomSheet(
       context: context,
@@ -381,6 +381,221 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             subtitle: Text(
                               '${historyItem['starttime']} - ${historyItem['endtime']}',
                             ),
+                            //       trailing: ElevatedButton(
+                            //         onPressed: () {
+                            //           showModalBottomSheet(
+                            //             context: context,
+                            //             shape: const RoundedRectangleBorder(
+                            //               borderRadius: BorderRadius.vertical(
+                            //                   top: Radius.circular(16.0)),
+                            //             ),
+                            //             builder: (BuildContext context) {
+                            //               return Container(
+                            //                 padding: const EdgeInsets.all(16.0),
+                            //                 width: double.infinity, // Full lebar
+                            //                 height: MediaQuery.of(context)
+                            //                         .size
+                            //                         .height *
+                            //                     0.50, // Atur tinggi sesuai kebutuhan
+                            //                 child: Column(
+                            //                   crossAxisAlignment:
+                            //                       CrossAxisAlignment.start,
+                            //                   children: [
+                            //                     // Tampilkan informasi attendance seperti di gambar
+                            //                     Row(children: [
+                            //                       const Text(
+                            //                         "Date",
+                            //                         style: TextStyle(
+                            //                             fontSize: 16,
+                            //                             color: Colors.black),
+                            //                       ),
+                            //                       const SizedBox(
+                            //                           width: 10), // Jarak horizontal
+                            //                       Text(
+                            //                         historyItem['date'],
+                            //                         style: const TextStyle(
+                            //                           fontSize: 24,
+                            //                           fontWeight: FontWeight.bold,
+                            //                           color: Colors.orange,
+                            //                         ),
+                            //                       ),
+                            //                     ]),
+                            //                     const SizedBox(height: 15),
+                            //                     Row(
+                            //                       children: [
+                            //                         const Text(
+                            //                           "Clock In ",
+                            //                           style: TextStyle(
+                            //                               fontSize: 14,
+                            //                               color: Colors.grey),
+                            //                         ),
+                            //                         const SizedBox(width: 50),
+                            //                         Text(
+                            //                           '${historyItem['starttime']} AM',
+                            //                           style: const TextStyle(
+                            //                             fontSize: 16,
+                            //                             color: Colors.black,
+                            //                           ),
+                            //                         ),
+                            //                       ],
+                            //                     ),
+                            //                     Row(
+                            //                       children: [
+                            //                         const Text(
+                            //                           "Clock Out ",
+                            //                           style: TextStyle(
+                            //                               color: Colors.grey,
+                            //                               fontSize: 14),
+                            //                         ),
+                            //                         const SizedBox(
+                            //                             width:
+                            //                                 40), // Jarak horizontal
+                            //                         Text(
+                            //                           '${historyItem['endtime']} PM',
+                            //                           style: const TextStyle(
+                            //                               fontSize: 16,
+                            //                               color: Colors.black),
+                            //                         ),
+                            //                       ],
+                            //                     ),
+                            //                     Row(
+                            //                       children: [
+                            //                         const Text(
+                            //                           "Work Duration",
+                            //                           style: TextStyle(
+                            //                               color: Colors.grey,
+                            //                               fontSize: 14),
+                            //                         ),
+                            //                         const SizedBox(
+                            //                             width:
+                            //                                 16), // Jarak horizontal
+
+                            //                         Text(
+                            //                           '${historyItem['duration']} Menit',
+                            //                           style: const TextStyle(
+                            //                               fontSize: 16,
+                            //                               color: Colors.black),
+                            //                         ),
+                            //                       ],
+                            //                     ),
+                            //                     Row(
+                            //                       children: [
+                            //                         const Text(
+                            //                           "Location ",
+                            //                           style: TextStyle(
+                            //                               color: Colors.grey,
+                            //                               fontSize: 14),
+                            //                         ),
+                            //                         const SizedBox(
+                            //                             width:
+                            //                                 48), // Jarak horizontal
+
+                            //                         Text(
+                            //                           historyItem['location']['name'],
+                            //                           style: const TextStyle(
+                            //                               fontSize: 16,
+                            //                               color: Colors.black),
+                            //                         ),
+                            //                       ],
+                            //                     ),
+                            //                     Row(
+                            //                       children: [
+                            //                         const Text(
+                            //                           "Status",
+                            //                           style: TextStyle(
+                            //                               color: Colors.grey,
+                            //                               fontSize: 14),
+                            //                         ),
+                            //                         const SizedBox(
+                            //                             width:
+                            //                                 66), // Jarak horizontal
+
+                            //                         Text(
+                            //                           historyItem['status']['name'],
+                            //                           style: const TextStyle(
+                            //                               fontSize: 16,
+                            //                               color: Colors.black),
+                            //                         ),
+                            //                       ],
+                            //                     ),
+                            //                     Row(
+                            //                       children: [
+                            //                         const Text(
+                            //                           "Type",
+                            //                           style: TextStyle(
+                            //                               color: Colors.grey,
+                            //                               fontSize: 14),
+                            //                         ),
+                            //                         const SizedBox(
+                            //                             width:
+                            //                                 75), // Jarak horizontal
+                            //                         Text(
+                            //                           historyItem['type']['name'],
+                            //                           style: const TextStyle(
+                            //                               fontSize: 16,
+                            //                               color: Colors.black),
+                            //                         ),
+                            //                       ],
+                            //                     ),
+                            //                     Row(
+                            //                       children: [
+                            //                         const Text(
+                            //                           "Geolocation",
+                            //                           style: TextStyle(
+                            //                               color: Colors.grey,
+                            //                               fontSize: 14),
+                            //                         ),
+                            //                         const SizedBox(
+                            //                             width:
+                            //                                 30), // Jarak horizontal
+
+                            //                         Text(
+                            //                           historyItem['geolocation'],
+                            //                           style: const TextStyle(
+                            //                               fontSize: 16,
+                            //                               color: Colors.black),
+                            //                         ),
+                            //                       ],
+                            //                     ),
+                            //                     const SizedBox(height: 10),
+                            //                     const Text(
+                            //                       "Note",
+                            //                       style: TextStyle(
+                            //                           color: Colors.grey,
+                            //                           fontSize: 14),
+                            //                     ),
+                            //                     const SizedBox(
+                            //                         width: 10), // Jarak horizontal
+
+                            //                     Text(
+                            //                       historyItem['notes'],
+                            //                       style: const TextStyle(
+                            //                           fontSize: 16,
+                            //                           color: Colors.black),
+                            //                     ),
+                            //                   ],
+                            //                 ),
+                            //               );
+                            //             },
+                            //           );
+                            //         },
+                            //         style: ElevatedButton.styleFrom(
+                            //           backgroundColor: Colors.white,
+                            //           foregroundColor: Colors.orange,
+                            //           side: const BorderSide(
+                            //               color: Color.fromARGB(255, 101, 19, 116)),
+                            //           shape: RoundedRectangleBorder(
+                            //             borderRadius: BorderRadius.circular(8.0),
+                            //           ),
+                            //         ),
+                            //         child: const Text(
+                            //           'Open',
+                            //           style: TextStyle(
+                            //             color: Colors.pink,
+                            //             fontWeight: FontWeight.bold,
+                            //           ),
+                            //         ),
+                            //       ),
                             trailing: ElevatedButton(
                               onPressed: () {
                                 showModalBottomSheet(
@@ -389,192 +604,92 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     borderRadius: BorderRadius.vertical(
                                         top: Radius.circular(16.0)),
                                   ),
+                                  isScrollControlled:
+                                      true, // Biar modal bisa diperbesar sesuai isi
                                   builder: (BuildContext context) {
-                                    return Container(
-                                      padding: const EdgeInsets.all(16.0),
-                                      width: double.infinity, // Full lebar
-                                      height: MediaQuery.of(context)
-                                              .size
-                                              .height *
-                                          0.50, // Atur tinggi sesuai kebutuhan
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // Tampilkan informasi attendance seperti di gambar
-                                          Row(children: [
-                                            const Text(
-                                              "Date",
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.black),
-                                            ),
-                                            const SizedBox(
-                                                width: 10), // Jarak horizontal
-                                            Text(
-                                              historyItem['date'],
-                                              style: const TextStyle(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.orange,
-                                              ),
-                                            ),
-                                          ]),
-                                          const SizedBox(height: 15),
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                "Clock In ",
-                                                style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.grey),
-                                              ),
-                                              const SizedBox(width: 50),
-                                              Text(
-                                                '${historyItem['starttime']} AM',
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.black,
+                                    return DraggableScrollableSheet(
+                                      expand:
+                                          false, // Biar bisa di-scroll tanpa full screen
+                                      builder: (context, scrollController) {
+                                        return Container(
+                                          padding: const EdgeInsets.all(16.0),
+                                          width: double.infinity, // Full lebar
+                                          decoration: const BoxDecoration(
+                                            borderRadius: BorderRadius.vertical(
+                                                top: Radius.circular(16.0)),
+                                            color: Colors.white,
+                                          ),
+                                          child: SingleChildScrollView(
+                                            controller:
+                                                scrollController, // Scrollable content
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    const Text(
+                                                      "Date",
+                                                      style: TextStyle(
+                                                          fontSize: 16,
+                                                          color: Colors.black),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Text(
+                                                      historyItem['date'],
+                                                      style: const TextStyle(
+                                                        fontSize: 24,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.orange,
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ),
-                                            ],
+                                                const SizedBox(height: 15),
+                                                _buildRow(
+                                                    "Clock In",
+                                                    historyItem['starttime'] +
+                                                        " AM"),
+                                                _buildRow(
+                                                    "Clock Out",
+                                                    historyItem['endtime'] +
+                                                        " PM"),
+                                                _buildRow("Work Duration",
+                                                    "${historyItem['duration']} Menit"),
+                                                _buildRow(
+                                                    "Location",
+                                                    historyItem['location']
+                                                        ['name']),
+                                                _buildRow(
+                                                    "Status",
+                                                    historyItem['status']
+                                                        ['name']),
+                                                _buildRow(
+                                                    "Type",
+                                                    historyItem['type']
+                                                        ['name']),
+                                                _buildRow("Geolocation",
+                                                    historyItem['geolocation']),
+                                                const SizedBox(height: 10),
+                                                const Text(
+                                                  "Note",
+                                                  style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 14),
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Text(
+                                                  historyItem['notes'],
+                                                  style: const TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.black),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                "Clock Out ",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14),
-                                              ),
-                                              const SizedBox(
-                                                  width:
-                                                      40), // Jarak horizontal
-                                              Text(
-                                                '${historyItem['endtime']} PM',
-                                                style: const TextStyle(
-                                                    fontSize: 16,
-                                                    color: Colors.black),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                "Work Duration",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14),
-                                              ),
-                                              const SizedBox(
-                                                  width:
-                                                      16), // Jarak horizontal
-
-                                              Text(
-                                                '${historyItem['duration']} Menit',
-                                                style: const TextStyle(
-                                                    fontSize: 16,
-                                                    color: Colors.black),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                "Location ",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14),
-                                              ),
-                                              const SizedBox(
-                                                  width:
-                                                      48), // Jarak horizontal
-
-                                              Text(
-                                                historyItem['location']['name'],
-                                                style: const TextStyle(
-                                                    fontSize: 16,
-                                                    color: Colors.black),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                "Status",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14),
-                                              ),
-                                              const SizedBox(
-                                                  width:
-                                                      66), // Jarak horizontal
-
-                                              Text(
-                                                historyItem['status']['name'],
-                                                style: const TextStyle(
-                                                    fontSize: 16,
-                                                    color: Colors.black),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                "Type",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14),
-                                              ),
-                                              const SizedBox(
-                                                  width:
-                                                      75), // Jarak horizontal
-                                              Text(
-                                                historyItem['type']['name'],
-                                                style: const TextStyle(
-                                                    fontSize: 16,
-                                                    color: Colors.black),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              const Text(
-                                                "Geolocation",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14),
-                                              ),
-                                              const SizedBox(
-                                                  width:
-                                                      30), // Jarak horizontal
-
-                                              Text(
-                                                historyItem['geolocation'],
-                                                style: const TextStyle(
-                                                    fontSize: 16,
-                                                    color: Colors.black),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 10),
-                                          const Text(
-                                            "Note",
-                                            style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 14),
-                                          ),
-                                          const SizedBox(
-                                              width: 10), // Jarak horizontal
-
-                                          Text(
-                                            historyItem['notes'],
-                                            style: const TextStyle(
-                                                fontSize: 16,
-                                                color: Colors.black),
-                                          ),
-                                        ],
-                                      ),
+                                        );
+                                      },
                                     );
                                   },
                                 );
@@ -607,6 +722,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment:
+            MainAxisAlignment.spaceBetween, // Biar rata kiri-kanan
+        children: [
+          SizedBox(
+            width: 120, // Atur lebar tetap untuk label
+            child: Text(
+              title,
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          ),
+          const SizedBox(width: 10), // Jarak antara label dan isi
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right, // Rata kanan untuk isi
+              style: const TextStyle(fontSize: 16, color: Colors.black),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

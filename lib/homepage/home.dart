@@ -64,6 +64,7 @@ class _HomePageState extends State<HomePage> {
       false; //Status untuk melihat notifikasi sudah di baca atau belum
   List<dynamic> notifications = []; //variabel noifiaksi
   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
+  Position? lastKnownPosition; // Simpan lokasi terakhir
 
   @override
   void initState() {
@@ -94,6 +95,27 @@ class _HomePageState extends State<HomePage> {
         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
       });
     });
+  }
+
+  void _showFakeGpsWarning() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Peringatan!"),
+          content: Text(
+              "Aplikasi mendeteksi penggunaan Fake GPS. Mohon matikan dan coba lagi."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showClockInPopupWFA(BuildContext context) {
@@ -434,12 +456,58 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  bool _isFakeLocation(Position position) {
+    // Cek apakah lokasi di-mock (hanya support di beberapa device Android)
+    if (position.isMocked) {
+      print("Deteksi Fake GPS dari isMocked!");
+      return true;
+    }
+
+    // Cek perubahan lokasi yang tiba-tiba (lompat jauh dalam waktu singkat)
+    if (lastKnownPosition != null) {
+      double distance = Geolocator.distanceBetween(
+        lastKnownPosition!.latitude,
+        lastKnownPosition!.longitude,
+        position.latitude,
+        position.longitude,
+      );
+
+      double timeDiff = position.timestamp
+          .difference(lastKnownPosition!.timestamp)
+          .inSeconds
+          .toDouble();
+      double speed =
+          distance / (timeDiff > 0 ? timeDiff : 1); // Kecepatan dalam m/s
+
+      print("Jarak berpindah: $distance meter, Kecepatan: $speed m/s");
+
+      if (speed > 50) {
+        // Kalau kecepatan lebih dari 50 m/s (180 km/jam), kemungkinan fake
+        print("Deteksi Fake GPS dari kecepatan tinggi!");
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   // Fungsi untuk mengambil data dari API
   Future<void> getData() async {
     try {
       // Ambil lokasi user
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
+      // Cek apakah lokasi menggunakan Fake GPS
+      bool isFake = _isFakeLocation(position);
+
+      if (isFake) {
+        _showFakeGpsWarning();
+        return; // Hentikan proses selanjutnya kalau fake GPS terdeteksi
+      }
+
+      // Simpan lokasi terakhir buat perbandingan nanti
+      lastKnownPosition = position;
+
       double userLatitude = position.latitude;
       double userLongitude = position.longitude;
 
@@ -472,7 +540,8 @@ class _HomePageState extends State<HomePage> {
             } else {
               jarak = false; // Jika user request WFA, jarak tidak berjalan
             }
-            jarakclockout = distance > 500;  // Jarak untuk Clock Out selalu dihitung
+            jarakclockout =
+                distance > 500; // Jarak untuk Clock Out selalu dihitung
           }
         });
       }
@@ -547,7 +616,7 @@ class _HomePageState extends State<HomePage> {
           hasCuti = cutiData['message'] == 'sedang cuti';
         });
       }
-     
+
       // Cek status clock-out-lupa
       var liburData = await ApiService.sendRequest(
           endpoint: 'other/cek-libur'); // Ganti endpoint jika perlu
@@ -714,7 +783,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             ElevatedButton.icon(
-                              onPressed: (hasClockedIn)
+                              onPressed: hasClockedIn
                                   ? null
                                   : () async {
                                       final result = await Navigator.push(
@@ -739,7 +808,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             ElevatedButton.icon(
-                              onPressed: (hasClockedIn && !hasClockedOut)
+                              onPressed: (hasClockedIn &&
+                                      !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
                                   ? () async {
                                       final result = await Navigator.push(
                                         context,
@@ -770,10 +840,10 @@ class _HomePageState extends State<HomePage> {
                               icon: const Icon(Icons.logout),
                               label: const Text('Clock Out'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    (hasClockedIn && !hasClockedOut)
-                                        ? Colors.white
-                                        : Colors.grey,
+                                backgroundColor: (hasClockedIn &&
+                                        !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
+                                    ? Colors.white
+                                    : Colors.grey,
                               ),
                             ),
                           ],
@@ -793,30 +863,31 @@ class _HomePageState extends State<HomePage> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   ElevatedButton.icon(
-                                    onPressed: hasClockedIn
-                                        ? null
-                                        : () async {
-                                            if (jarak) {
-                                              _showClockInPopupWFA(
-                                                  context); // Tampilkan pop-up WFA jika request WFA
-                                            } else {
-                                              // Jika tidak WFH/WFA, langsung Clock In tanpa pop-up
-                                              final result =
-                                                  await Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const ClockInPage(),
-                                                ),
-                                              );
-                                              if (result == true) {
-                                                setState(() {
-                                                  hasClockedIn = true;
-                                                  hasClockedOut = false;
-                                                });
-                                              }
-                                            }
-                                          },
+                                    onPressed:
+                                        hasClockedIn // Disable jika sudah Clock In atau sedang cuti
+                                            ? null
+                                            : () async {
+                                                if (jarak) {
+                                                  _showClockInPopupWFA(
+                                                      context); // Tampilkan pop-up WFA jika request WFA
+                                                } else {
+                                                  // Jika tidak WFH/WFA, langsung Clock In tanpa pop-up
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const ClockInPage(),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    setState(() {
+                                                      hasClockedIn = true;
+                                                      hasClockedOut = false;
+                                                    });
+                                                  }
+                                                }
+                                              },
                                     icon: const Icon(Icons.login),
                                     label: const Text('Clock In'),
                                     style: ElevatedButton.styleFrom(
@@ -826,9 +897,10 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   ElevatedButton.icon(
-                                    onPressed: (hasClockedIn && !hasClockedOut)
+                                    onPressed: (hasClockedIn &&
+                                            !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
                                         ? () async {
-                                            if (jarakclockout) {
+                                            if (jarak) {
                                               _showClockoutPopupjarak(context);
                                             } else {
                                               final result =
@@ -863,10 +935,10 @@ class _HomePageState extends State<HomePage> {
                                     icon: const Icon(Icons.logout),
                                     label: const Text('Clock Out'),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          (hasClockedIn && !hasClockedOut)
-                                              ? Colors.white
-                                              : Colors.grey,
+                                      backgroundColor: (hasClockedIn &&
+                                              !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
+                                          ? Colors.white
+                                          : Colors.grey,
                                     ),
                                   ),
                                 ],

@@ -24,6 +24,9 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   String? selectedWorkPlaceType;
   String iduser = "";
   String? type = '1';
+  String? _selectedType = ' ';
+  List<String> _quotaOptions = [];
+  bool isQuotaEmpty = false; // Tambahkan state untuk cek kuota kosong
 
   @override
   void initState() {
@@ -31,6 +34,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     getStatus();
     getData();
     getProfile();
+    getDatakuota();
   }
 
   Future<void> getData() async {
@@ -120,6 +124,58 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     }
   }
 
+  Future<void> getDatakuota() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    try {
+      var response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${localStorage.getString('token')}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        print("Response API Kuota: ${jsonEncode(data)}");
+
+        // Filter hanya kuota WFA
+        var wfaQuota = (data['data'] as List?)
+            ?.where((item) => item['type']['name'].toString() == "WFA")
+            .toList();
+
+        if (wfaQuota == null || wfaQuota.isEmpty) {
+          // Jika tidak ada kuota WFA, set peringatan
+          setState(() {
+            _quotaOptions = ["Tidak ada kuota WFA tersedia"];
+            _selectedType = _quotaOptions.first;
+            isQuotaEmpty = true; // Set flag kuota kosong
+          });
+          return;
+        }
+
+        // Ambil informasi kuota WFA
+        setState(() {
+          _quotaOptions = wfaQuota.map<String>((item) {
+            String typeName = item['type']['name'].toString();
+            String remaining = item['kuota'].toString();
+            String maxQuota = item['type']['max_quota'].toString();
+            return "$typeName ($remaining/$maxQuota)";
+          }).toList();
+
+          isQuotaEmpty = wfaQuota.first['kuota'] == 0; // Cek jika kuota 0
+          _selectedType = _quotaOptions.isNotEmpty ? _quotaOptions.first : null;
+        });
+      } else {
+        print('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
+    }
+  }
+
   Future<void> getProfile() async {
     final url =
         Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
@@ -154,78 +210,17 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     }
   }
 
-  // Future<void> _submitData() async {
-  //   if (selectedDate == null || noteController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
-  //     );
-  //     return;
-  //   }
-
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (BuildContext context) {
-  //       return const Center(
-  //         child: CircularProgressIndicator(
-  //           color: Color.fromARGB(255, 101, 19, 116),
-  //         ),
-  //       );
-  //     },
-  //   );
-
-  //   try {
-  //     await getProfile();
-
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //     String? token = localStorage.getString('token');
-
-  //     if (token == null || token.isEmpty) {
-  //       print("Error: Token tidak ditemukan!");
-  //       return;
-  //     }
-
-  //     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate!);
-  //     var response = await http.post(
-  //       url,
-  //       headers: {
-  //         'Authorization': 'Bearer $token',
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: jsonEncode({
-  //         'user_id': iduser,
-  //         'notes': noteController.text,
-  //         'date': formattedDate,
-  //       }),
-  //     );
-
-  //     Navigator.pop(context);
-
-  //     if (response.statusCode == 200) {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const SuccessPage()),
-  //       );
-  //     } else {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const FailurePage()),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     Navigator.pop(context);
-  //     print(e);
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const FailurePage()),
-  //     );
-  //   }
-  // }
-
   Future<void> _submitData() async {
-  
+    if (selectedDate == null || noteController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Harap isi semua data sebelum submit!")),
+      );
+      return;
+    }
+    if (isQuotaEmpty) {
+      setState(() {}); // Update UI agar peringatan muncul
+      return;
+    }
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -239,6 +234,8 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
     );
 
     try {
+      await getProfile();
+
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -263,7 +260,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
         }),
       );
 
-      Navigator.pop(context); // Tutup loading dialog
+      Navigator.pop(context);
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
@@ -271,19 +268,10 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
           MaterialPageRoute(builder: (context) => const SuccessPageWFA()),
         );
       } else {
-        var responseData = jsonDecode(response.body);
-        if (response.statusCode == 400 &&
-            responseData['message'] == "Kuota Cuti belum ditentukan") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const Failurebatascuti()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const FailurePage2I()),
-          );
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const FailurePage2I()),
+        );
       }
     } catch (e) {
       Navigator.pop(context);
@@ -440,65 +428,17 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
                   hintText: "Masukkan catatan",
                 ),
               ),
-              // // Date Picker
-              // const Text(
-              //   'Tanggal',
-              //   style: TextStyle(
-              //       fontSize: 16,
-              //       fontWeight: FontWeight.w500,
-              //       color: Color.fromRGBO(101, 19, 116, 1)),
-              // ),
-              // const SizedBox(height: 10),
-              // InkWell(
-              //   onTap: () => _selectDate(context),
-              //   child: InputDecorator(
-              //     decoration: InputDecoration(
-              //       border: OutlineInputBorder(
-              //           borderRadius: BorderRadius.circular(10),
-              //           borderSide: const BorderSide(
-              //               color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
-              //       focusedBorder: OutlineInputBorder(
-              //           borderRadius: BorderRadius.circular(10),
-              //           borderSide: const BorderSide(
-              //               color: Color.fromRGBO(101, 19, 116, 1), width: 2)),
-              //       contentPadding: const EdgeInsets.symmetric(
-              //           horizontal: 12, vertical: 14),
-              //     ),
-              //     child: Text(
-              //       selectedDate == null
-              //           ? "Choose Date"
-              //           : DateFormat('dd MMMM yyyy').format(selectedDate!),
-              //       style: const TextStyle(fontSize: 16),
-              //     ),
-              //   ),
-              // ),
-              // const SizedBox(height: 20),
-
-              // // Note Field
-              // const Text(
-              //   'Note',
-              //   style: TextStyle(
-              //       fontSize: 16,
-              //       fontWeight: FontWeight.w500,
-              //       color: Color.fromRGBO(101, 19, 116, 1)),
-              // ),
-              // const SizedBox(height: 10),
-              // TextField(
-              //   controller: noteController,
-              //   decoration: InputDecoration(
-              //     border: OutlineInputBorder(
-              //         borderRadius: BorderRadius.circular(10),
-              //         borderSide: const BorderSide(
-              //             color: Color.fromRGBO(101, 19, 116, 1))),
-              //     focusedBorder: OutlineInputBorder(
-              //         borderRadius: BorderRadius.circular(10),
-              //         borderSide: const BorderSide(
-              //             color: Color.fromRGBO(101, 19, 116, 1))),
-              //     hintText: "Enter your note",
-              //   ),
-              // ),
+              // Tampilkan peringatan jika kuota WFA kosong
+              const SizedBox(height: 10),
+              if (isQuotaEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    "Kuota WFA tidak tersedia!",
+                    style: TextStyle(color: Colors.red, fontSize: 14),
+                  ),
+                ),
               const SizedBox(height: 120),
-
               // Submit Button
               Center(
                 child: ElevatedButton(

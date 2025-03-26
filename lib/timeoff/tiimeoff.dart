@@ -18,13 +18,15 @@ class _TimeOffState extends State<TimeOff> {
   String formatStarttedDate = '';
   String formatEndtedDate = '';
   String Reason = '';
-  String? _selectedType = 'Cuti';
+  String? _selectedType = '';
   String? iduser;
   String? limit;
-  String? type = '1';
+  String? type = '';
   bool _isReasonEmpty = false;
   bool _isStartDateEmpty = false;
   bool _isEndDateEmpty = false;
+  bool _isQuotaEmpty = false; // Tambahan: cek jika kuota habis
+  String _quotaWarning = ''; // Pesan peringatan kuota
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
@@ -63,6 +65,51 @@ class _TimeOffState extends State<TimeOff> {
     }
   }
 
+  // Future<void> getDatakuota() async {
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //   try {
+  //     var response = await http.get(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer ${localStorage.getString('token')}',
+  //       },
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       var data = jsonDecode(response.body);
+  //       print("Response API Kuota: ${jsonEncode(data)}");
+
+  //       if (data['data'] == null || (data['data'] as List).isEmpty) {
+  //         print("Data kuota kosong");
+  //         setState(() {
+  //           _quotaOptions = ["Tidak ada kuota tersedia"];
+  //           _selectedType = _quotaOptions.first;
+  //         });
+  //         return;
+  //       }
+
+  //       setState(() {
+  //         _quotaOptions = (data['data'] as List).map<String>((item) {
+  //           String typeName = item['type']['name'].toString();
+  //           String remaining = item['kuota'].toString();
+  //           String maxQuota = item['type']['max_quota'].toString();
+  //           return "$typeName ($remaining/$maxQuota)";
+  //         }).toList();
+
+  //         if (_quotaOptions.isNotEmpty) {
+  //           _selectedType = _quotaOptions.first;
+  //         }
+  //       });
+  //     } else {
+  //       print('Gagal mengambil data: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Terjadi kesalahan: $e');
+  //   }
+  // }
   Future<void> getDatakuota() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
@@ -81,25 +128,36 @@ class _TimeOffState extends State<TimeOff> {
         print("Response API Kuota: ${jsonEncode(data)}");
 
         if (data['data'] == null || (data['data'] as List).isEmpty) {
-          print("Data kuota kosong");
           setState(() {
-            _quotaOptions = ["Tidak ada kuota tersedia"];
-            _selectedType = _quotaOptions.first;
+            _quotaOptions = [];
+            _selectedType = null;
+            _isQuotaEmpty = true;
+            _quotaWarning = "Kuota cuti tidak tersedia!";
           });
           return;
         }
 
-        setState(() {
-          _quotaOptions = (data['data'] as List).map<String>((item) {
-            String typeName = item['type']['name'].toString();
-            String remaining = item['kuota'].toString();
-            String maxQuota = item['type']['max_quota'].toString();
-            return "$typeName ($remaining/$maxQuota)";
-          }).toList();
+        List<String> filteredQuota = (data['data'] as List)
+            .where((item) =>
+                item['type']['name'].toString() != "WFA" &&
+                item['type']['name'].toString() != "Cuti Sakit")
+            .map<String>((item) {
+              String typeName = item['type']['name'].toString();
+              int remaining = int.parse(item['kuota'].toString());
+              String maxQuota = item['type']['max_quota'].toString();
 
-          if (_quotaOptions.isNotEmpty) {
-            _selectedType = _quotaOptions.first;
-          }
+              return remaining > 0 ? "$typeName ($remaining/$maxQuota)" : "";
+            })
+            .where((element) => element.isNotEmpty)
+            .toList();
+
+        setState(() {
+          _quotaOptions = filteredQuota;
+          _selectedType = _quotaOptions.isNotEmpty ? _quotaOptions.first : null;
+          _isQuotaEmpty = _quotaOptions.isEmpty;
+          _quotaWarning = _isQuotaEmpty
+              ? "Kuota cuti tidak tersedia!"
+              : ""; // Update warning
         });
       } else {
         print('Gagal mengambil data: ${response.statusCode}');
@@ -108,7 +166,6 @@ class _TimeOffState extends State<TimeOff> {
       print('Terjadi kesalahan: $e');
     }
   }
-
   // Future<void> getData() async {
   //   final url = Uri.parse(
   //       'https://portal.eksam.cloud/api/v1/request-history/get-type-parameter');
@@ -168,109 +225,6 @@ class _TimeOffState extends State<TimeOff> {
       print("Error: $e");
     }
   }
-
-  // Future<void> _submitData() async {
-  //   await getProfile(); // Ambil data limit cuti terbaru
-
-  //   if (limit == null || limit == '0') {
-  //     // Jika limit cuti tidak ada atau 0, tampilkan pesan error dan pindah halaman
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Cuti Anda sudah habis!'),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-
-  //     // Arahkan user ke halaman failure setelah notifikasi muncul
-  //     Future.delayed(const Duration(seconds: 1), () {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const Failurebatascuti()),
-  //       );
-  //     });
-
-  //     return;
-  //   }
-
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (BuildContext context) {
-  //       return const Center(
-  //         child: CircularProgressIndicator(
-  //           color: Color.fromARGB(255, 101, 19, 116),
-  //         ),
-  //       );
-  //     },
-  //   );
-
-  //   try {
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/request-history/make-request');
-  //     var request = http.MultipartRequest('POST', url);
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //     String formattedStartDate = _selectedStartDate != null
-  //         ? DateFormat('yyyy-MM-dd').format(_selectedStartDate!)
-  //         : '';
-  //     String formattedEndDate = _selectedEndDate != null
-  //         ? DateFormat('yyyy-MM-dd').format(_selectedEndDate!)
-  //         : '';
-
-  //     if (_selectedType == "Izin") {
-  //       type = '3';
-  //     } else {
-  //       type = '1';
-  //     }
-
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-  //     request.fields['user_id'] = iduser.toString();
-  //     request.fields['notes'] = Reason.toString();
-  //     request.fields['startdate'] = formattedStartDate;
-  //     request.fields['enddate'] = formattedEndDate;
-  //     request.fields['type'] = type!;
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (response.statusCode == 200) {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const SuccessPage2I()),
-  //       );
-  //     } else if (response.statusCode == 400 &&
-  //         data['message'] == 'Kuota Cuti belum ditentukan') {
-  //       // Jika API mengembalikan error kuota cuti habis
-  //       Navigator.pop(context); // Tutup dialog loading
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text('Cuti Anda sudah habis!'),
-  //           backgroundColor: Colors.red,
-  //         ),
-  //       );
-
-  //       Future.delayed(const Duration(seconds: 1), () {
-  //         Navigator.pushReplacement(
-  //           context,
-  //           MaterialPageRoute(builder: (context) => const Failurebatascuti()),
-  //         );
-  //       });
-  //     } else {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const FailurePage2I()),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     print(e);
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const FailurePage2I()),
-  //     );
-  //   }
-  // }
 
   Future<void> _submitData() async {
     showDialog(
@@ -359,77 +313,6 @@ class _TimeOffState extends State<TimeOff> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Remaining Leave
-              const SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                height: 140,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 30.0, vertical: 25.0),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 243, 147, 4),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Teks di sebelah kiri
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment:
-                          MainAxisAlignment.center, // Tengah vertikal
-                      children: [
-                        Text(
-                          'Your Remaining\nLeave Is',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Angka di sebelah kanan
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline
-                            .alphabetic, // Menambahkan baseline agar teks sejajar
-                        children: [
-                          Text(
-                            limit.toString(),
-                            style: const TextStyle(
-                              fontSize: 50,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 4.0),
-                            child: Text(
-                              '/',
-                              style: TextStyle(
-                                fontSize: 44,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const Text(
-                            '12',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 24),
               const Text(
                 'Tipe Cuti',
@@ -641,7 +524,15 @@ class _TimeOffState extends State<TimeOff> {
                   ),
                 ),
               ),
-
+              const SizedBox(height: 10),
+              if (_isQuotaEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    _quotaWarning,
+                    style: TextStyle(color: Colors.red, fontSize: 14),
+                  ),
+                ),
               const SizedBox(height: 50),
               SizedBox(
                 width: double.infinity,
@@ -663,11 +554,17 @@ class _TimeOffState extends State<TimeOff> {
                         _isReasonEmpty = true;
                       });
                     }
+                    if (_quotaOptions.isEmpty) {
+                      setState(() {
+                        _isQuotaEmpty = true;
+                      });
+                    }
 
                     // Jika ada input yang belum diisi, jangan lanjutkan
                     if (_isStartDateEmpty ||
                         _isEndDateEmpty ||
-                        _isReasonEmpty) {
+                        _isReasonEmpty ||
+                        _isQuotaEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Please complete all required fields.'),

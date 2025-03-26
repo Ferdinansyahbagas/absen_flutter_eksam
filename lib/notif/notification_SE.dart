@@ -168,7 +168,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
-                    errorText: _isPasswordValid ? null : 'Password minimal 6 karakter',
+                    errorText:
+                        _isPasswordValid ? null : 'Password minimal 6 karakter',
                     suffixIcon: IconButton(
                       icon: Icon(
                         _showPassword ? Icons.visibility : Icons.visibility_off,
