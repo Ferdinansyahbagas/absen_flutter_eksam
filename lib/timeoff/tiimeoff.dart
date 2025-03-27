@@ -31,9 +31,7 @@ class _TimeOffState extends State<TimeOff> {
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
   List<String> _quotaOptions = [];
-  List<String> _typeOptions = [''];
   final _reasonController = TextEditingController();
-  // final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -65,51 +63,6 @@ class _TimeOffState extends State<TimeOff> {
     }
   }
 
-  // Future<void> getDatakuota() async {
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //   try {
-  //     var response = await http.get(
-  //       url,
-  //       headers: {
-  //         'Authorization': 'Bearer ${localStorage.getString('token')}',
-  //       },
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       var data = jsonDecode(response.body);
-  //       print("Response API Kuota: ${jsonEncode(data)}");
-
-  //       if (data['data'] == null || (data['data'] as List).isEmpty) {
-  //         print("Data kuota kosong");
-  //         setState(() {
-  //           _quotaOptions = ["Tidak ada kuota tersedia"];
-  //           _selectedType = _quotaOptions.first;
-  //         });
-  //         return;
-  //       }
-
-  //       setState(() {
-  //         _quotaOptions = (data['data'] as List).map<String>((item) {
-  //           String typeName = item['type']['name'].toString();
-  //           String remaining = item['kuota'].toString();
-  //           String maxQuota = item['type']['max_quota'].toString();
-  //           return "$typeName ($remaining/$maxQuota)";
-  //         }).toList();
-
-  //         if (_quotaOptions.isNotEmpty) {
-  //           _selectedType = _quotaOptions.first;
-  //         }
-  //       });
-  //     } else {
-  //       print('Gagal mengambil data: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('Terjadi kesalahan: $e');
-  //   }
-  // }
   Future<void> getDatakuota() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
@@ -258,7 +211,7 @@ class _TimeOffState extends State<TimeOff> {
       request.fields['notes'] = Reason;
       request.fields['startdate'] = formattedStartDate;
       request.fields['enddate'] = formattedEndDate;
-      request.fields['type'] = type!;
+      request.fields['type'] = _selectedType!;
 
       var response = await request.send();
       // var rp = await http.Response.fromStream(response);
@@ -313,56 +266,11 @@ class _TimeOffState extends State<TimeOff> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
               const Text(
                 'Tipe Cuti',
                 style: TextStyle(color: Colors.black54),
               ),
               const SizedBox(height: 8),
-              // DropdownButtonFormField<String>(
-              //   value: _selectedType,
-              //   decoration: InputDecoration(
-              //     border: OutlineInputBorder(
-              //       borderRadius: BorderRadius.circular(10),
-              //       borderSide: const BorderSide(
-              //         color: Color.fromRGBO(
-              //             101, 19, 116, 1), // Customize border color
-              //         width: 2, // Customize border width
-              //       ),
-              //     ),
-              //   ),
-              //   items: _typeOptions.map((String typeOptions) {
-              //     return DropdownMenuItem<String>(
-              //       value: typeOptions,
-              //       child: Text(typeOptions),
-              //     );
-              //   }).toList(),
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       _selectedType = newValue;
-              //     });
-              //   },
-              // ),
-              // DropdownButtonFormField<String>(
-              //   value:
-              //       _typeOptions.contains(_selectedType) ? _selectedType : null,
-              //   decoration: InputDecoration(
-              //     border: OutlineInputBorder(
-              //       borderRadius: BorderRadius.circular(10),
-              //     ),
-              //   ),
-              //   items: _typeOptions.map((String typeOptions) {
-              //     return DropdownMenuItem<String>(
-              //       value: typeOptions,
-              //       child: Text(typeOptions),
-              //     );
-              //   }).toList(),
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       _selectedType = newValue;
-              //     });
-              //   },
-              // ),
               DropdownButtonFormField<String>(
                 value: _quotaOptions.contains(_selectedType)
                     ? _selectedType
@@ -473,7 +381,6 @@ class _TimeOffState extends State<TimeOff> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
               InkWell(
                 onTap: () => _selectDate(context, false),
@@ -533,7 +440,7 @@ class _TimeOffState extends State<TimeOff> {
                     style: TextStyle(color: Colors.red, fontSize: 14),
                   ),
                 ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 180),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

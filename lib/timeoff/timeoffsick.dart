@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:absen/susses&failde/gagalbatascuti.dart';
 
 class TimeOffSick extends StatefulWidget {
   const TimeOffSick({super.key});
@@ -22,8 +21,8 @@ class _TimeOffSickState extends State<TimeOffSick> {
   String formatStarttedDate = '';
   String formatEndtedDate = '';
   String Reason = '';
-  final String _selectedType = 'Sick';
   String? limit;
+  String? maxQuota;
   String? iduser;
   String? type = '2';
   File? _image; // To store the image file
@@ -35,11 +34,9 @@ class _TimeOffSickState extends State<TimeOffSick> {
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
-  final ImagePicker _picker = ImagePicker();
   List<String> _quotaOptions = [];
-
-  // final _reasonController = TextEditingController();
-  // final _formKey = GlobalKey<FormState>();
+  final String _selectedType = 'Sick';
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -70,6 +67,89 @@ class _TimeOffSickState extends State<TimeOffSick> {
     }
   }
 
+  // Future<void> getDatakuota() async {
+  //   final url = Uri.parse(
+  //       'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
+  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+  //   try {
+  //     var response = await http.get(
+  //       url,
+  //       headers: {
+  //         'Authorization': 'Bearer ${localStorage.getString('token')}',
+  //       },
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       var data = jsonDecode(response.body);
+  //       print("Response API Kuota: ${jsonEncode(data)}");
+
+  //       if (data['data'] == null || (data['data'] as List).isEmpty) {
+  //         setState(() {
+  //           _quotaOptions = ["Tidak ada kuota tersedia"];
+  //           _isQuotaEmpty = true; // Set status kuota habis
+  //         });
+  //         return;
+  //       }
+
+  //       // Filter hanya kuota cuti sakit
+  //       var sickQuota = (data['data'] as List).firstWhere(
+  //         (item) => item['type']['name'].toString().toLowerCase() == 'sick',
+  //         orElse: () => null,
+  //       );
+
+  //       if (sickQuota == null ||
+  //           int.parse(sickQuota['kuota'].toString()) == 0) {
+  //         setState(() {
+  //           _isQuotaEmpty = true;
+  //           _quotaOptions = ["Cuti Sakit Habis"];
+  //         });
+  //         return;
+  //       }
+
+  //       setState(() {
+  //         _isQuotaEmpty = false;
+  //         _quotaOptions = [
+  //           "Sick (${sickQuota['kuota']}/${sickQuota['type']['max_quota']})"
+  //         ];
+  //       });
+  //     } else {
+  //       print('Gagal mengambil data: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Terjadi kesalahan: $e');
+  //   }
+  // }
+
+  Future<void> getProfile() async {
+    try {
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print(data);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          // limit = data['data']['batas_cuti'].toString();
+          iduser = data['data']['id'].toString();
+        });
+        localStorage.setString('id', data['data']['id']);
+      } else {
+        print("Error retrieving profile");
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
   Future<void> getDatakuota() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
@@ -90,14 +170,16 @@ class _TimeOffSickState extends State<TimeOffSick> {
         if (data['data'] == null || (data['data'] as List).isEmpty) {
           setState(() {
             _quotaOptions = ["Tidak ada kuota tersedia"];
-            _isQuotaEmpty = true; // Set status kuota habis
+            _isQuotaEmpty = true;
+            limit = "0";
+            type = null; // Tidak ada type jika tidak ada kuota
           });
           return;
         }
 
-        // Filter hanya kuota cuti sakit
         var sickQuota = (data['data'] as List).firstWhere(
-          (item) => item['type']['name'].toString().toLowerCase() == 'sick',
+          (item) =>
+              item['type']['name'].toString().toLowerCase() == 'cuti sakit',
           orElse: () => null,
         );
 
@@ -106,50 +188,24 @@ class _TimeOffSickState extends State<TimeOffSick> {
           setState(() {
             _isQuotaEmpty = true;
             _quotaOptions = ["Cuti Sakit Habis"];
+            limit = "0";
+            type = null;
           });
           return;
         }
 
         setState(() {
           _isQuotaEmpty = false;
-          _quotaOptions = [
-            "Sick (${sickQuota['kuota']}/${sickQuota['type']['max_quota']})"
-          ];
+          limit = sickQuota['kuota'].toString();
+          maxQuota = sickQuota['type']['max_quota'].toString();
+          type = sickQuota['type']['name'].toString(); // Simpan ID tipe cuti
+          _quotaOptions = ["Cuti Sakit ($limit/$maxQuota)"];
         });
       } else {
         print('Gagal mengambil data: ${response.statusCode}');
       }
     } catch (e) {
       print('Terjadi kesalahan: $e');
-    }
-  }
-
-  Future<void> getProfile() async {
-    try {
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-
-      var request = http.MultipartRequest('GET', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-      print(data);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          limit = data['data']['batas_cuti'].toString();
-          iduser = data['data']['id'].toString();
-        });
-        localStorage.setString('id', data['data']['id']);
-      } else {
-        print("Error retrieving profile");
-      }
-    } catch (e) {
-      print("Error: $e");
     }
   }
 
@@ -337,7 +393,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                           MainAxisAlignment.center, // Tengah vertikal
                       children: [
                         Text(
-                          'Your Remaining\nLeave Is',
+                          'Sisa batas cuti\nAnda',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -355,7 +411,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                             .alphabetic, // Menambahkan baseline agar teks sejajar
                         children: [
                           Text(
-                            limit.toString(),
+                            limit ?? "0",
                             style: const TextStyle(
                               fontSize: 50,
                               color: Colors.white,
@@ -373,8 +429,8 @@ class _TimeOffSickState extends State<TimeOffSick> {
                               ),
                             ),
                           ),
-                          const Text(
-                            '12',
+                          Text(
+                            maxQuota ?? "6",
                             style: TextStyle(
                               fontSize: 20,
                               color: Colors.white,
