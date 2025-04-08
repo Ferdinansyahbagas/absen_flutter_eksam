@@ -13,56 +13,65 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  // bool _hasToken = false;
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _checkToken();
-  // }
-
-  // void _checkToken() async {
-  //   String? token = await Preferences.getToken();
-  //   if (token != null) {
-  //     // Jika token tersedia, set state
-  //     setState(() {
-  //       _hasToken = true;
-  //     });
-  //   }
-  // }
-
-  String? _hasDeviceId;
+  String? _deviceIdFromServer;
 
   @override
   void initState() {
     super.initState();
-    _checkDeviceId();
+    _checkDeviceLogin();
   }
 
-  Future<void> _checkDeviceId() async {
+  Future<void> _checkDeviceLogin() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    final localDeviceId =
+        localStorage.getString('device_id'); // device id lokal (set saat login)
+    final token = localStorage.getString('token');
+
+    if (token == null || localDeviceId == null) {
+      _navigateToLogin(); // kalau token atau device_id belum ada, langsung login
+      return;
+    }
+
     try {
       final url =
           Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
 
       var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
+      request.headers['Authorization'] = 'Bearer $token';
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+      var data = jsonDecode(rp.body);
 
-      setState(() {
-        print(data['data']['device_id']);
-        print(_hasDeviceId);
-        _hasDeviceId = data['data']['device_id'];
-      });
+      _deviceIdFromServer = data['data']['device_id'];
 
-      print("Profil pengguna: ${data['data']}");
+      print('Local Device ID: $localDeviceId');
+      print('Server Device ID: $_deviceIdFromServer');
+
+      if (_deviceIdFromServer == localDeviceId) {
+        _navigateToHome();
+      } else {
+        // Logout otomatis karena login di device lain
+        await localStorage.clear(); // hapus token, device_id, dll
+        _navigateToLogin();
+      }
     } catch (e) {
-      print("Error mengambil profil pengguna: $e");
+      print("Error saat cek device login: $e");
+      _navigateToLogin(); // fallback
     }
+  }
+
+  void _navigateToLogin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  void _navigateToHome() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
 
   @override
@@ -117,21 +126,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (_hasDeviceId != null) {
-                      // Jika token ada, langsung ke HomePage
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomePage()),
-                      );
-                    } else {
-                      // Jika tidak ada token, ke LoginScreen
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()),
-                      );
-                    }
+                    _navigateToLogin();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFBD73), // Warna tombol

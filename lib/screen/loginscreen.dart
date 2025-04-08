@@ -97,21 +97,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void saveDeviceId() async {
     String? userToken = await Preferences.getToken();
-
     if (userToken == null) return;
 
     try {
-      // Ambil device ID
       DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       String deviceId;
 
       if (Theme.of(context).platform == TargetPlatform.android) {
         AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-        deviceId = androidInfo.id; // ID perangkat Android
+        deviceId = androidInfo.id;
       } else {
         IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-        deviceId = iosInfo.identifierForVendor ?? "Unknown"; // ID perangkat iOS
+        deviceId = iosInfo.identifierForVendor ?? "Unknown";
       }
+
+      // Simpan device_id ke SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('device_id', deviceId);
 
       final response = await http.post(
         Uri.parse('https://portal.eksam.cloud/api/v1/other/send-device-id'),
@@ -123,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
-        print("Device ID berhasil dikirim!");
+        print("Device ID berhasil dikirim dan disimpan!");
       } else {
         print("Gagal mengirim Device ID: ${response.body}");
       }

@@ -16,7 +16,6 @@ import 'package:absen/service/api_service.dart'; // Import ApiService
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -869,21 +868,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-Future<void> deleteToken() async {
-  await FirebaseMessaging.instance.deleteToken();
-  print("Token Firebase dihapus");
-}
+  Future<void> deleteToken() async {
+    await FirebaseMessaging.instance.deleteToken();
+    print("Token Firebase dihapus");
+  }
 
   void _logout(BuildContext context) async {
     // Hapus token dan device_id dari SharedPreferences
     await Preferences.clearToken();
     await Preferences.clearDeviceId();
     await Preferences.clearFirebaseToken(); // Hapus token Firebase
-     await deleteToken(); // Hapus token dari perangkat
-      await Preferences.clearAll();         // Atau bisa pakai ini langsung
+    await deleteToken(); // Hapus token dari perangkat
+    await Preferences.clearAll(); // Atau bisa pakai ini langsung
 
-  print("✅ Logout selesai, semua data lokal dihapus.");
-
+    print("✅ Logout selesai, semua data lokal dihapus.");
 
     // Pindah ke halaman login tanpa bisa kembali ke Home
     Navigator.pushAndRemoveUntil(

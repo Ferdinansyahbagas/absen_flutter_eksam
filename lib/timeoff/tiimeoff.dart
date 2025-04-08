@@ -31,6 +31,7 @@ class _TimeOffState extends State<TimeOff> {
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
   List<String> _quotaOptions = [];
+  Map<String, String> _typeMap = {}; // Tambahan
   final _reasonController = TextEditingController();
 
   @override
@@ -90,27 +91,29 @@ class _TimeOffState extends State<TimeOff> {
           return;
         }
 
-        List<String> filteredQuota = (data['data'] as List)
-            .where((item) =>
-                item['type']['name'].toString() != "WFA" &&
-                item['type']['name'].toString() != "Cuti Sakit")
-            .map<String>((item) {
-              String typeName = item['type']['name'].toString();
-              int remaining = int.parse(item['kuota'].toString());
-              String maxQuota = item['type']['max_quota'].toString();
+        List quotaList = data['data'] as List;
+        List<String> filteredQuota = [];
+        Map<String, String> tempMap = {};
 
-              return remaining > 0 ? "$typeName ($remaining/$maxQuota)" : "";
-            })
-            .where((element) => element.isNotEmpty)
-            .toList();
+        for (var item in quotaList) {
+          String typeName = item['type']['name'].toString();
+          String typeId = item['type']['id'].toString();
+          int remaining = int.parse(item['kuota'].toString());
+          String maxQuota = item['type']['max_quota'].toString();
+
+          if (typeName != "WFA" && typeName != "Cuti Sakit" && remaining > 0) {
+            String displayName = "$typeName ($remaining/$maxQuota)";
+            filteredQuota.add(displayName);
+            tempMap[displayName] = typeId;
+          }
+        }
 
         setState(() {
           _quotaOptions = filteredQuota;
+          _typeMap = tempMap;
           _selectedType = _quotaOptions.isNotEmpty ? _quotaOptions.first : null;
           _isQuotaEmpty = _quotaOptions.isEmpty;
-          _quotaWarning = _isQuotaEmpty
-              ? "Kuota cuti tidak tersedia!"
-              : ""; // Update warning
+          _quotaWarning = _isQuotaEmpty ? "Kuota cuti tidak tersedia!" : "";
         });
       } else {
         print('Gagal mengambil data: ${response.statusCode}');
@@ -119,6 +122,7 @@ class _TimeOffState extends State<TimeOff> {
       print('Terjadi kesalahan: $e');
     }
   }
+
   // Future<void> getData() async {
   //   final url = Uri.parse(
   //       'https://portal.eksam.cloud/api/v1/request-history/get-type-parameter');
@@ -211,7 +215,7 @@ class _TimeOffState extends State<TimeOff> {
       request.fields['notes'] = Reason;
       request.fields['startdate'] = formattedStartDate;
       request.fields['enddate'] = formattedEndDate;
-      request.fields['type'] = _selectedType!;
+      request.fields['type'] = _typeMap[_selectedType] ?? '';
 
       var response = await request.send();
       // var rp = await http.Response.fromStream(response);
@@ -277,8 +281,7 @@ class _TimeOffState extends State<TimeOff> {
                     : null,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 items: _quotaOptions.map((String quota) {
                   return DropdownMenuItem<String>(
