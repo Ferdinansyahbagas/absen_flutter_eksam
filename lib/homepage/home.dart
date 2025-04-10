@@ -200,7 +200,7 @@ class _HomePageState extends State<HomePage> {
   Column _buildMenuShortcut({
     required String label,
     TextStyle? labelStyle,
-    required Widget targetPage,
+    required Widget targetPage, 
     Color bgColor =
         const Color.fromARGB(255, 101, 19, 116), // Warna background default
     IconData? iconData, // Opsional untuk menggunakan Icon Flutter

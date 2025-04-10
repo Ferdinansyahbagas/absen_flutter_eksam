@@ -67,60 +67,6 @@ class _TimeOffSickState extends State<TimeOffSick> {
     }
   }
 
-  // Future<void> getDatakuota() async {
-  //   final url = Uri.parse(
-  //       'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
-  //   SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //   try {
-  //     var response = await http.get(
-  //       url,
-  //       headers: {
-  //         'Authorization': 'Bearer ${localStorage.getString('token')}',
-  //       },
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       var data = jsonDecode(response.body);
-  //       print("Response API Kuota: ${jsonEncode(data)}");
-
-  //       if (data['data'] == null || (data['data'] as List).isEmpty) {
-  //         setState(() {
-  //           _quotaOptions = ["Tidak ada kuota tersedia"];
-  //           _isQuotaEmpty = true; // Set status kuota habis
-  //         });
-  //         return;
-  //       }
-
-  //       // Filter hanya kuota cuti sakit
-  //       var sickQuota = (data['data'] as List).firstWhere(
-  //         (item) => item['type']['name'].toString().toLowerCase() == 'sick',
-  //         orElse: () => null,
-  //       );
-
-  //       if (sickQuota == null ||
-  //           int.parse(sickQuota['kuota'].toString()) == 0) {
-  //         setState(() {
-  //           _isQuotaEmpty = true;
-  //           _quotaOptions = ["Cuti Sakit Habis"];
-  //         });
-  //         return;
-  //       }
-
-  //       setState(() {
-  //         _isQuotaEmpty = false;
-  //         _quotaOptions = [
-  //           "Sick (${sickQuota['kuota']}/${sickQuota['type']['max_quota']})"
-  //         ];
-  //       });
-  //     } else {
-  //       print('Gagal mengambil data: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('Terjadi kesalahan: $e');
-  //   }
-  // }
-
   Future<void> getProfile() async {
     try {
       final url =
@@ -210,6 +156,75 @@ class _TimeOffSickState extends State<TimeOffSick> {
   }
 
   // *Menampilkan dialog pilihan sumber gambar*
+  // Future<void> _pickImage() async {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return SafeArea(
+  //         child: Wrap(
+  //           children: <Widget>[
+  //             ListTile(
+  //               leading: const Icon(Icons.camera_alt),
+  //               title: const Text('Ambil dari Kamera'),
+  //               onTap: () async {
+  //                 Navigator.pop(context);
+  //                 await _getImage(ImageSource.camera);
+  //               },
+  //             ),
+  //             ListTile(
+  //               leading: const Icon(Icons.photo_library),
+  //               title: const Text('Pilih dari Galeri'),
+  //               onTap: () async {
+  //                 Navigator.pop(context);
+  //                 await _getImage(ImageSource.gallery);
+  //               },
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
+  // // *Mengambil gambar dari sumber yang dipilih*
+  // Future<void> _getImage(ImageSource source) async {
+  //   final XFile? pickedFile = await _picker.pickImage(source: source);
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _image = File(pickedFile.path);
+  //       _isImageRequired = false;
+  //     });
+  //   }
+  // }
+
+  Future<void> _getImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      final int fileSizeInBytes = await file.length();
+      final double fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+      if (fileSizeInMB > 2) {
+        setState(() {
+          _image = null;
+          _isImageRequired = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ukuran gambar tidak boleh lebih dari 2 MB.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      setState(() {
+        _image = file;
+        _isImageRequired = false;
+      });
+    }
+  }
+
   Future<void> _pickImage() async {
     showModalBottomSheet(
       context: context,
@@ -238,17 +253,6 @@ class _TimeOffSickState extends State<TimeOffSick> {
         );
       },
     );
-  }
-
-  // *Mengambil gambar dari sumber yang dipilih*
-  Future<void> _getImage(ImageSource source) async {
-    final XFile? pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-        _isImageRequired = false;
-      });
-    }
   }
 
   // Function to submit data to API
