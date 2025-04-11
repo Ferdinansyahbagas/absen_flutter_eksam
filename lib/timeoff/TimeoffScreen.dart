@@ -23,6 +23,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
   String? limit;
   List<dynamic> historyData = []; // Tambahkan list untuk menyimpan data history
   List<dynamic> notifications = [];
+  List<Map<String, dynamic>> quotaData = [];
   bool hasUnreadNotifications = false;
 
   @override
@@ -31,6 +32,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
     getProfile();
     getHistoryData(); // Panggil fungsi untuk mengambil data history
     getNotif();
+    getDatakuota();
   }
 
   // fungsi untuk memanggil bacaan notifikasi
@@ -79,6 +81,89 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
         }).toList();
         hasUnreadNotifications = notifications.any((notif) => !notif['isRead']);
       });
+    }
+  }
+
+  Future<void> getDatakuota() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    try {
+      var response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${localStorage.getString('token')}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        print("Response API Kuota: ${jsonEncode(data)}");
+
+        if (data['data'] == null || (data['data'] as List).isEmpty) {
+          setState(() {
+            quotaData = [];
+          });
+          return;
+        }
+
+        List<Map<String, dynamic>> parsedQuota = [];
+
+        for (var item in data['data']) {
+          parsedQuota.add({
+            "type": item['type']['name'],
+            "remaining": item['kuota'],
+            "max": item['type']['max_quota'],
+          });
+        }
+
+        setState(() {
+          quotaData = parsedQuota;
+        });
+      } else {
+        print('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
+    }
+  }
+
+  Future<void> deleteCuti(String id) async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/request-history/cancel-request/$id');
+
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    final token = localStorage.getString('token');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        print('Berhasil: $data');
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text('Pengajuan berhasil dibatalkan')),
+        // );
+        getHistoryData();
+      } else {
+        var errorData = jsonDecode(response.body);
+        print('Gagal: ${errorData['message']}');
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text('Gagal membatalkan pengajuan')),
+        // );
+      }
+    } catch (e) {
+      print('Error saat mengirim request: $e');
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Terjadi kesalahan saat menghapus')),
+      // );
     }
   }
 
@@ -179,73 +264,148 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
           children: [
             // Remaining Leave
             const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              height: 140,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 243, 147, 4),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Teks di sebelah kiri
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment:
-                        MainAxisAlignment.center, // Tengah vertikal
-                    children: [
-                      Text(
-                        'Sisa Cuti Anda \nAdalah',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+            // Container(
+            //   width: double.infinity,
+            //   height: 140,
+            //   padding:
+            //       const EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
+            //   decoration: BoxDecoration(
+            //     color: const Color.fromARGB(255, 243, 147, 4),
+            //     borderRadius: BorderRadius.circular(9),
+            //   ),
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       // Teks di sebelah kiri
+            //       const Column(
+            //         crossAxisAlignment: CrossAxisAlignment.start,
+            //         mainAxisAlignment:
+            //             MainAxisAlignment.center, // Tengah vertikal
+            //         children: [
+            //           Text(
+            //             'Sisa Cuti Anda \nAdalah',
+            //             style: TextStyle(
+            //               color: Colors.white,
+            //               fontSize: 22,
+            //               fontWeight: FontWeight.bold,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //       // Angka di sebelah kanan
+            //       Align(
+            //         alignment: Alignment.bottomRight,
+            //         child: Row(
+            //           crossAxisAlignment: CrossAxisAlignment.baseline,
+            //           textBaseline: TextBaseline
+            //               .alphabetic, // Menambahkan baseline agar teks sejajar
+            //           children: [
+            //             Text(
+            //               limit.toString(),
+            //               style: const TextStyle(
+            //                 fontSize: 50,
+            //                 color: Colors.white,
+            //                 fontWeight: FontWeight.bold,
+            //               ),
+            //             ),
+            //             const Padding(
+            //               padding: EdgeInsets.only(left: 4.0),
+            //               child: Text(
+            //                 '/',
+            //                 style: TextStyle(
+            //                   fontSize: 44,
+            //                   color: Colors.black,
+            //                   fontWeight: FontWeight.bold,
+            //                 ),
+            //               ),
+            //             ),
+            //             const Text(
+            //               '12',
+            //               style: TextStyle(
+            //                 fontSize: 20,
+            //                 color: Colors.white,
+            //                 fontWeight: FontWeight.bold,
+            //               ),
+            //             ),
+            //           ],
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Detail Kuota Cuti'),
+                      content: SizedBox(
+                        // Batasi tinggi maksimal agar tidak overflow
+                        height: MediaQuery.of(context).size.height * 0.4,
+                        width: double.maxFinite,
+                        child: quotaData.isNotEmpty
+                            ? SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: quotaData.map((data) {
+                                    return ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text('${data['type']}'),
+                                      subtitle: Text(
+                                        'Sisa: ${data['remaining']}/${data['max']} hari',
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              )
+                            : const Center(
+                                child: Text('Tidak ada data kuota tersedia.'),
+                              ),
                       ),
-                    ],
-                  ),
-                  // Angka di sebelah kanan
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline
-                          .alphabetic, // Menambahkan baseline agar teks sejajar
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Tutup'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                height: 140,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 30.0, vertical: 25.0),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(255, 243, 147, 4),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          limit.toString(),
-                          style: const TextStyle(
-                            fontSize: 50,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4.0),
-                          child: Text(
-                            '/',
-                            style: TextStyle(
-                              fontSize: 44,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const Text(
-                          '12',
+                          'Sisa Cuti Anda \nAdalah',
                           style: TextStyle(
-                            fontSize: 20,
                             color: Colors.white,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -304,6 +464,93 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
               ),
             ),
             // Time Off Request Card
+            // Expanded(
+            //   child: historyData.isEmpty
+            //       ? const Center(
+            //           child: Text(
+            //             "Belum ada history time off",
+            //             style: TextStyle(
+            //               color: Colors.grey,
+            //               fontSize: 16,
+            //               fontWeight: FontWeight.bold,
+            //             ),
+            //           ),
+            //         )
+            //       : ListView.builder(
+            //           itemCount: historyData.length,
+            //           itemBuilder: (context, index) {
+            //             final item = historyData[index] as Map<String, dynamic>;
+            //             return Container(
+            //               margin: const EdgeInsets.only(bottom: 16),
+            //               padding: const EdgeInsets.symmetric(
+            //                   horizontal: 16, vertical: 20),
+            //               decoration: BoxDecoration(
+            //                 color: const Color.fromARGB(255, 236, 81, 109),
+            //                 borderRadius: BorderRadius.circular(12),
+            //               ),
+            //               child: Column(
+            //                 crossAxisAlignment: CrossAxisAlignment.start,
+            //                 children: [
+            //                   // Header dengan judul tipe dan tanggal
+            //                   Row(
+            //                     mainAxisAlignment:
+            //                         MainAxisAlignment.spaceBetween,
+            //                     children: [
+            //                       Text(
+            //                         item['type']['name']?.toString() ??
+            //                             'Unknown Type',
+            //                         style: const TextStyle(
+            //                           color: Colors.white,
+            //                           fontSize: 25,
+            //                           fontWeight: FontWeight.bold,
+            //                         ),
+            //                       ),
+            //                       Text(
+            //                         '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
+            //                         style: const TextStyle(
+            //                           color: Colors.white,
+            //                           fontSize: 12,
+            //                         ),
+            //                       ),
+            //                     ],
+            //                   ),
+            //                   // Catatan atau deskripsi
+            //                   Text(
+            //                     item['notes']?.toString() ??
+            //                         'No reason provided',
+            //                     style: const TextStyle(
+            //                       color: Colors.white,
+            //                       fontSize: 14,
+            //                     ),
+            //                   ),
+            //                   const SizedBox(height: 20),
+            //                   // Status pengajuan
+            //                   Align(
+            //                     alignment: Alignment.center,
+            //                     child: Container(
+            //                       padding: const EdgeInsets.symmetric(
+            //                           vertical: 8, horizontal: 110),
+            //                       decoration: BoxDecoration(
+            //                         color: Colors.white,
+            //                         borderRadius: BorderRadius.circular(9),
+            //                       ),
+            //                       child: Text(
+            //                         item['status']['name']?.toString() ??
+            //                             'Unknown Status',
+            //                         style: const TextStyle(
+            //                           color: Colors.pink,
+            //                           fontWeight: FontWeight.bold,
+            //                           fontSize: 16,
+            //                         ),
+            //                       ),
+            //                     ),
+            //                   ),
+            //                 ],
+            //               ),
+            //             );
+            //           },
+            //         ),
+            // )
             Expanded(
               child: historyData.isEmpty
                   ? const Center(
@@ -320,6 +567,10 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                       itemCount: historyData.length,
                       itemBuilder: (context, index) {
                         final item = historyData[index] as Map<String, dynamic>;
+                        final statusName =
+                            item['status']['name']?.toString() ?? '';
+                        final requestId = item['id'].toString();
+
                         return Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.symmetric(
@@ -331,7 +582,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Header dengan judul tipe dan tanggal
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -354,7 +604,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                                   ),
                                 ],
                               ),
-                              // Catatan atau deskripsi
                               Text(
                                 item['notes']?.toString() ??
                                     'No reason provided',
@@ -364,7 +613,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                                 ),
                               ),
                               const SizedBox(height: 20),
-                              // Status pengajuan
                               Align(
                                 alignment: Alignment.center,
                                 child: Container(
@@ -375,8 +623,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                                     borderRadius: BorderRadius.circular(9),
                                   ),
                                   child: Text(
-                                    item['status']['name']?.toString() ??
-                                        'Unknown Status',
+                                    statusName,
                                     style: const TextStyle(
                                       color: Colors.pink,
                                       fontWeight: FontWeight.bold,
@@ -385,86 +632,32 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                                   ),
                                 ),
                               ),
+                              if (statusName.toLowerCase() == 'pending') ...[
+                                const SizedBox(height: 12),
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.pink,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      deleteCuti(requestId);
+                                    },
+                                    icon: const Icon(Icons.cancel),
+                                    label: const Text("Batalkan"),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         );
                       },
                     ),
             )
-            // Expanded(
-            //   child: ListView.builder(
-            //     itemCount: historyData.length,
-            //     itemBuilder: (context, index) {
-            //       final item = historyData[index] as Map<String, dynamic>;
-            //       return Container(
-            //         margin: const EdgeInsets.only(bottom: 16),
-            //         padding: const EdgeInsets.symmetric(
-            //             horizontal: 16, vertical: 20),
-            //         decoration: BoxDecoration(
-            //           color: const Color.fromARGB(255, 236, 81, 109),
-            //           borderRadius: BorderRadius.circular(12),
-            //         ),
-            //         child: Column(
-            //           crossAxisAlignment: CrossAxisAlignment.start,
-            //           children: [
-            //             // Header dengan judul tipe dan tanggal
-            //             Row(
-            //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //               children: [
-            //                 Text(
-            //                   item['type']['name']?.toString() ??
-            //                       'Unknown Type', // Hanya menampilkan nama tipe
-            //                   style: const TextStyle(
-            //                     color: Colors.white,
-            //                     fontSize: 25,
-            //                     fontWeight: FontWeight.bold,
-            //                   ),
-            //                 ),
-            //                 Text(
-            //                   '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
-            //                   style: const TextStyle(
-            //                     color: Colors.white,
-            //                     fontSize: 12,
-            //                   ),
-            //                 ),
-            //               ],
-            //             ),
-            //             // Catatan atau deskripsi
-            //             Text(
-            //               item['notes']?.toString() ?? 'No reason provided',
-            //               style: const TextStyle(
-            //                 color: Colors.white,
-            //                 fontSize: 14,
-            //               ),
-            //             ),
-            //             const SizedBox(height: 20),
-            //             // Status pengajuan
-            //             Align(
-            //               alignment: Alignment.center,
-            //               child: Container(
-            //                 padding: const EdgeInsets.symmetric(
-            //                     vertical: 8, horizontal: 110),
-            //                 decoration: BoxDecoration(
-            //                   color: Colors.white,
-            //                   borderRadius: BorderRadius.circular(9),
-            //                 ),
-            //                 child: Text(
-            //                   item['status']['name']?.toString() ??
-            //                       'Unknown Status',
-            //                   style: const TextStyle(
-            //                     color: Colors.pink,
-            //                     fontWeight: FontWeight.bold,
-            //                     fontSize: 16,
-            //                   ),
-            //                 ),
-            //               ),
-            //             ),
-            //           ],
-            //         ),
-            //       );
-            //     },
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -547,11 +740,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
               );
               break;
             case 1:
-              // Navigator.pushAndRemoveUntil(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => const TimeOffScreen()),
-              //   (route) => false,
-              // );
               break;
             case 2:
               Navigator.pushAndRemoveUntil(

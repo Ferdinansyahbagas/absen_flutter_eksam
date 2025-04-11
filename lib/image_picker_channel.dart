@@ -1,151 +1,74 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+// FFuture<void> getuserinfo() async {
+//   try {
+//     final url = Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
+//     var request = http.MultipartRequest('GET', url);
+//     SharedPreferences localStorage = await SharedPreferences.getInstance();
+//     request.headers['Authorization'] = 'Bearer ${localStorage.getString('token')}';
 
-class ClockInPage extends StatefulWidget {
-  const ClockInPage({super.key});
+//     var response = await request.send();
+//     var rp = await http.Response.fromStream(response);
+//     var json = jsonDecode(rp.body);
 
-  @override
-  _ClockInPageState createState() => _ClockInPageState();
-}
+//     if (rp.statusCode == 200) {
+//       var data = json['data'];
+//       var dataBulanIni = json['data_bulan_ini'];
+//       var dataMingguIni = json['data_minggu_ini'];
 
-class _ClockInPageState extends State<ClockInPage> {
-  String? _selectedWorkType = 'Reguler';
-  String? _selectedWorkplaceType = 'WFO';
-  String? batasWfh;
-  bool isPending = false; // Untuk status tombol setelah submit WFH
+//       int menit = data['menit'];
+//       int hari = data['hari'];
+//       int telat = data['telat'];
+//       int menitTelat = data['menit_telat'];
+//       int lembur = data['lembur'];
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchBatasWFH();
-    _checkWFHStatus();
-  }
+//       int menitB = dataBulanIni['menit'];
+//       int hariB = dataBulanIni['hari'];
+//       int telatB = dataBulanIni['telat'];
+//       int menitTelatB = dataBulanIni['menit_telat'];
+//       int lemburB = dataBulanIni['lembur'];
 
-  Future<void> _fetchBatasWFH() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-    var response = await http.get(url, headers: {
-      'Authorization': 'Bearer ${localStorage.getString('token')}'
-    });
+//       int menitM = dataMingguIni['menit'];
+//       int hariM = dataMingguIni['hari'];
+//       int telatM = dataMingguIni['telat'];
+//       int menitTelatM = dataMingguIni['menit_telat'];
+//       int lemburM = dataMingguIni['lembur'];
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      setState(() {
-        batasWfh = data['data']['batas_wfh'].toString();
-      });
-    }
-  }
+//       setState(() {
+//         // Simpan data ke dalam variabel state atau lakukan apapun yang diperlukan
+//       });
+//     } else {
+//       print('Error fetching data: ${rp.statusCode}');
+//       print(rp.body);
+//     }
+//   } catch (e) {
+//     print('Error occurred: $e');
+//   }
+// }
 
-  Future<void> _checkWFHStatus() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-wfh');
-    var response = await http.get(url, headers: {
-      'Authorization': 'Bearer ${localStorage.getString('token')}'
-    });
+// Map<String, dynamic> bulanIni = {};
+// Map<String, dynamic> bulanSebelumnya = {};
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      setState(() {
-        isPending = data['is_wfh']; // Ubah tombol jika sudah mengajukan WFH
-      });
-    }
-  }
+// Future<void> getTarget() async {
+//   try {
+//     final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-target-hour');
+//     var request = http.MultipartRequest('GET', url);
+//     SharedPreferences localStorage = await SharedPreferences.getInstance();
+//     request.headers['Authorization'] =
+//         'Bearer ${localStorage.getString('token')}';
 
-  Future<void> _submitWFH() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
-    var response = await http.post(url,
-        headers: {'Authorization': 'Bearer ${localStorage.getString('token')}'},
-        body: {'type': '1', 'location': '2'});
+//     var response = await request.send();
+//     var rp = await http.Response.fromStream(response);
+//     var data = jsonDecode(rp.body.toString());
 
-    if (response.statusCode == 200) {
-      setState(() {
-        isPending = true;
-      });
-    }
-  }
-
-  Future<void> _cancelWFH() async {
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/cancel-wfh');
-    var response = await http.delete(url, headers: {
-      'Authorization': 'Bearer ${localStorage.getString('token')}'
-    });
-
-    if (response.statusCode == 200) {
-      setState(() {
-        isPending = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Clock In')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Jenis Pekerjaan'),
-            DropdownButtonFormField<String>(
-              value: _selectedWorkType,
-              items: ['Reguler', 'Lembur'].map((String value) {
-                return DropdownMenuItem<String>(
-                    value: value, child: Text(value));
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedWorkType = newValue;
-                });
-              },
-            ),
-            const SizedBox(height: 10),
-            const Text('Jenis Tempat Kerja'),
-            DropdownButtonFormField<String>(
-              value: _selectedWorkplaceType,
-              items: ['WFO', 'WFH'].map((String value) {
-                return DropdownMenuItem<String>(
-                    value: value, child: Text(value));
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedWorkplaceType = newValue;
-                });
-              },
-            ),
-            if (_selectedWorkType == 'Reguler' &&
-                _selectedWorkplaceType == 'WFH')
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text('Batas WFH anda tersisa: $batasWfh'),
-              ),
-            const SizedBox(height: 20),
-            Center(
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: isPending ? null : _submitWFH,
-                    child: Text(isPending ? 'Pending' : 'Clock In'),
-                  ),
-                  if (isPending)
-                    TextButton(
-                      onPressed: _cancelWFH,
-                      child: const Text('Batalkan'),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//     if (rp.statusCode == 200) {
+//       setState(() {
+//         bulanIni = data['data']['bulan_ini'];
+//         bulanSebelumnya = data['data']['bulan_sebelumnya'];
+//       });
+//     } else {
+//       print('Error fetching target data: ${rp.statusCode}');
+//       print(rp.body);
+//     }
+//   } catch (e) {
+//     print('Error occurred: $e');
+//   }
+// } 

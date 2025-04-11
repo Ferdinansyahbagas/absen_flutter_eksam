@@ -204,14 +204,14 @@ class _TimeOffSickState extends State<TimeOffSick> {
       final int fileSizeInBytes = await file.length();
       final double fileSizeInMB = fileSizeInBytes / (1024 * 1024);
 
-      if (fileSizeInMB > 2) {
+      if (fileSizeInMB > 5) {
         setState(() {
           _image = null;
           _isImageRequired = true;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Ukuran gambar tidak boleh lebih dari 2 MB.'),
+            content: Text('Ukuran gambar tidak boleh lebih dari 5 MB.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -397,7 +397,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                           MainAxisAlignment.center, // Tengah vertikal
                       children: [
                         Text(
-                          'Sisa batas cuti\nAnda',
+                          'Sisa batas cuti\nSakit anda',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,

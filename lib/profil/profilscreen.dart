@@ -59,7 +59,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _getBank();
     loadProfileImage();
     getProfile();
-    deleteToken();
   }
 
   Future<void> saveImageUrls({

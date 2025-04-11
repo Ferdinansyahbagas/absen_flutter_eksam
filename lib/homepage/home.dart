@@ -17,6 +17,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:absen/service/api_service.dart'; // Import ApiService
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -200,7 +202,7 @@ class _HomePageState extends State<HomePage> {
   Column _buildMenuShortcut({
     required String label,
     TextStyle? labelStyle,
-    required Widget targetPage, 
+    required Widget targetPage,
     Color bgColor =
         const Color.fromARGB(255, 101, 19, 116), // Warna background default
     IconData? iconData, // Opsional untuk menggunakan Icon Flutter
@@ -637,6 +639,30 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> getuserinfo() async {
+    try {
+      final url = Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

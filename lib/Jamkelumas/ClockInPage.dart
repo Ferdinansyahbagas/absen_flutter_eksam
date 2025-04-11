@@ -12,7 +12,6 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:absen/service/api_service.dart'; // Import ApiService
 
 class ClockInPage extends StatefulWidget {
   const ClockInPage({super.key});
