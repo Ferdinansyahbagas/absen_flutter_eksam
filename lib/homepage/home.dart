@@ -43,6 +43,22 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   int _currentPage = 0; // Variable to keep track of the current page
   int? userId;
+  int hariBulanIni = 0;
+  int menitBulanIni = 0;
+  int telatBulanIni = 0;
+  int cutiBulanIni = 0;
+  int hariBulanLalu = 0;
+  int menitBulanLalu = 0;
+  int telatBulanLalu = 0;
+  int cutiBulanLalu = 0;
+  int hadirHariIni = 0;
+  int targetHariIni = 0;
+  int hadirMenitIni = 0;
+  int targetMenitIni = 0;
+  int hadirHariSebelumnya = 0;
+  int targetHariSebelumnya = 0;
+  int hadirMenitSebelumnya = 0;
+  int targetMenitSebelumnya = 0;
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
   bool hasClockedIn = false; // Status clock-in biasa
   bool hasClockedOut = false; // Status clock-out biasa
@@ -66,6 +82,7 @@ class _HomePageState extends State<HomePage> {
       false; //Status untuk melihat notifikasi sudah di baca atau belum
   List<dynamic> notifications = []; //variabel noifiaksi
   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
+  Map<String, dynamic> targetData = {};
   Position? lastKnownPosition; // Simpan lokasi terakhir
 
   @override
@@ -78,6 +95,8 @@ class _HomePageState extends State<HomePage> {
       getPengumuman();
       getNotif();
       getcekwfa();
+      getTarget();
+      getuserinfo();
     });
     _pageController.addListener(() {
       setState(() {
@@ -641,7 +660,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> getuserinfo() async {
     try {
-      final url = Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
       var request = http.MultipartRequest('GET', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
@@ -652,17 +672,221 @@ class _HomePageState extends State<HomePage> {
       var data = jsonDecode(rp.body.toString());
 
       if (rp.statusCode == 200) {
+        final bulanIni = data['data_bulan_ini'];
+        final bulanLalu = data['data'];
+
         setState(() {
+          hariBulanIni = bulanIni['hari'];
+          menitBulanIni = bulanIni['menit'];
+          telatBulanIni = bulanIni['menit_telat'];
+          cutiBulanIni = 0;
+
+          hariBulanLalu = bulanLalu['hari'];
+          menitBulanLalu = bulanLalu['menit'];
+          telatBulanLalu = bulanLalu['menit_telat'];
+          cutiBulanLalu = 0;
         });
       } else {
-        print('Error fetching history data: ${rp.statusCode}');
+        print('Error fetching user info: ${rp.statusCode}');
         print(rp.body);
       }
     } catch (e) {
       print('Error occurred: $e');
     }
   }
-  
+
+  Widget buildRekapBox(String title, int hari, int menit, int telat, int cuti) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildStatItem("$hari", "Masuk", Colors.blue, "Hari"),
+              buildStatItem("$menit", "Durasi Kerja", Colors.green, "Menit"),
+              buildStatItem("$telat", "Durasi Terlambat", Colors.red, "Menit"),
+              buildStatItem("$cuti", "Cuti", Colors.orange, "Hari"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildStatItem(String value, String label, Color color, String unit) {
+    return Column(
+      children: [
+        Text(value,
+            style: TextStyle(
+                fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+        const SizedBox(height: 4),
+        Text(label,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(unit, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      ],
+    );
+  }
+
+  // Future<void> getTarget() async {
+  //   try {
+  //     final url = Uri.parse(
+  //         'https://portal.eksam.cloud/api/v1/attendance/get-target-hour');
+  //     var request = http.MultipartRequest('GET', url);
+  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
+  //     request.headers['Authorization'] =
+  //         'Bearer ${localStorage.getString('token')}';
+
+  //     var response = await request.send();
+  //     var rp = await http.Response.fromStream(response);
+  //     var json = jsonDecode(rp.body.toString());
+  //     print("STATUS CODE: ${rp.statusCode}");
+  //     print("RESPONSE BODY: ${rp.body}");
+  //     print("DATA JSON: ${json['data']}");
+  //     print(rp.body); // <-- cetak isi respons
+
+  //     if (rp.statusCode == 200) {
+  //       var data = json['data'];
+  //       var bulanIni = data['bulan_ini'] ?? {};
+  //       var bulanSebelumnya = data['bulan_sebelumnya'] ?? {};
+
+  //       print('=== BULAN INI ===');
+  //       print('Jumlah Masuk: ${bulanIni['jumlah_masuk']}');
+  //       print('Target Hari: ${bulanIni['target_hari']}');
+  //       print('Jumlah Menit: ${bulanIni['jumlah_menit']}');
+  //       print('Target Menit: ${bulanIni['target_menit']}');
+
+  //       print('=== BULAN SEBELUMNYA ===');
+  //       print('Jumlah Masuk: ${bulanSebelumnya['jumlah_masuk']}');
+  //       print('Target Hari: ${bulanSebelumnya['target_hari']}');
+  //       print('Jumlah Menit: ${bulanSebelumnya['jumlah_menit']}');
+  //       print('Target Menit: ${bulanSebelumnya['target_menit']}');
+
+  //       setState(() {
+  //         masukBulanIni = bulanIni['jumlah_masuk'] ?? 0;
+  //         targetHariBulanIni = bulanIni['target_hari'] ?? 0;
+  //         menitBulanini = bulanIni['jumlah_menit'] ?? 0;
+  //         targetMenitBulanIni = bulanIni['target_menit'] ?? 0;
+
+  //         masukBulanSebelumnya = bulanSebelumnya['jumlah_masuk'] ?? 0;
+  //         targetHariBulanSebelumnya = bulanSebelumnya['target_hari'] ?? 0;
+  //         menitBulanSebelumnya = bulanSebelumnya['jumlah_menit'] ?? 0;
+  //         targetMenitBulanSebelumnya = bulanSebelumnya['target_menit'] ?? 0;
+  //       });
+  //     } else {
+  //       print('Error fetching target data: ${rp.statusCode}');
+  //       print(rp.body);
+  //     }
+  //   } catch (e) {
+  //     print('Error occurred: $e');
+  //   }
+  // }
+
+  Future<void> getTarget() async {
+    try {
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/attendance/get-target-hour');
+      var request = http.MultipartRequest('POST', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+      print("STATUS CODE: ${rp.statusCode}");
+      print("RESPONSE BODY: ${rp.body}");
+      print(rp.body);
+
+      if (rp.statusCode == 200) {
+        final bulanIni = data['data']['bulan_ini'];
+        final bulanSebelumnya = data['data']['bulan_sebelumnya'];
+
+        setState(() {
+          hadirMenitIni = bulanIni['target_menit'];
+          hadirHariIni =
+              bulanIni['target_hari']; // bisa diganti jika ada data hari hadir
+          targetHariIni = bulanIni['target_hari_no_daysoff'];
+          targetMenitIni = 9600; // misalnya total menit kerja bulan ini
+
+          hadirHariSebelumnya = bulanSebelumnya['target_hari'];
+          hadirMenitSebelumnya = bulanSebelumnya['target_menit'];
+          targetHariSebelumnya = bulanSebelumnya['target_hari_no_daysoff'];
+          targetMenitSebelumnya =
+              10560; // misalnya total target bulan sebelumnya
+        });
+      } else {
+        print('Error fetching target data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Widget buildProgressBox({
+    required String title,
+    required int hariMasuk,
+    required int totalHari,
+    required int menitMasuk,
+    required int totalMenit,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Text('Masuk'),
+          LinearProgressIndicator(
+            value: totalHari == 0 ? 0 : hariMasuk / totalHari,
+            color: Colors.lightBlue,
+            backgroundColor: Colors.grey[300],
+            minHeight: 10,
+          ),
+          Center(child: Text('$hariMasuk/$totalHari Hari')),
+          const SizedBox(height: 10),
+          Text('Durasi Kerja'),
+          LinearProgressIndicator(
+            value: totalMenit == 0 ? 0 : menitMasuk / totalMenit,
+            color: Colors.green,
+            backgroundColor: Colors.grey[300],
+            minHeight: 10,
+          ),
+          Center(child: Text('$menitMasuk/$totalMenit Menit')),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1339,6 +1563,34 @@ class _HomePageState extends State<HomePage> {
                           ),
                   ),
                   const SizedBox(height: 20),
+                  // Target Kehadiran
+                  buildProgressBox(
+                    title: "Target Kehadiran Bulan Sebelumnya",
+                    hariMasuk: hadirHariSebelumnya,
+                    totalHari: targetHariSebelumnya,
+                    menitMasuk: hadirMenitSebelumnya,
+                    totalMenit: targetMenitSebelumnya,
+                  ),
+                  const SizedBox(height: 16),
+                  buildProgressBox(
+                    title: "Target Kehadiran Bulan Berjalan",
+                    hariMasuk: hadirHariIni,
+                    totalHari: targetHariIni,
+                    menitMasuk: hadirMenitIni,
+                    totalMenit: targetMenitIni,
+                  ),
+                  const SizedBox(height: 20),
+                  buildRekapBox("Rekapitulasi Kehadiran Bulan Berjalan",
+                      hariBulanIni, menitBulanIni, telatBulanIni, cutiBulanIni),
+                  const SizedBox(height: 16),
+                  buildRekapBox(
+                      "Rekapitulasi Kehadiran Bulan Lalu",
+                      hariBulanLalu,
+                      menitBulanLalu,
+                      telatBulanLalu,
+                      cutiBulanLalu),
+                  const SizedBox(height: 20),
+
                   // Note Section
                   Padding(
                     padding:
