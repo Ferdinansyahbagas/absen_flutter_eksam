@@ -52,12 +52,12 @@ class _HomePageState extends State<HomePage> {
   int telatBulanLalu = 0;
   int cutiBulanLalu = 0;
   int hadirHariIni = 0;
-  int targetHariIni = 0;
   int hadirMenitIni = 0;
+  int targetHariIni = 0;
   int targetMenitIni = 0;
   int hadirHariSebelumnya = 0;
-  int targetHariSebelumnya = 0;
   int hadirMenitSebelumnya = 0;
+  int targetHariSebelumnya = 0;
   int targetMenitSebelumnya = 0;
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
   bool hasClockedIn = false; // Status clock-in biasa
@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
       getNotif();
       getcekwfa();
       getTarget();
-      getuserinfo();
+      getUserInfo();
     });
     _pageController.addListener(() {
       setState(() {
@@ -658,37 +658,47 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> getuserinfo() async {
+  Future<void> getUserInfo({int cutOff = 0}) async {
     try {
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
-      var request = http.MultipartRequest('GET', url);
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/karyawan/get-user-info?cutOff=$cutOff');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+      final token = localStorage.getString('token');
 
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
 
-      if (rp.statusCode == 200) {
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
         final bulanIni = data['data_bulan_ini'];
-        final bulanLalu = data['data'];
+        final bulanLalu = data['data_bulan_lalu'];
 
         setState(() {
+          name = data['data']['nama'];
           hariBulanIni = bulanIni['hari'];
           menitBulanIni = bulanIni['menit'];
           telatBulanIni = bulanIni['menit_telat'];
-          cutiBulanIni = 0;
+          cutiBulanIni = bulanIni['cuti'];
 
           hariBulanLalu = bulanLalu['hari'];
           menitBulanLalu = bulanLalu['menit'];
           telatBulanLalu = bulanLalu['menit_telat'];
-          cutiBulanLalu = 0;
+          cutiBulanLalu = bulanLalu['cuti'];
+
+          // Ambil kehadiran aktual dari getUserInfo untuk bulan ini dan sebelumnya
+          hadirHariIni = bulanIni['hari'];
+          hadirMenitIni = bulanIni['menit'];
+          hadirHariSebelumnya = bulanLalu['hari'];
+          hadirMenitSebelumnya = bulanLalu['menit'];
         });
       } else {
-        print('Error fetching user info: ${rp.statusCode}');
-        print(rp.body);
+        print('Error fetching user info: ${response.statusCode}');
+        print(response.body);
       }
     } catch (e) {
       print('Error occurred: $e');
@@ -698,6 +708,7 @@ class _HomePageState extends State<HomePage> {
   Widget buildRekapBox(String title, int hari, int menit, int telat, int cuti) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -744,60 +755,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Future<void> getTarget() async {
-  //   try {
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/attendance/get-target-hour');
-  //     var request = http.MultipartRequest('GET', url);
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var json = jsonDecode(rp.body.toString());
-  //     print("STATUS CODE: ${rp.statusCode}");
-  //     print("RESPONSE BODY: ${rp.body}");
-  //     print("DATA JSON: ${json['data']}");
-  //     print(rp.body); // <-- cetak isi respons
-
-  //     if (rp.statusCode == 200) {
-  //       var data = json['data'];
-  //       var bulanIni = data['bulan_ini'] ?? {};
-  //       var bulanSebelumnya = data['bulan_sebelumnya'] ?? {};
-
-  //       print('=== BULAN INI ===');
-  //       print('Jumlah Masuk: ${bulanIni['jumlah_masuk']}');
-  //       print('Target Hari: ${bulanIni['target_hari']}');
-  //       print('Jumlah Menit: ${bulanIni['jumlah_menit']}');
-  //       print('Target Menit: ${bulanIni['target_menit']}');
-
-  //       print('=== BULAN SEBELUMNYA ===');
-  //       print('Jumlah Masuk: ${bulanSebelumnya['jumlah_masuk']}');
-  //       print('Target Hari: ${bulanSebelumnya['target_hari']}');
-  //       print('Jumlah Menit: ${bulanSebelumnya['jumlah_menit']}');
-  //       print('Target Menit: ${bulanSebelumnya['target_menit']}');
-
-  //       setState(() {
-  //         masukBulanIni = bulanIni['jumlah_masuk'] ?? 0;
-  //         targetHariBulanIni = bulanIni['target_hari'] ?? 0;
-  //         menitBulanini = bulanIni['jumlah_menit'] ?? 0;
-  //         targetMenitBulanIni = bulanIni['target_menit'] ?? 0;
-
-  //         masukBulanSebelumnya = bulanSebelumnya['jumlah_masuk'] ?? 0;
-  //         targetHariBulanSebelumnya = bulanSebelumnya['target_hari'] ?? 0;
-  //         menitBulanSebelumnya = bulanSebelumnya['jumlah_menit'] ?? 0;
-  //         targetMenitBulanSebelumnya = bulanSebelumnya['target_menit'] ?? 0;
-  //       });
-  //     } else {
-  //       print('Error fetching target data: ${rp.statusCode}');
-  //       print(rp.body);
-  //     }
-  //   } catch (e) {
-  //     print('Error occurred: $e');
-  //   }
-  // }
-
   Future<void> getTarget() async {
     try {
       final url = Uri.parse(
@@ -810,26 +767,17 @@ class _HomePageState extends State<HomePage> {
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
-      print("STATUS CODE: ${rp.statusCode}");
-      print("RESPONSE BODY: ${rp.body}");
-      print(rp.body);
 
       if (rp.statusCode == 200) {
         final bulanIni = data['data']['bulan_ini'];
         final bulanSebelumnya = data['data']['bulan_sebelumnya'];
 
         setState(() {
-          hadirMenitIni = bulanIni['target_menit'];
-          hadirHariIni =
-              bulanIni['target_hari']; // bisa diganti jika ada data hari hadir
           targetHariIni = bulanIni['target_hari_no_daysoff'];
-          targetMenitIni = 9600; // misalnya total menit kerja bulan ini
+          targetMenitIni = bulanIni['target_menit'];
 
-          hadirHariSebelumnya = bulanSebelumnya['target_hari'];
-          hadirMenitSebelumnya = bulanSebelumnya['target_menit'];
           targetHariSebelumnya = bulanSebelumnya['target_hari_no_daysoff'];
-          targetMenitSebelumnya =
-              10560; // misalnya total target bulan sebelumnya
+          targetMenitSebelumnya = bulanSebelumnya['target_menit'];
         });
       } else {
         print('Error fetching target data: ${rp.statusCode}');
@@ -849,6 +797,7 @@ class _HomePageState extends State<HomePage> {
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1571,7 +1520,6 @@ class _HomePageState extends State<HomePage> {
                     menitMasuk: hadirMenitSebelumnya,
                     totalMenit: targetMenitSebelumnya,
                   ),
-                  const SizedBox(height: 16),
                   buildProgressBox(
                     title: "Target Kehadiran Bulan Berjalan",
                     hariMasuk: hadirHariIni,
@@ -1579,16 +1527,10 @@ class _HomePageState extends State<HomePage> {
                     menitMasuk: hadirMenitIni,
                     totalMenit: targetMenitIni,
                   ),
-                  const SizedBox(height: 20),
-                  buildRekapBox("Rekapitulasi Kehadiran Bulan Berjalan",
-                      hariBulanIni, menitBulanIni, telatBulanIni, cutiBulanIni),
-                  const SizedBox(height: 16),
-                  buildRekapBox(
-                      "Rekapitulasi Kehadiran Bulan Lalu",
-                      hariBulanLalu,
-                      menitBulanLalu,
-                      telatBulanLalu,
-                      cutiBulanLalu),
+                  buildRekapBox("Rekap Kehadiran Bulan Ini", hariBulanIni,
+                      menitBulanIni, telatBulanIni, cutiBulanIni),
+                  buildRekapBox("Rekap Kehadiran Bulan Lalu", hariBulanLalu,
+                      menitBulanLalu, telatBulanLalu, cutiBulanLalu),
                   const SizedBox(height: 20),
 
                   // Note Section
