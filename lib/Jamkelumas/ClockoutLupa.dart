@@ -463,6 +463,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
               ),
               const SizedBox(height: 20),
               // Date picker field
+              //ini buat ambil tanggal bebas
               // InkWell(
               //   onTap: () => _selectDate(context, true),
               //   child: InputDecorator(
@@ -509,6 +510,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
               //     ),
               //   ),
               // ),
+              //ini buatambil taggal dari db
               InputDecorator(
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),

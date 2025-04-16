@@ -8,6 +8,8 @@ import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clockou
 import 'package:absen/Jamkelumas/Clockinwfa.dart';
 import 'package:absen/Jamkelumas/ClockoutLupa.dart';
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
+import 'package:absen/inventaris/inventaris.dart';
+import 'package:absen/inventaris/peraturan.dart';
 import 'dart:async'; // Untuk timer
 import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'package:geocoding/geocoding.dart'; //kordinat
@@ -1283,6 +1285,30 @@ class _HomePageState extends State<HomePage> {
                                   fontSize: 14,
                                 ),
                               ),
+                              _buildMenuShortcut(
+                                label: 'Inventory',
+                                targetPage: InventoryScreen(),
+                                bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                                imagePath: 'assets/icon/gudang.png',
+                                iconColor: Colors.white,
+                                iconSize: 32,
+                                labelStyle: const TextStyle(
+                                  color: Colors.pink,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              _buildMenuShortcut(
+                                label: 'Peraturan \n kantor',
+                                targetPage: PeraturanScreen(),
+                                bgColor: const Color.fromRGBO(101, 19, 116, 1),
+                                imagePath: 'assets/icon/policy.png',
+                                iconColor: Colors.white,
+                                iconSize: 32,
+                                labelStyle: const TextStyle(
+                                  color: Colors.pink,
+                                  fontSize: 14,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -1514,13 +1540,6 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 20),
                   // Target Kehadiran
                   buildProgressBox(
-                    title: "Target Kehadiran Bulan Sebelumnya",
-                    hariMasuk: hadirHariSebelumnya,
-                    totalHari: targetHariSebelumnya,
-                    menitMasuk: hadirMenitSebelumnya,
-                    totalMenit: targetMenitSebelumnya,
-                  ),
-                  buildProgressBox(
                     title: "Target Kehadiran Bulan Berjalan",
                     hariMasuk: hadirHariIni,
                     totalHari: targetHariIni,
@@ -1529,6 +1548,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                   buildRekapBox("Rekap Kehadiran Bulan Ini", hariBulanIni,
                       menitBulanIni, telatBulanIni, cutiBulanIni),
+                  buildProgressBox(
+                    title: "Target Kehadiran Bulan Sebelumnya",
+                    hariMasuk: hadirHariSebelumnya,
+                    totalHari: targetHariSebelumnya,
+                    menitMasuk: hadirMenitSebelumnya,
+                    totalMenit: targetMenitSebelumnya,
+                  ),
                   buildRekapBox("Rekap Kehadiran Bulan Lalu", hariBulanLalu,
                       menitBulanLalu, telatBulanLalu, cutiBulanLalu),
                   const SizedBox(height: 20),

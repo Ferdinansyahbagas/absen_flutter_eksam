@@ -1177,11 +1177,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         }),
                       ),
                       const SizedBox(height: 14),
-                      _buildNohp(
-                        title: 'Batas Cuti',
-                        value: Limit,
-                        isEditable: false, // Tidak bisa diedit
-                      ),
+                      // _buildNohp(
+                      //   title: 'Batas Cuti',
+                      //   value: Limit,
+                      //   isEditable: false, // Tidak bisa diedit
+                      // ),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
                         onPressed: () => _logout(context),

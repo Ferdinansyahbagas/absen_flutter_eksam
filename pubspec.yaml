@@ -92,9 +92,9 @@ flutter:
     - assets/icon/profil.png
     - assets/icon/home.png
     - assets/icon/WFA.png
-    - assets/announcement/messi.jpeg
-    - assets/announcement/dodo.jpeg
-    - assets/announcement/neymar.jpeg
+    - assets/icon/bonus.png  
+    - assets/icon/gudang.png
+    - assets/icon/policy.png        
 
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
