@@ -24,7 +24,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
+  // int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
   final PageController _pageController = PageController();
   String? profileImageUrl;
   String? idCardImageUrl;
@@ -920,7 +920,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         controller: _pageController,
         onPageChanged: (index) {
           setState(() {
-            _currentIndex =
+            // _currentIndex =
                 index; // Sinkronisasi indeks ketika halaman berganti
           });
         },

@@ -87,10 +87,10 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  Future<bool> _isNotificationRead(int id) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('notif_read_$id') ?? false;
-  }
+  // Future<bool> _isNotificationRead(int id) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   return prefs.getBool('notif_read_$id') ?? false;
+  // }
 
   Future<void> _markNotificationAsRead(int id) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

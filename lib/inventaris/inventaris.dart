@@ -54,21 +54,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/get-self-inventory');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
+      String? token = localStorage.getString('token');
+
+      if (token == null) {
+        print('Token tidak ditemukan');
+        return;
+      }
 
       var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
+      request.headers['Authorization'] = 'Bearer $token';
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
 
       if (rp.statusCode == 200) {
-        setState(() {
-          _inventoryList = data['data'];
-        });
+        var data = jsonDecode(rp.body.toString());
+
+        if (data['data'] != null && data['data'] is List) {
+          setState(() {
+            _inventoryList = data['data'];
+          });
+        } else {
+          print('Data kosong atau format tidak sesuai');
+        }
       } else {
         print('Gagal ambil data: ${rp.statusCode}');
+        print(rp.body); // buat lihat isi error-nya
       }
     } catch (e) {
       print('Error fetchInventory: $e');
@@ -86,6 +97,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['name'] = name;
       request.fields['keterangan'] = keterangan;
+      request.fields['status'] = '1';
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -93,7 +105,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       if (rp.statusCode == 200) {
         // name = '';
         // keterangan = '';
-        // fetchInventory();
+        fetchInventory();
         print('Data berhasil ditambahkan');
       } else {
         print('Gagal tambah data: ${rp.statusCode}');
@@ -107,7 +119,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Future<void> updateInventory(String id) async {
     try {
       final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/edit-self-inventory/$id');
+          'https://portal.eksam.cloud/api/v1/other/edit-inventory/$id');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       String token = localStorage.getString('token') ?? '';
 
@@ -115,6 +127,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['name'] = name;
       request.fields['keterangan'] = keterangan;
+      request.fields['status'] = '1';
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -132,7 +145,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Future<void> deleteInventory(String id) async {
     try {
       final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/delete-self-inventory/$id');
+          'https://portal.eksam.cloud/api/v1/other/delete-inventory/$id');
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
 

@@ -223,51 +223,53 @@ class _HomePageState extends State<HomePage> {
   Column _buildMenuShortcut({
     required String label,
     TextStyle? labelStyle,
-    required Widget targetPage,
-    Color bgColor =
-        const Color.fromARGB(255, 101, 19, 116), // Warna background default
-    IconData? iconData, // Opsional untuk menggunakan Icon Flutter
-    String? imagePath, // Opsional untuk menggunakan gambar dari asset
-    Color iconColor = Colors.white, // Warna icon atau filter warna
-    double? iconSize = 30, // Ukuran default untuk ikon atau gambar
+    Widget? targetPage, // Diubah ke nullable
+    VoidCallback? onTap, // Tambahkan ini untuk handle custom aksi
+    Color bgColor = const Color.fromARGB(255, 101, 19, 116),
+    IconData? iconData,
+    String? imagePath,
+    Color iconColor = Colors.white,
+    double? iconSize = 30,
   }) {
     return Column(
       children: [
         Container(
           width: 100,
-          padding: const EdgeInsets.all(8.0), // Padding di dalam container
+          padding: const EdgeInsets.all(8.0),
           decoration: BoxDecoration(
-            color: Colors.transparent, // Warna latar belakang
-            borderRadius: BorderRadius.circular(8.0), // Sudut melengkung
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(8.0),
           ),
           child: Column(
             children: [
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => targetPage),
-                  );
-                },
+                onTap: onTap ??
+                    () {
+                      if (targetPage != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => targetPage),
+                        );
+                      }
+                    },
                 child: Container(
-                  width: 60, // Lebar container shortcut
-                  height: 60, // Tinggi container shortcut
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
                     color: bgColor,
-                    borderRadius:
-                        BorderRadius.circular(50), // Membuat sudut melengkung
+                    borderRadius: BorderRadius.circular(50),
                   ),
                   child: Center(
                     child: imagePath != null
                         ? ColorFiltered(
                             colorFilter: ColorFilter.mode(
-                              iconColor, // Warna filter yang diterapkan
-                              BlendMode.srcIn, // Mengatur mode blending
+                              iconColor,
+                              BlendMode.srcIn,
                             ),
                             child: Image.asset(
                               imagePath,
-                              width: iconSize, // Sesuaikan ukuran gambar
-                              height: iconSize, // Sesuaikan ukuran gambar
+                              width: iconSize,
+                              height: iconSize,
                               fit: BoxFit.contain,
                             ),
                           )
@@ -283,14 +285,33 @@ class _HomePageState extends State<HomePage> {
               Text(
                 label,
                 style: const TextStyle(
-                    color: Colors.pink,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.pink,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+//fungsi untuuk menampilkan pop up comiing soon
+  void _showComingSoonDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Coming Soon"),
+        content: const Text("Fitur ini akan tersedia segera."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Oke"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1052,8 +1073,6 @@ class _HomePageState extends State<HomePage> {
                       ] else if
                           // hasClockedOut &&
                           (userStatus == "1" || userStatus == "2") ...[
-                        // Jika user level 1 atau 2 telah request WFH
-
                         // Jika belum request WFH, cek apakah sudah clock out
                         Column(
                           children: [
@@ -1286,8 +1305,9 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               _buildMenuShortcut(
-                                label: 'Inventory',
-                                targetPage: InventoryScreen(),
+                                label: 'Inventaris',
+                                onTap: () => _showComingSoonDialog(
+                                    context), // ubah ke onTap
                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
                                 imagePath: 'assets/icon/gudang.png',
                                 iconColor: Colors.white,
@@ -1299,7 +1319,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                               _buildMenuShortcut(
                                 label: 'Peraturan \n kantor',
-                                targetPage: PeraturanScreen(),
+                                onTap: () => _showComingSoonDialog(
+                                    context), // ubah ke onTap
                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
                                 imagePath: 'assets/icon/policy.png',
                                 iconColor: Colors.white,
@@ -1358,8 +1379,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   //card untuk lembur
-                  if (isovertime //&& userStatus != "3"
-                      )
+                  if (isovertime)
                     Card(
                       color: Colors.redAccent,
                       elevation: 5,
@@ -1558,7 +1578,6 @@ class _HomePageState extends State<HomePage> {
                   buildRekapBox("Rekap Kehadiran Bulan Lalu", hariBulanLalu,
                       menitBulanLalu, telatBulanLalu, cutiBulanLalu),
                   const SizedBox(height: 20),
-
                   // Note Section
                   Padding(
                     padding:

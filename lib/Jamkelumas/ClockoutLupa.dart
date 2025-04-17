@@ -27,7 +27,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   String? _selectedWorkplaceType;
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
-  // bool _isDateEmpty = false;
   bool _isTimeEmpty = false;
   String? userStatus; // Tambahan untuk menyimpan user level
   List<String> WorkTypes = [];
@@ -68,24 +67,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isStartDate) {
-          selectedDate = picked;
-          formattedDate = DateFormat('yyyy-MM-dd').format(picked);
-          // _isDateEmpty = false;
-        }
-      });
-    }
-  }
-
   void _pickTime() async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -109,83 +90,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       });
     }
   }
-
-  // Future<void> _setWorkTypeLembur() async {
-
-  //   try {
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (response.statusCode == 200) {
-  //       bool hasClockedIn = data['message'] != 'belum clock-in';
-  //       // Cek status clock-in
-  //       setState(() {
-  //         if (hasClockedIn) {
-  //           // Jika sudah clock-in, hanya munculkan Lembur
-  //           _selectedWorkType = 'Lembur';
-  //         }
-  //         // } else {
-  //         //   // Jika belum clock-in, munculkan opsi Reguler dan Lembur
-  //         //   workTypes = ['Reguler', 'Lembur'];
-  //         //   _selectedWorkType = 'Reguler';
-  //         // }
-  //       });
-  //     } else {
-  //       print("Error mengecek status clock-in: ${response.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     print("Error mengecek status clock-in: $e");
-  //   }
-  // }
-
-  // Future<void> _setWorkTypeLembur() async {
-  //   try {
-  //     if (userStatus == '3') {
-  //       setState(() {
-  //         WorkTypes = ['Reguler'];
-  //         _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-  //       });
-  //       return; // Stop di sini kalau user level 3
-  //     }
-
-  //     final url = Uri.parse(
-  //         'https://portal.eksam.cloud/api/v1/attendance/is-lembur-in');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (response.statusCode == 200) {
-  //       bool hasClockedIn = data['message'] != 'belum clock-in';
-
-  //       setState(() {
-  //         if (hasClockedIn) {
-  //           _selectedWorkType = 'Lembur';
-  //         } else {
-  //           _selectedWorkType = 'Reguler';
-  //         }
-  //       });
-  //     } else {
-  //       print("Error mengecek status clock-in: ${response.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     print("Error mengecek status clock-in: $e");
-  //   }
-  // }
 
   Future<void> getProfil() async {
     try {
@@ -211,68 +115,9 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     }
   }
 
-  // Future<void> getDatalupa() async {
-  //   try {
-  //     final url =
-  //         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
-  //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-  //     var request = http.MultipartRequest('GET', url);
-  //     request.headers['Authorization'] =
-  //         'Bearer ${localStorage.getString('token')}';
-
-  //     var response = await request.send();
-  //     var rp = await http.Response.fromStream(response);
-  //     var data = jsonDecode(rp.body.toString());
-
-  //     if (response.statusCode == 200) {
-  //       setState(() {
-  //         print(data[data]['attendance_type_id']);
-  //         print(data[data]['attendance_location_id']);
-
-  //         _selectedWorkType = data['data']['attendance_type_id'].toString();
-  //         _selectedWorkplaceType =
-  //             data['data']['attendance_location_id'].toString();
-  //       });
-  //     } else {
-  //       print("Error fetching data: ${response.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     print("Error occurred: $e");
-  //   }
-  // }
-
   Future<void> getDatalupa() async {
-    // try {
     final url =
         Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
-    //     SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-    //     var request = http.MultipartRequest('GET', url);
-    //     request.headers['Authorization'] =
-    //         'Bearer ${localStorage.getString('token')}';
-
-    //     var response = await request.send();
-    //     var rp = await http.Response.fromStream(response);
-
-    //     print("Response Body: ${rp.body}"); // Debugging: Lihat isi respons
-
-    //     var data = jsonDecode(rp.body.toString());
-
-    //     if (data != null && data['data'] != null) {
-    //       setState(() {
-    //         _selectedWorkType =
-    //             data['data']['attendance_type_id']?.toString() ?? 'Unknown';
-    //         _selectedWorkplaceType =
-    //             data['data']['attendance_location_id']?.toString() ?? 'Unknown';
-    //       });
-    //     } else {
-    //       print("Data tidak ditemukan dalam respons API");
-    //     }
-    //   } catch (e) {
-    //     print("Error mengecek status clock-in: $e");
-    //   }
-    // }
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -337,7 +182,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
     try {
       final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/clock-out-lupa');
+          'https://portal.eksam.cloud/api/v1/attendance/clock-out-lupa-id');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
@@ -347,7 +192,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
       request.fields['notes'] = _noteController.text;
       request.fields['jam_clock_out'] = formattedTime; // Kirim waktu clock-out
-      request.fields['clock_out_date'] = formattedDate;
+      request.fields['date'] = formattedDate;
 
       if (_image != null) {
         request.files.add(await http.MultipartFile.fromPath(
@@ -462,55 +307,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
                 onChanged: null, // Disabled
               ),
               const SizedBox(height: 20),
-              // Date picker field
-              //ini buat ambil tanggal bebas
-              // InkWell(
-              //   onTap: () => _selectDate(context, true),
-              //   child: InputDecorator(
-              //     decoration: InputDecoration(
-              //       labelText: 'Tanggal',
-              //       labelStyle: const TextStyle(
-              //           color: Color.fromARGB(255, 101, 19, 116)),
-              //       floatingLabelBehavior: FloatingLabelBehavior
-              //           .always, // Always show label on top
-              //       border: const OutlineInputBorder(),
-              //       enabledBorder: OutlineInputBorder(
-              //         borderSide: BorderSide(
-              //             color: _isDateEmpty
-              //                 ? Colors.red
-              //                 : const Color.fromARGB(255, 101, 19, 116)),
-              //       ),
-              //       focusedBorder: OutlineInputBorder(
-              //         borderSide: const BorderSide(
-              //             color: Color.fromARGB(255, 101, 19, 116), width: 2),
-              //         borderRadius: BorderRadius.circular(8),
-              //       ),
-              //       errorBorder: OutlineInputBorder(
-              //         borderSide: const BorderSide(
-              //             color: Colors.red), // Border saat error
-              //         borderRadius: BorderRadius.circular(12),
-              //       ),
-              //       focusedErrorBorder: OutlineInputBorder(
-              //         borderSide: const BorderSide(
-              //             color: Colors.red), // Border saat error dan fokus
-              //         borderRadius: BorderRadius.circular(12),
-              //       ),
-              //       errorText: _isDateEmpty
-              //           ? 'Tanggal Wajib Di isi'
-              //           : null, // Error message
-              //     ),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //       children: [
-              //         Text(
-              //           selectedDate == null ? 'Select Date' : formattedDate,
-              //         ),
-              //         const Icon(Icons.calendar_today, color: Colors.orange),
-              //       ],
-              //     ),
-              //   ),
-              // ),
-              //ini buatambil taggal dari db
               InputDecorator(
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),

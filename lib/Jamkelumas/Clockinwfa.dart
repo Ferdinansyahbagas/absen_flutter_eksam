@@ -5,7 +5,6 @@ import 'package:absen/susses&failde/gagalV2I.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:absen/susses&failde/gagalbatascuti.dart';
 
 class ClockinwfaPage extends StatefulWidget {
   const ClockinwfaPage({super.key});
@@ -107,20 +106,6 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
       }
     } catch (e) {
       print('Error occurred: $e');
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-      });
     }
   }
 

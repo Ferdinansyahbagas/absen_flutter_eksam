@@ -31,22 +31,11 @@ class _ClockInPageState extends State<ClockInPage> {
   List<String> workTypes = []; // Dynamically set work types
   bool _isImageRequired = false; // Flag to indicate if image is required
   bool _isHoliday = false; // Flag for holiday status
-  bool _isLoading = true; // Tambahkan state untuk loading
   final ImagePicker _picker = ImagePicker();
   List<String> workplaceTypes = [];
   Position? lastKnownPosition; // Simpan lokasi terakhir
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _setWorkTypesBasedOnDay();
-  //   _setWorkTypeLembur();
-  //   getStatus();
-  //   getLocation();
-  //   getData();
-  //   _startLoading();
-  // }
-
+  
   @override
   void initState() {
     super.initState();
@@ -54,7 +43,6 @@ class _ClockInPageState extends State<ClockInPage> {
   }
 
   Future<void> _initializeData() async {
-    setState(() => _isLoading = true);
     await Future.wait([
       _setWorkTypesBasedOnDay(),
       _setWorkTypeLembur(),
@@ -62,7 +50,6 @@ class _ClockInPageState extends State<ClockInPage> {
       getLocation(),
       getData(),
     ]);
-    setState(() => _isLoading = false);
   }
 
   void _showFakeGpsWarning() {
@@ -269,12 +256,11 @@ class _ClockInPageState extends State<ClockInPage> {
             // Jika sudah clock-in, hanya munculkan Lembur
             workTypes = ['Lembur'];
             _selectedWorkType = 'Lembur';
+          } else {
+            // Jika belum clock-in, munculkan opsi Reguler dan Lembur
+            workTypes = ['Reguler', 'Lembur'];
+            _selectedWorkType = 'Reguler';
           }
-          // } else {
-          //   // Jika belum clock-in, munculkan opsi Reguler dan Lembur
-          //   workTypes = ['Reguler', 'Lembur'];
-          //   _selectedWorkType = 'Reguler';
-          // }
         });
       } else {
         print("Error mengecek status clock-in: ${response.statusCode}");
@@ -565,19 +551,6 @@ class _ClockInPageState extends State<ClockInPage> {
                 },
               ),
               const SizedBox(height: 10),
-              // if (_selectedWorkplaceType == "WFH" &&
-              //     _selectedWorkType == "Reguler" &&
-              //     (userStatus == "1" || userStatus == "2")) ...[
-              //   Text(
-              //     "Sisa WFH Anda: ${bataswfh ?? '0'} hari",
-              //     style: const TextStyle(
-              //       fontSize: 14,
-              //       fontWeight: FontWeight.w500,
-              //       color: Colors.red,
-              //     ),
-              //   ),
-              //   const SizedBox(height: 10),
-              // ],
               // Upload Photo Button with Conditional Styling
               GestureDetector(
                 onTap: _pickImage, // Langsung panggil kamera
