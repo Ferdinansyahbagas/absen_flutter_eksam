@@ -889,24 +889,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       (route) => false,
     );
   }
-//   void logout() async {
-//   await Preferences.clearToken();       // Hapus token
-//   await Preferences.clearDeviceId();    // Hapus device ID
-//   await Preferences.clearAll();         // Atau bisa pakai ini langsung
-
-//   // Kalo kamu juga simpan firebase_token di SharedPreferences manual
-//   SharedPreferences prefs = await SharedPreferences.getInstance();
-//   await prefs.remove('firebase_token');
-
-//   print("✅ Logout selesai. Semua data lokal dihapus.");
-
-//   // Navigasi ke halaman login atau welcome screen
-//   Navigator.pushAndRemoveUntil(
-//     context,
-//     MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-//     (route) => false,
-//   );
-// }
 
   final TextStyle titleStyle =
       const TextStyle(fontSize: 14, color: Colors.black54);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/susses&failde/gagalV1.dart';
-import 'package:absen/susses&failde/berhasilV1.dart';
+import 'package:absen/susses&failde/berhasilV1II.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:intl/intl.dart'; //unntuk format tanggal
@@ -208,7 +208,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => SuccessPage()));
+            context, MaterialPageRoute(builder: (context) => SuccessPageII()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

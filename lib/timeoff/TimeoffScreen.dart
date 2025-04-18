@@ -1,4 +1,3 @@
-//nanti jangan lupa ganti nama filenya
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/homepage/notif.dart';
@@ -148,22 +147,13 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         print('Berhasil: $data');
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text('Pengajuan berhasil dibatalkan')),
-        // );
         getHistoryData();
       } else {
         var errorData = jsonDecode(response.body);
         print('Gagal: ${errorData['message']}');
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text('Gagal membatalkan pengajuan')),
-        // );
       }
     } catch (e) {
       print('Error saat mengirim request: $e');
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text('Terjadi kesalahan saat menghapus')),
-      // );
     }
   }
 
@@ -264,75 +254,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
           children: [
             // Remaining Leave
             const SizedBox(height: 20),
-            // Container(
-            //   width: double.infinity,
-            //   height: 140,
-            //   padding:
-            //       const EdgeInsets.symmetric(horizontal: 30.0, vertical: 25.0),
-            //   decoration: BoxDecoration(
-            //     color: const Color.fromARGB(255, 243, 147, 4),
-            //     borderRadius: BorderRadius.circular(9),
-            //   ),
-            //   child: Row(
-            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //     children: [
-            //       // Teks di sebelah kiri
-            //       const Column(
-            //         crossAxisAlignment: CrossAxisAlignment.start,
-            //         mainAxisAlignment:
-            //             MainAxisAlignment.center, // Tengah vertikal
-            //         children: [
-            //           Text(
-            //             'Sisa Cuti Anda \nAdalah',
-            //             style: TextStyle(
-            //               color: Colors.white,
-            //               fontSize: 22,
-            //               fontWeight: FontWeight.bold,
-            //             ),
-            //           ),
-            //         ],
-            //       ),
-            //       // Angka di sebelah kanan
-            //       Align(
-            //         alignment: Alignment.bottomRight,
-            //         child: Row(
-            //           crossAxisAlignment: CrossAxisAlignment.baseline,
-            //           textBaseline: TextBaseline
-            //               .alphabetic, // Menambahkan baseline agar teks sejajar
-            //           children: [
-            //             Text(
-            //               limit.toString(),
-            //               style: const TextStyle(
-            //                 fontSize: 50,
-            //                 color: Colors.white,
-            //                 fontWeight: FontWeight.bold,
-            //               ),
-            //             ),
-            //             const Padding(
-            //               padding: EdgeInsets.only(left: 4.0),
-            //               child: Text(
-            //                 '/',
-            //                 style: TextStyle(
-            //                   fontSize: 44,
-            //                   color: Colors.black,
-            //                   fontWeight: FontWeight.bold,
-            //                 ),
-            //               ),
-            //             ),
-            //             const Text(
-            //               '12',
-            //               style: TextStyle(
-            //                 fontSize: 20,
-            //                 color: Colors.white,
-            //                 fontWeight: FontWeight.bold,
-            //               ),
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
             GestureDetector(
               onTap: () {
                 showDialog(

@@ -84,7 +84,6 @@ class _TimeOffSickState extends State<TimeOffSick> {
 
       if (response.statusCode == 200) {
         setState(() {
-          // limit = data['data']['batas_cuti'].toString();
           iduser = data['data']['id'].toString();
         });
         localStorage.setString('id', data['data']['id']);
@@ -154,48 +153,6 @@ class _TimeOffSickState extends State<TimeOffSick> {
       print('Terjadi kesalahan: $e');
     }
   }
-
-  // *Menampilkan dialog pilihan sumber gambar*
-  // Future<void> _pickImage() async {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return SafeArea(
-  //         child: Wrap(
-  //           children: <Widget>[
-  //             ListTile(
-  //               leading: const Icon(Icons.camera_alt),
-  //               title: const Text('Ambil dari Kamera'),
-  //               onTap: () async {
-  //                 Navigator.pop(context);
-  //                 await _getImage(ImageSource.camera);
-  //               },
-  //             ),
-  //             ListTile(
-  //               leading: const Icon(Icons.photo_library),
-  //               title: const Text('Pilih dari Galeri'),
-  //               onTap: () async {
-  //                 Navigator.pop(context);
-  //                 await _getImage(ImageSource.gallery);
-  //               },
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
-  // // *Mengambil gambar dari sumber yang dipilih*
-  // Future<void> _getImage(ImageSource source) async {
-  //   final XFile? pickedFile = await _picker.pickImage(source: source);
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       _image = File(pickedFile.path);
-  //       _isImageRequired = false;
-  //     });
-  //   }
-  // }
 
   Future<void> _getImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(source: source);

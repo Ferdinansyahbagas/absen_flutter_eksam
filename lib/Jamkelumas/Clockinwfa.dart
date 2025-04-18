@@ -23,6 +23,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   String? selectedWorkPlaceType;
   String iduser = "";
   String? type = '1';
+  // ignore: unused_field
   String? _selectedType = ' ';
   List<String> _quotaOptions = [];
   bool isQuotaEmpty = false; // Tambahkan state untuk cek kuota kosong

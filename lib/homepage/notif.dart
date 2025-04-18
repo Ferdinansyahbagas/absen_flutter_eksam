@@ -450,7 +450,7 @@ class PayslipDetailPage extends StatelessWidget {
     );
   }
 
-   Future<bool> _requestStoragePermission() async {
+  Future<bool> _requestStoragePermission() async {
     if (await Permission.storage.request().isGranted) {
       return true;
     } else if (await Permission.manageExternalStorage.request().isGranted) {

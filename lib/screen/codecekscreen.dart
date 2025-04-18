@@ -14,7 +14,6 @@ class Codecekscreen extends StatefulWidget {
 
 class _CodecekscreenState extends State<Codecekscreen> {
   String? errorMessage;
-  // String? _errorMessage; // Tambahkan variabel untuk pesan error
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
 
@@ -33,7 +32,6 @@ class _CodecekscreenState extends State<Codecekscreen> {
 
         // Reset pesan error jika login berhasil
         setState(() {
-          // _errorMessage = null;
         });
         SharedPreferences localStorage = await SharedPreferences.getInstance();
         localStorage.setString('code', _emailController.text);
@@ -44,16 +42,12 @@ class _CodecekscreenState extends State<Codecekscreen> {
           MaterialPageRoute(builder: (context) => const ResetPasswordScreen()),
         );
       } else {
-        // var data = jsonDecode(response.body.toString());
         setState(() {
-          // _errorMessage = data['message']; // Set pesan error dari server
         });
       }
     } catch (e) {
       print(e.toString());
       setState(() {
-        // _errorMessage =
-        //     "Terjadi kesalahan. Coba lagi nanti."; // Pesan error umum
       });
     }
   }

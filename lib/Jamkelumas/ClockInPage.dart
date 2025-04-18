@@ -24,9 +24,7 @@ class _ClockInPageState extends State<ClockInPage> {
   String? _selectedWorkType = 'Reguler';
   String? _selectedWorkplaceType = 'WFO';
   String? userStatus;
-  String? bataswfh;
   String? Id; // Simpan ID WFH jika ada
-  bool isWFARequested = false;
   File? _image; // To store the image file
   List<String> workTypes = []; // Dynamically set work types
   bool _isImageRequired = false; // Flag to indicate if image is required
@@ -35,7 +33,6 @@ class _ClockInPageState extends State<ClockInPage> {
   List<String> workplaceTypes = [];
   Position? lastKnownPosition; // Simpan lokasi terakhir
 
-  
   @override
   void initState() {
     super.initState();
@@ -170,7 +167,6 @@ class _ClockInPageState extends State<ClockInPage> {
       if (rp.statusCode == 200) {
         setState(() {
           userStatus = data['data']['user_level_id'].toString();
-          bataswfh = (data['data']['batas_wfh'] ?? "0").toString();
 
           double officeLatitude =
               double.tryParse(data['data']['latitude'].toString()) ?? 0.0;
@@ -271,14 +267,14 @@ class _ClockInPageState extends State<ClockInPage> {
   }
 
   Future<void> _setWorkTypesBasedOnDay() async {
-    if (userStatus == '3') {
-      setState(() {
-        workTypes = ['Reguler'];
-        _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-      });
-      return; //
-    }
     try {
+      if (userStatus == '3') {
+        setState(() {
+          workTypes = ['Reguler'];
+          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+        });
+        return;
+      }
       // Get current day
       final int currentDay = DateTime.now().weekday;
       // Check if today is a weekend
@@ -400,7 +396,7 @@ class _ClockInPageState extends State<ClockInPage> {
 
       // Tentukan tipe kerja dan lokasi
       String type = (_selectedWorkType == "Lembur") ? '2' : '1';
-      String location = (_selectedWorkplaceType == "WFH") ? '2' : '1';
+      String location = (_selectedWorkplaceType == "WFA") ? '2' : '1';
 
       // Siapkan request ke API clock-in
       final url =
@@ -515,7 +511,6 @@ class _ClockInPageState extends State<ClockInPage> {
                     : null, // Disable dropdown if it's a holiday
               ),
               const SizedBox(height: 20),
-
               // Workplace Type Dropdown
               const Text(
                 'Jenis Tempat Kerja',

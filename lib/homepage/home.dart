@@ -43,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   int currentIndex = 0; // Default to the home page
   int _currentIndex = 0;
+  // ignore: unused_field
   int _currentPage = 0; // Variable to keep track of the current page
   int? userId;
   int hariBulanIni = 0;
@@ -79,6 +80,7 @@ class _HomePageState extends State<HomePage> {
   bool isWFARequested = false; //status pengajuan WFA
   bool jarak = false; // status untuk jarak kantor
   bool jarakclockout = false; // status untuk jarak kantor
+  // ignore: unused_field
   bool _isApiLoaded = false; // Status apakah API sudah selesai dimuat
   bool hasUnreadNotifications =
       false; //Status untuk melihat notifikasi sudah di baca atau belum
@@ -299,21 +301,21 @@ class _HomePageState extends State<HomePage> {
   }
 
 //fungsi untuuk menampilkan pop up comiing soon
-  void _showComingSoonDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Coming Soon"),
-        content: const Text("Fitur ini akan tersedia segera."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Oke"),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showComingSoonDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) => AlertDialog(
+  //       title: const Text("Coming Soon"),
+  //       content: const Text("Fitur ini akan tersedia segera."),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text("Oke"),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Fungsi untuk mendapatkan lokasi saat ini
   Future<void> _getCurrentLocation() async {
@@ -796,10 +798,10 @@ class _HomePageState extends State<HomePage> {
         final bulanSebelumnya = data['data']['bulan_sebelumnya'];
 
         setState(() {
-          targetHariIni = bulanIni['target_hari_no_daysoff'];
+          targetHariIni = bulanIni['target_hari'];
           targetMenitIni = bulanIni['target_menit'];
 
-          targetHariSebelumnya = bulanSebelumnya['target_hari_no_daysoff'];
+          targetHariSebelumnya = bulanSebelumnya['target_hari'];
           targetMenitSebelumnya = bulanSebelumnya['target_menit'];
         });
       } else {
@@ -1194,6 +1196,7 @@ class _HomePageState extends State<HomePage> {
                                       backgroundColor: hasClockedInOvertime
                                           ? Colors.grey
                                           : Colors.white,
+                                                                            fontSize: 12,
                                     ),
                                   ),
                                   ElevatedButton.icon(
@@ -1222,6 +1225,7 @@ class _HomePageState extends State<HomePage> {
                                               !hasClockedOutOvertime)
                                           ? Colors.white
                                           : Colors.grey,
+                                                                            fontSize: 12,
                                     ),
                                   ),
                                 ],
@@ -1306,8 +1310,9 @@ class _HomePageState extends State<HomePage> {
                               ),
                               _buildMenuShortcut(
                                 label: 'Inventaris',
-                                onTap: () => _showComingSoonDialog(
-                                    context), // ubah ke onTap
+                                // onTap: () => _showComingSoonDialog(
+                                //     context), // ubah ke onTap
+                                targetPage: InventoryScreen(),
                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
                                 imagePath: 'assets/icon/gudang.png',
                                 iconColor: Colors.white,
@@ -1319,8 +1324,9 @@ class _HomePageState extends State<HomePage> {
                               ),
                               _buildMenuShortcut(
                                 label: 'Peraturan \n kantor',
-                                onTap: () => _showComingSoonDialog(
-                                    context), // ubah ke onTap
+                                // onTap: () => _showComingSoonDialog(
+                                //     context), // ubah ke onTap
+                                targetPage: PeraturanScreen(),
                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
                                 imagePath: 'assets/icon/policy.png',
                                 iconColor: Colors.white,
