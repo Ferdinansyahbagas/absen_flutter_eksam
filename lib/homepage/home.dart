@@ -1191,12 +1191,14 @@ class _HomePageState extends State<HomePage> {
                                             }
                                           },
                                     icon: const Icon(Icons.timer),
-                                    label: const Text('Overtime In'),
+                                    label: const Text(
+                                      'Overtime In',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: hasClockedInOvertime
                                           ? Colors.grey
                                           : Colors.white,
-                                                                            fontSize: 12,
                                     ),
                                   ),
                                   ElevatedButton.icon(
@@ -1219,13 +1221,15 @@ class _HomePageState extends State<HomePage> {
                                           }
                                         : null,
                                     icon: const Icon(Icons.timer_off),
-                                    label: const Text('Overtime Out'),
+                                    label: const Text(
+                                      'Overtime Out',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: (hasClockedInOvertime &&
                                               !hasClockedOutOvertime)
                                           ? Colors.white
                                           : Colors.grey,
-                                                                            fontSize: 12,
                                     ),
                                   ),
                                 ],
