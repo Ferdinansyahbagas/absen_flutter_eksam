@@ -25,6 +25,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   String formattedTime = '';
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
+  String? _absenId; // Tambahan untuk ID absen
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
   bool _isTimeEmpty = false;
@@ -134,6 +135,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
           _selectedWorkType = data['data']['type']['name'];
           _selectedWorkplaceType = data['data']['location']['name'];
           formattedDate = data['data']['date'];
+          _absenId = data['data']['id'].toString(); // Ambil ID absen
         });
       } else {
         print('Error fetching history data: ${rp.statusCode}');
@@ -189,7 +191,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
           'Bearer ${localStorage.getString('token')}';
 
       print(formattedTime);
-
+      request.fields['id'] = _absenId!;
       request.fields['notes'] = _noteController.text;
       request.fields['jam_clock_out'] = formattedTime; // Kirim waktu clock-out
       request.fields['date'] = formattedDate;

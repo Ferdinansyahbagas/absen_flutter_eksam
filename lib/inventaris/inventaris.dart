@@ -212,12 +212,35 @@ class _InventoryScreenState extends State<InventoryScreen> {
             key: _formKey,
             child: Column(children: [
               TextFormField(
-                decoration: InputDecoration(labelText: 'Nama Barang'),
+                decoration: InputDecoration(
+                  labelText: 'Nama Barang',
+                  labelStyle: TextStyle(color: Colors.purple),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: Colors.purple),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: Colors.purple),
+                  ),
+                ),
                 validator: (val) => val!.isEmpty ? 'Wajib diisi' : null,
                 onChanged: (val) => name = val,
               ),
+              SizedBox(height: 10),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Keterangan'),
+                decoration: InputDecoration(
+                  labelText: 'Keterangan',
+                  labelStyle: TextStyle(color: Colors.purple),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: Colors.purple),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: Colors.purple),
+                  ),
+                ),
                 validator: (val) => val!.isEmpty ? 'Wajib diisi' : null,
                 onChanged: (val) => keterangan = val,
               ),
@@ -228,7 +251,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     addInventory();
                   }
                 },
-                child: Text('Tambah'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  minimumSize:
+                      Size(double.infinity, 50), // lebar penuh & tinggi 50
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(40), // bikin melengkung penuh
+                  ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  'Tambah',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ]),
           ),
@@ -236,29 +273,34 @@ class _InventoryScreenState extends State<InventoryScreen> {
           Expanded(
             child: _inventoryList.isEmpty
                 ? Center(child: Text('Belum ada data inventaris'))
-                : ListView.builder(
-                    itemCount: _inventoryList.length,
-                    itemBuilder: (context, index) {
-                      final item = _inventoryList[index];
-                      return ListTile(
-                        title: Text(item['name']),
-                        subtitle: Text(item['keterangan']),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.edit),
-                              onPressed: () => _showEditDialog(item),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () =>
-                                  deleteInventory(item['id'].toString()),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columns: const [
+                        DataColumn(label: Text('Nama')),
+                        DataColumn(label: Text('Keterangan')),
+                        DataColumn(label: Text('Aksi')),
+                      ],
+                      rows: _inventoryList.map((item) {
+                        return DataRow(cells: [
+                          DataCell(Text(item['name'] ?? '')),
+                          DataCell(Text(item['keterangan'] ?? '')),
+                          DataCell(Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, size: 20),
+                                onPressed: () => _showEditDialog(item),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, size: 20),
+                                onPressed: () =>
+                                    deleteInventory(item['id'].toString()),
+                              ),
+                            ],
+                          )),
+                        ]);
+                      }).toList(),
+                    ),
                   ),
           ),
         ]),

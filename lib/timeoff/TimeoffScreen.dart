@@ -385,93 +385,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
               ),
             ),
             // Time Off Request Card
-            // Expanded(
-            //   child: historyData.isEmpty
-            //       ? const Center(
-            //           child: Text(
-            //             "Belum ada history time off",
-            //             style: TextStyle(
-            //               color: Colors.grey,
-            //               fontSize: 16,
-            //               fontWeight: FontWeight.bold,
-            //             ),
-            //           ),
-            //         )
-            //       : ListView.builder(
-            //           itemCount: historyData.length,
-            //           itemBuilder: (context, index) {
-            //             final item = historyData[index] as Map<String, dynamic>;
-            //             return Container(
-            //               margin: const EdgeInsets.only(bottom: 16),
-            //               padding: const EdgeInsets.symmetric(
-            //                   horizontal: 16, vertical: 20),
-            //               decoration: BoxDecoration(
-            //                 color: const Color.fromARGB(255, 236, 81, 109),
-            //                 borderRadius: BorderRadius.circular(12),
-            //               ),
-            //               child: Column(
-            //                 crossAxisAlignment: CrossAxisAlignment.start,
-            //                 children: [
-            //                   // Header dengan judul tipe dan tanggal
-            //                   Row(
-            //                     mainAxisAlignment:
-            //                         MainAxisAlignment.spaceBetween,
-            //                     children: [
-            //                       Text(
-            //                         item['type']['name']?.toString() ??
-            //                             'Unknown Type',
-            //                         style: const TextStyle(
-            //                           color: Colors.white,
-            //                           fontSize: 25,
-            //                           fontWeight: FontWeight.bold,
-            //                         ),
-            //                       ),
-            //                       Text(
-            //                         '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
-            //                         style: const TextStyle(
-            //                           color: Colors.white,
-            //                           fontSize: 12,
-            //                         ),
-            //                       ),
-            //                     ],
-            //                   ),
-            //                   // Catatan atau deskripsi
-            //                   Text(
-            //                     item['notes']?.toString() ??
-            //                         'No reason provided',
-            //                     style: const TextStyle(
-            //                       color: Colors.white,
-            //                       fontSize: 14,
-            //                     ),
-            //                   ),
-            //                   const SizedBox(height: 20),
-            //                   // Status pengajuan
-            //                   Align(
-            //                     alignment: Alignment.center,
-            //                     child: Container(
-            //                       padding: const EdgeInsets.symmetric(
-            //                           vertical: 8, horizontal: 110),
-            //                       decoration: BoxDecoration(
-            //                         color: Colors.white,
-            //                         borderRadius: BorderRadius.circular(9),
-            //                       ),
-            //                       child: Text(
-            //                         item['status']['name']?.toString() ??
-            //                             'Unknown Status',
-            //                         style: const TextStyle(
-            //                           color: Colors.pink,
-            //                           fontWeight: FontWeight.bold,
-            //                           fontSize: 16,
-            //                         ),
-            //                       ),
-            //                     ),
-            //                   ),
-            //                 ],
-            //               ),
-            //             );
-            //           },
-            //         ),
-            // )
             Expanded(
               child: historyData.isEmpty
                   ? const Center(
@@ -512,7 +425,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                                         'Unknown Type',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 25,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -557,19 +470,24 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                                 const SizedBox(height: 12),
                                 Align(
                                   alignment: Alignment.center,
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.pink,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                  child: SizedBox(
+                                    width:
+                                        270, // Atau gunakan double.infinity biar full width
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: Colors.pink,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
                                       ),
+                                      onPressed: () {
+                                        deleteCuti(requestId);
+                                      },
+                                      icon: const Icon(Icons.cancel),
+                                      label: const Text("Batalkan"),
                                     ),
-                                    onPressed: () {
-                                      deleteCuti(requestId);
-                                    },
-                                    icon: const Icon(Icons.cancel),
-                                    label: const Text("Batalkan"),
                                   ),
                                 ),
                               ],

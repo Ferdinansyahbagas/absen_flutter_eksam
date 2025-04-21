@@ -600,10 +600,15 @@ class _HomePageState extends State<HomePage> {
           hasClockedIn = clockInData['message'] != 'belum clock-in';
           if (hasClockedIn) {
             showNote = false;
-            isholiday = false;
-            clockInData['data']['attendance_status_id'] == 5;
-            isSuccess = true; // Clock-in berhasil sebelum jam 8
             isovertime = false;
+
+            final hasHoliday =
+                clockInData['data']['attendance_status_id'] ?? false;
+            if (hasHoliday == 5) {
+              isholiday = true;
+            } else {
+              isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
+            }
           }
         });
       }
