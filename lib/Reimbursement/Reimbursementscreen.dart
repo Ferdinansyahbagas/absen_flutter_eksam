@@ -22,7 +22,7 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
   List<dynamic> historyData = [];
   List<dynamic> notifications = [];
   bool isLoading = true; // Menambahkan status loading
-    bool hasUnreadNotifications = false;
+  bool hasUnreadNotifications = false;
 
   @override
   void initState() {
@@ -297,38 +297,39 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
         onTap: (index) {
           // Handle bottom navigation bar tap
           switch (index) {
-              case 0:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-        (route) => false, // Menghapus semua halaman sebelumnya
-      );
-      break;
-    case 1:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const TimeOffScreen()),
-        (route) => false,
-      );
-      break;
-    case 2:
-      break;
-    case 3:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const NotificationPage()),
-        (route) => false,
-      );
-      break;
-    case 4:
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileScreen()),
-        (route) => false,
-      );
-      break;
-  }
-},
+            case 0:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+                (route) => false, // Menghapus semua halaman sebelumnya
+              );
+              break;
+            case 1:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const TimeOffScreen()),
+                (route) => false,
+              );
+              break;
+            case 2:
+              break;
+            case 3:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NotificationPage()),
+                (route) => false,
+              );
+              break;
+            case 4:
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                (route) => false,
+              );
+              break;
+          }
+        },
       ),
     );
   }

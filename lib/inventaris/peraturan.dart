@@ -42,7 +42,7 @@ class _PeraturanScreenState extends State<PeraturanScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          peraturanList = data['data']; // sesuai respons Laravel
+          peraturanList = data['data'];
           isLoading = false;
         });
       } else {
@@ -82,32 +82,28 @@ class _PeraturanScreenState extends State<PeraturanScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Center(
-                            child: Html(
-                              data: item['peraturan'] ?? 'Tanpa Judul',
-                              style: {
-                                "body": Style(
-                                  textAlign: TextAlign.center,
-                                  fontSize: FontSize(16.0),
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 101, 19, 116),
-                                ),
-                              },
-                            ),
+                          Html(
+                            data: item['peraturan'] ?? 'Tanpa Judul',
+                            style: {
+                              "body": Style(
+                                textAlign: TextAlign.left,
+                                fontSize: FontSize(16.0),
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 101, 19, 116),
+                              ),
+                            },
                           ),
                           SizedBox(height: 8),
-                          Center(
-                            child: Html(
-                              data: item['deskripsi'] ?? '-',
-                              style: {
-                                "body": Style(
-                                  textAlign: TextAlign.center,
-                                  fontSize: FontSize(16.0),
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 101, 19, 116),
-                                ),
-                              },
-                            ),
+                          Html(
+                            data: item['deskripsi'] ?? '-',
+                            style: {
+                              "body": Style(
+                                textAlign: TextAlign.left,
+                                fontSize: FontSize(16.0),
+                                fontWeight: FontWeight.normal,
+                                color: Colors.black87,
+                              ),
+                            },
                           ),
                         ],
                       ),

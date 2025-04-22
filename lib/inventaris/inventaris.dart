@@ -13,40 +13,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String? id;
   String name = '';
   String keterangan = '';
-  List _inventoryList = [];
+  List<dynamic> _inventoryList = [];
 
   @override
   void initState() {
     super.initState();
     fetchInventory();
-    getProfil();
-  }
-
-  Future<void> getProfil() async {
-    try {
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      setState(() {
-        id = data['data']['id'].toString();
-      });
-
-      // Simpan user_id ke SharedPreferences
-      localStorage.setInt('user_id', data['data']['id']);
-
-      print("Profil pengguna: ${data['data']}");
-    } catch (e) {
-      print("Error mengambil profil pengguna: $e");
-    }
   }
 
   Future<void> fetchInventory() async {
@@ -56,33 +28,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       String? token = localStorage.getString('token');
 
-      if (token == null) {
-        print('Token tidak ditemukan');
-        return;
-      }
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
 
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] = 'Bearer $token';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-
-      if (rp.statusCode == 200) {
-        var data = jsonDecode(rp.body.toString());
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
         if (data['data'] != null && data['data'] is List) {
           setState(() {
             _inventoryList = data['data'];
+            print("Data inventory: $_inventoryList");
           });
         } else {
-          print('Data kosong atau format tidak sesuai');
+          print('Format respons tidak sesuai: ${data['message']}');
         }
       } else {
-        print('Gagal ambil data: ${rp.statusCode}');
-        print(rp.body); // buat lihat isi error-nya
+        print('Gagal ambil data, status: ${response.statusCode}');
+        print('Isi respons: ${response.body}');
       }
     } catch (e) {
-      print('Error fetchInventory: $e');
+      print('Terjadi kesalahan saat fetchInventory: $e');
     }
   }
 
@@ -91,25 +61,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/add-self-inventory');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
-      String token = localStorage.getString('token') ?? '';
+      String? token = localStorage.getString('token');
 
-      var request = http.MultipartRequest('POST', url);
-      request.headers['Authorization'] = 'Bearer $token';
-      request.fields['name'] = name;
-      request.fields['keterangan'] = keterangan;
-      request.fields['status'] = '1';
+      if (token == null) {
+        print('Token tidak ditemukan');
+        return;
+      }
 
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'name': name,
+          'keterangan': keterangan,
+        }),
+      );
 
-      if (rp.statusCode == 200) {
-        // name = '';
-        // keterangan = '';
-        fetchInventory();
-        print('Data berhasil ditambahkan');
-      } else {
-        print('Gagal tambah data: ${rp.statusCode}');
-        print(rp.body);
+      print('Response Add: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        if (result['status'] == 'success') {
+          await fetchInventory();
+        }
       }
     } catch (e) {
       print('Error addInventory: $e');
@@ -127,7 +104,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['name'] = name;
       request.fields['keterangan'] = keterangan;
-      request.fields['status'] = '1';
+      request.fields['status'] = '2';
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -199,6 +176,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ],
       ),
     );
+  }
+
+  // String _getStatusText(int status) {
+  //   switch (status) {
+  //     case 1:
+  //       return 'Disetujui';
+  //     case 2:
+  //       return 'Menunggu';
+  //     case 3:
+  //       return 'Ditolak';
+  //     default:
+  //       return 'Tidak diketahui';
+  //   }
+  // }
+
+  Color _getStatusColor(int status) {
+    switch (status) {
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
   @override
@@ -279,12 +282,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       columns: const [
                         DataColumn(label: Text('Nama')),
                         DataColumn(label: Text('Keterangan')),
+                        DataColumn(label: Text('Status')),
                         DataColumn(label: Text('Aksi')),
                       ],
                       rows: _inventoryList.map((item) {
+                        final status = item['status'];
                         return DataRow(cells: [
-                          DataCell(Text(item['name'] ?? '')),
-                          DataCell(Text(item['keterangan'] ?? '')),
+                          DataCell(Text(item['name'] ?? '-')),
+                          DataCell(Text(item['keterangan'] ?? '-')),
+                          DataCell(Text(
+                            status != null && status['nama'] != null
+                                ? status['nama']
+                                : 'Tidak diketahui',
+                            style: TextStyle(
+                              color: _getStatusColor(status),
+                            ),
+                          )),
                           DataCell(Row(
                             children: [
                               IconButton(

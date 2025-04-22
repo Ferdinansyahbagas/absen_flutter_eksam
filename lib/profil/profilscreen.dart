@@ -903,7 +903,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onPageChanged: (index) {
           setState(() {
             // _currentIndex =
-                index; // Sinkronisasi indeks ketika halaman berganti
+            index; // Sinkronisasi indeks ketika halaman berganti
           });
         },
         children: [

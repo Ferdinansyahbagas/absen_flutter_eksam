@@ -450,14 +450,16 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                               Align(
                                 alignment: Alignment.center,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 110),
+                                  width: double.infinity,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(9),
                                   ),
                                   child: Text(
                                     statusName,
+                                    textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       color: Colors.pink,
                                       fontWeight: FontWeight.bold,
@@ -470,23 +472,20 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
                                 const SizedBox(height: 12),
                                 Align(
                                   alignment: Alignment.center,
-                                  child: SizedBox(
-                                    width:
-                                        270, // Atau gunakan double.infinity biar full width
-                                    child: ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.pink,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      deleteCuti(requestId);
+                                    },
+                                    icon: const Icon(Icons.cancel),
+                                    label: const Text("Batalkan"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.pink,
+                                      minimumSize: const Size(double.infinity,
+                                          48), // width full, height 48
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(9),
                                       ),
-                                      onPressed: () {
-                                        deleteCuti(requestId);
-                                      },
-                                      icon: const Icon(Icons.cancel),
-                                      label: const Text("Batalkan"),
                                     ),
                                   ),
                                 ),
