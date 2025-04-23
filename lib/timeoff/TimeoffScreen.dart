@@ -24,6 +24,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
   List<dynamic> notifications = [];
   List<Map<String, dynamic>> quotaData = [];
   bool hasUnreadNotifications = false;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -194,6 +195,9 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
   }
 
   Future<void> getHistoryData() async {
+    setState(() {
+      isLoading = true;
+    });
     {
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/request-history/get-user-history');
@@ -213,11 +217,12 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             historyData = data['data'] ?? []; // Validasi key
           });
         } catch (e) {
-          print('Error parsing JSON: $e');
+          print('Terjadi kesalahan saat fetchInventory: $e');
+        } finally {
+          setState(() {
+            isLoading = false;
+          });
         }
-      } else {
-        print('Error fetching history data: ${rp.statusCode}');
-        print(rp.body);
       }
     }
   }
@@ -386,115 +391,121 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
             ),
             // Time Off Request Card
             Expanded(
-              child: historyData.isEmpty
-                  ? const Center(
-                      child: Text(
-                        "Belum ada history time off",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: historyData.length,
-                      itemBuilder: (context, index) {
-                        final item = historyData[index] as Map<String, dynamic>;
-                        final statusName =
-                            item['status']['name']?.toString() ?? '';
-                        final requestId = item['id'].toString();
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 20),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 236, 81, 109),
-                            borderRadius: BorderRadius.circular(12),
+              child: isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : historyData.isEmpty
+                      ? const Center(
+                          child: Text(
+                            "Belum ada history time off",
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                        )
+                      : ListView.builder(
+                          itemCount: historyData.length,
+                          itemBuilder: (context, index) {
+                            final item =
+                                historyData[index] as Map<String, dynamic>;
+                            final statusName =
+                                item['status']['name']?.toString() ?? '';
+                            final requestId = item['id'].toString();
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 20),
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 236, 81, 109),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    item['type']['name']?.toString() ??
-                                        'Unknown Type',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        item['type']['name']?.toString() ??
+                                            'Unknown Type',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Text(
-                                    '${item['startdate'] ?? ''} - \n ${item['enddate'] ?? ''}',
+                                    item['notes']?.toString() ??
+                                        'No reason provided',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 12,
+                                      fontSize: 14,
                                     ),
                                   ),
-                                ],
-                              ),
-                              Text(
-                                item['notes']?.toString() ??
-                                    'No reason provided',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Align(
-                                alignment: Alignment.center,
-                                child: Container(
-                                  width: double.infinity,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(9),
-                                  ),
-                                  child: Text(
-                                    statusName,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Colors.pink,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              if (statusName.toLowerCase() == 'pending') ...[
-                                const SizedBox(height: 12),
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      deleteCuti(requestId);
-                                    },
-                                    icon: const Icon(Icons.cancel),
-                                    label: const Text("Batalkan"),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.pink,
-                                      minimumSize: const Size(double.infinity,
-                                          48), // width full, height 48
-                                      shape: RoundedRectangleBorder(
+                                  const SizedBox(height: 20),
+                                  Align(
+                                    alignment: Alignment.center,
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
                                         borderRadius: BorderRadius.circular(9),
+                                      ),
+                                      child: Text(
+                                        statusName,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.pink,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                                  if (statusName.toLowerCase() ==
+                                      'pending') ...[
+                                    const SizedBox(height: 12),
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          deleteCuti(requestId);
+                                        },
+                                        icon: const Icon(Icons.cancel),
+                                        label: const Text("Batalkan"),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.pink,
+                                          minimumSize: const Size(
+                                              double.infinity,
+                                              48), // width full, height 48
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(9),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        ),
             )
           ],
         ),

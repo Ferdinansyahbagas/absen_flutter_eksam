@@ -192,7 +192,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _onCheckHistoryPressed(BuildContext context, List historyData) {
-    TextEditingController searchController = TextEditingController();
+    // TextEditingController searchController = TextEditingController();
     List filteredData = List.from(historyData);
 
     void filterData(int days) {
@@ -203,19 +203,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
       }).toList();
     }
 
-    void searchHistory(String query) {
-      filteredData = historyData.where((item) {
-        return item['date'].contains(query) ||
-            item['location']['name']
-                .toLowerCase()
-                .contains(query.toLowerCase()) ||
-            item['status']['name']
-                .toLowerCase()
-                .contains(query.toLowerCase()) ||
-            item['notes'].toLowerCase().contains(query.toLowerCase());
-      }).toList();
-    }
-
+    // void searchHistory(String query) {
+    //   filteredData = historyData.where((item) {
+    //     return item['date'].contains(query) ||
+    //         item['location']['name']
+    //             .toLowerCase()
+    //             .contains(query.toLowerCase()) ||
+    //         item['status']['name']
+    //             .toLowerCase()
+    //             .contains(query.toLowerCase()) ||
+    //         item['notes'].toLowerCase().contains(query.toLowerCase());
+    //   }).toList();
+    // }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -231,137 +230,239 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(
-                                      color: const Color.fromARGB(
-                                          255, 101, 19, 116)),
-                                  borderRadius: BorderRadius.circular(30.0),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                  color:
+                                      const Color.fromARGB(255, 101, 19, 116)),
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                            child: PopupMenuButton<int>(
+                              onSelected: (value) {
+                                setState(() {
+                                  filterData(value);
+                                });
+                              },
+                              itemBuilder: (BuildContext context) =>
+                                  <PopupMenuEntry<int>>[
+                                const PopupMenuItem<int>(
+                                  value: 10,
+                                  child: Text(
+                                    'in the last 10 days',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
+                                const PopupMenuItem<int>(
+                                  value: 25,
+                                  child: Text(
+                                    'in the last 25 days',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const PopupMenuItem<int>(
+                                  value: 50,
+                                  child: Text(
+                                    'in the last 50 days',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const PopupMenuItem<int>(
+                                  value: 100,
+                                  child: Text(
+                                    'in the last 100 days',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16.0, vertical: 16.0),
                                 child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsets.only(left: 16.0),
-                                        child: TextField(
-                                          controller: searchController,
-                                          decoration: const InputDecoration(
-                                            hintText: 'Search',
-                                            border: InputBorder.none,
-                                          ),
-                                          onChanged: (query) {
-                                            setState(() {
-                                              searchHistory(query);
-                                            });
-                                          },
-                                        ),
+                                    Text(
+                                      'Filter',
+                                      style: TextStyle(
+                                        color:
+                                            Color.fromARGB(255, 101, 19, 116),
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.search,
-                                          color: Colors.orange),
-                                      onPressed: () {
-                                        setState(() {
-                                          searchHistory(searchController.text);
-                                        });
-                                      },
+                                    Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Colors.orange,
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                    color: const Color.fromARGB(
-                                        255, 101, 19, 116)),
-                                borderRadius: BorderRadius.circular(30.0),
-                              ),
-                              child: PopupMenuButton<int>(
-                                onSelected: (value) {
-                                  setState(() {
-                                    filterData(value);
-                                  });
-                                },
-                                itemBuilder: (BuildContext context) =>
-                                    <PopupMenuEntry<int>>[
-                                  const PopupMenuItem<int>(
-                                    value: 10,
-                                    child: Text(
-                                      'in the last 10 days',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const PopupMenuItem<int>(
-                                    value: 25,
-                                    child: Text(
-                                      'in the last 25 days',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const PopupMenuItem<int>(
-                                    value: 50,
-                                    child: Text(
-                                      'in the last 50 days',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const PopupMenuItem<int>(
-                                    value: 100,
-                                    child: Text(
-                                      'in the last 100 days',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 16.0, vertical: 12.0),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        'Filter',
-                                        style: TextStyle(
-                                          color:
-                                              Color.fromARGB(255, 101, 19, 116),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.arrow_drop_down,
-                                        color: Colors.orange,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
                   ),
+                  // showModalBottomSheet(
+                  //   context: context,
+                  //   isScrollControlled: true,
+                  //   shape: const RoundedRectangleBorder(
+                  //     borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+                  //   ),
+                  //   builder: (BuildContext context) {
+                  //     return StatefulBuilder(
+                  //       builder: (BuildContext context, StateSetter setState) {
+                  //         return SizedBox(
+                  //           height: MediaQuery.of(context).size.height * 0.8,
+                  //           child: Column(
+                  //             children: [
+                  //               Padding(
+                  //                 padding: const EdgeInsets.all(16.0),
+                  //                 child: Column(
+                  //                   children: [
+                  //                     Row(
+                  //                       children: [
+                  //                         Expanded(
+                  //                           child: Container(
+                  //                             decoration: BoxDecoration(
+                  //                               color: Colors.white,
+                  //                               border: Border.all(
+                  //                                   color: const Color.fromARGB(
+                  //                                       255, 101, 19, 116)),
+                  //                               borderRadius: BorderRadius.circular(30.0),
+                  //                             ),
+                  //                             child: Row(
+                  //                               children: [
+                  //                                 Expanded(
+                  //                                   child: Padding(
+                  //                                     padding:
+                  //                                         const EdgeInsets.only(left: 16.0),
+                  //                                     child: TextField(
+                  //                                       controller: searchController,
+                  //                                       decoration: const InputDecoration(
+                  //                                         hintText: 'Search',
+                  //                                         border: InputBorder.none,
+                  //                                       ),
+                  //                                       onChanged: (query) {
+                  //                                         setState(() {
+                  //                                           searchHistory(query);
+                  //                                         });
+                  //                                       },
+                  //                                     ),
+                  //                                   ),
+                  //                                 ),
+                  //                                 IconButton(
+                  //                                   icon: const Icon(Icons.search,
+                  //                                       color: Colors.orange),
+                  //                                   onPressed: () {
+                  //                                     setState(() {
+                  //                                       searchHistory(searchController.text);
+                  //                                     });
+                  //                                   },
+                  //                                 ),
+                  //                               ],
+                  //                             ),
+                  //                           ),
+                  //                         ),
+                  //                         const SizedBox(width: 10),
+                  //                         Container(
+                  //                           decoration: BoxDecoration(
+                  //                             color: Colors.white,
+                  //                             border: Border.all(
+                  //                                 color: const Color.fromARGB(
+                  //                                     255, 101, 19, 116)),
+                  //                             borderRadius: BorderRadius.circular(30.0),
+                  //                           ),
+                  //                           child: PopupMenuButton<int>(
+                  //                             onSelected: (value) {
+                  //                               setState(() {
+                  //                                 filterData(value);
+                  //                               });
+                  //                             },
+                  //                             itemBuilder: (BuildContext context) =>
+                  //                                 <PopupMenuEntry<int>>[
+                  //                               const PopupMenuItem<int>(
+                  //                                 value: 10,
+                  //                                 child: Text(
+                  //                                   'in the last 10 days',
+                  //                                   style: TextStyle(
+                  //                                     color: Colors.black,
+                  //                                     fontWeight: FontWeight.bold,
+                  //                                   ),
+                  //                                 ),
+                  //                               ),
+                  //                               const PopupMenuItem<int>(
+                  //                                 value: 25,
+                  //                                 child: Text(
+                  //                                   'in the last 25 days',
+                  //                                   style: TextStyle(
+                  //                                     color: Colors.black,
+                  //                                     fontWeight: FontWeight.bold,
+                  //                                   ),
+                  //                                 ),
+                  //                               ),
+                  //                               const PopupMenuItem<int>(
+                  //                                 value: 50,
+                  //                                 child: Text(
+                  //                                   'in the last 50 days',
+                  //                                   style: TextStyle(
+                  //                                     color: Colors.black,
+                  //                                     fontWeight: FontWeight.bold,
+                  //                                   ),
+                  //                                 ),
+                  //                               ),
+                  //                               const PopupMenuItem<int>(
+                  //                                 value: 100,
+                  //                                 child: Text(
+                  //                                   'in the last 100 days',
+                  //                                   style: TextStyle(
+                  //                                     color: Colors.black,
+                  //                                     fontWeight: FontWeight.bold,
+                  //                                   ),
+                  //                                 ),
+                  //                               ),
+                  //                             ],
+                  //                             child: const Padding(
+                  //                               padding: EdgeInsets.symmetric(
+                  //                                   horizontal: 16.0, vertical: 12.0),
+                  //                               child: Row(
+                  //                                 children: [
+                  //                                   Text(
+                  //                                     'Filter',
+                  //                                     style: TextStyle(
+                  //                                       color:
+                  //                                           Color.fromARGB(255, 101, 19, 116),
+                  //                                       fontWeight: FontWeight.bold,
+                  //                                     ),
+                  //                                   ),
+                  //                                   Icon(
+                  //                                     Icons.arrow_drop_down,
+                  //                                     color: Colors.orange,
+                  //                                   ),
+                  //                                 ],
+                  //                               ),
+                  //                             ),
+                  //                           ),
+                  //                         ),
+                  //                       ],
+                  //                     ),
+                  //                   ],
+                  //                 ),
+                  //               ),
                   Expanded(
                     child: ListView.builder(
                       itemCount: filteredData.length,

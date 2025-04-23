@@ -14,6 +14,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String name = '';
   String keterangan = '';
   List<dynamic> _inventoryList = [];
+  int _currentPage = 0;
+  String? userId;
+  final int _rowsPerPage = 10;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -21,7 +25,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
     fetchInventory();
   }
 
+  List<dynamic> get _pagedInventory {
+    int start = _currentPage * _rowsPerPage;
+    int end = start + _rowsPerPage;
+    end = end > _inventoryList.length ? _inventoryList.length : end;
+    return _inventoryList.sublist(start, end);
+  }
+
   Future<void> fetchInventory() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/get-self-inventory');
@@ -53,6 +67,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
       }
     } catch (e) {
       print('Terjadi kesalahan saat fetchInventory: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -110,7 +128,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       var rp = await http.Response.fromStream(response);
 
       if (rp.statusCode == 200) {
-        fetchInventory();
+        await fetchInventory();
       } else {
         print('Gagal update: ${rp.statusCode}');
       }
@@ -167,9 +185,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              updateInventory(item['id'].toString());
-              Navigator.pop(context);
+            onPressed: () async {
+              if (_formKey.currentState!.validate()) {
+                await updateInventory(item['id'].toString());
+                Navigator.pop(context);
+              }
             },
             child: Text('Simpan'),
           ),
@@ -178,25 +198,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  // String _getStatusText(int status) {
-  //   switch (status) {
-  //     case 1:
-  //       return 'Disetujui';
-  //     case 2:
-  //       return 'Menunggu';
-  //     case 3:
-  //       return 'Ditolak';
-  //     default:
-  //       return 'Tidak diketahui';
-  //   }
-  // }
-
   Color _getStatusColor(int status) {
     switch (status) {
       case 1:
         return Colors.green;
       case 2:
-        return Colors.orange;
+        return Colors.grey;
       case 3:
         return Colors.red;
       default:
@@ -274,47 +281,108 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
           SizedBox(height: 20),
           Expanded(
-            child: _inventoryList.isEmpty
-                ? Center(child: Text('Belum ada data inventaris'))
-                : SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('Nama')),
-                        DataColumn(label: Text('Keterangan')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Aksi')),
-                      ],
-                      rows: _inventoryList.map((item) {
-                        final status = item['status'];
-                        return DataRow(cells: [
-                          DataCell(Text(item['name'] ?? '-')),
-                          DataCell(Text(item['keterangan'] ?? '-')),
-                          DataCell(Text(
-                            status != null && status['nama'] != null
-                                ? status['nama']
-                                : 'Tidak diketahui',
-                            style: TextStyle(
-                              color: _getStatusColor(status),
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : _inventoryList.isEmpty
+                    ? Center(child: Text('Belum ada data inventaris'))
+                    : Scrollbar(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              headingRowHeight: 40,
+                              dataRowHeight: 48,
+                              columnSpacing: 20,
+                              columns: const [
+                                DataColumn(
+                                    label: Text('No',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('Nama',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('Keterangan',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('Status',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                DataColumn(
+                                    label: Text('',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ],
+                              rows: List<DataRow>.generate(
+                                  _pagedInventory.length, (index) {
+                                final item = _pagedInventory[index];
+                                final status = item['status'];
+                                final statusText =
+                                    (status is Map && status['name'] != null)
+                                        ? status['name'].toString()
+                                        : 'Tidak diketahui';
+                                return DataRow(cells: [
+                                  DataCell(Text(
+                                      '${_currentPage * _rowsPerPage + index + 1}',
+                                      style: TextStyle(fontSize: 12))),
+                                  DataCell(Text(item['name'] ?? '-',
+                                      style: TextStyle(fontSize: 12))),
+                                  DataCell(Text(item['keterangan'] ?? '-',
+                                      style: TextStyle(fontSize: 12))),
+                                  DataCell(Text(
+                                    statusText,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          _getStatusColor(status?['id'] ?? 0),
+                                    ),
+                                  )),
+                                  DataCell(Row(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(Icons.edit, size: 18),
+                                        onPressed: () => _showEditDialog(item),
+                                        padding: EdgeInsets.zero,
+                                        constraints: BoxConstraints(),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.delete, size: 18),
+                                        onPressed: () => deleteInventory(
+                                            item['id'].toString()),
+                                        padding: EdgeInsets.zero,
+                                        constraints: BoxConstraints(),
+                                      ),
+                                    ],
+                                  )),
+                                ]);
+                              }),
                             ),
-                          )),
-                          DataCell(Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit, size: 20),
-                                onPressed: () => _showEditDialog(item),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete, size: 20),
-                                onPressed: () =>
-                                    deleteInventory(item['id'].toString()),
-                              ),
-                            ],
-                          )),
-                        ]);
-                      }).toList(),
-                    ),
-                  ),
+                          ),
+                        ),
+                      ),
+          ),
+          // if (_inventoryList.isEmpty)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: _currentPage > 0
+                    ? () => setState(() => _currentPage--)
+                    : null,
+              ),
+              Text('Halaman ${_currentPage + 1}'),
+              IconButton(
+                icon: Icon(Icons.arrow_forward),
+                onPressed:
+                    (_currentPage + 1) * _rowsPerPage < _inventoryList.length
+                        ? () => setState(() => _currentPage++)
+                        : null,
+              ),
+            ],
           ),
         ]),
       ),
