@@ -22,8 +22,8 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
   String description = '';
   String formattedDate = '';
   String totalReimbursement = '';
-  DateTime? selectedDate;
   File? _image;
+  DateTime? selectedDate;
   bool _isDateEmpty = false;
   bool _isTotalEmpty = false;
   bool _isImageRequired = false;

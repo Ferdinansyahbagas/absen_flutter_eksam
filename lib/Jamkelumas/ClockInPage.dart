@@ -21,17 +21,17 @@ class ClockInPage extends StatefulWidget {
 }
 
 class _ClockInPageState extends State<ClockInPage> {
+  String? Id; // Simpan ID WFH jika ada
+  String? userStatus;
   String? _selectedWorkType = 'Reguler';
   String? _selectedWorkplaceType = 'WFO';
-  String? userStatus;
-  String? Id; // Simpan ID WFH jika ada
   File? _image; // To store the image file
-  List<String> workTypes = []; // Dynamically set work types
   bool _isImageRequired = false; // Flag to indicate if image is required
   bool _isHoliday = false; // Flag for holiday status
-  final ImagePicker _picker = ImagePicker();
+  List<String> workTypes = []; // Dynamically set work types
   List<String> workplaceTypes = [];
   Position? lastKnownPosition; // Simpan lokasi terakhir
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {

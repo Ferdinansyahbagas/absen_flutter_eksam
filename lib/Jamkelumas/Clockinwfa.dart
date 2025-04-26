@@ -14,10 +14,6 @@ class ClockinwfaPage extends StatefulWidget {
 }
 
 class _ClockinwfaPageState extends State<ClockinwfaPage> {
-  DateTime? selectedDate;
-  TextEditingController noteController = TextEditingController();
-  List<String> workTypes = []; // Dynamically set work types
-  List<String> workPlaceTypes = []; // Dynamically set work types
   String? bataswfh;
   String? selectedWorkType;
   String? selectedWorkPlaceType;
@@ -25,8 +21,12 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   String? type = '1';
   // ignore: unused_field
   String? _selectedType = ' ';
-  List<String> _quotaOptions = [];
+  DateTime? selectedDate;
   bool isQuotaEmpty = false; // Tambahkan state untuk cek kuota kosong
+  List<String> workTypes = []; // Dynamically set work types
+  List<String> workPlaceTypes = []; // Dynamically set work types
+  List<String> _quotaOptions = [];
+  TextEditingController noteController = TextEditingController();
 
   @override
   void initState() {

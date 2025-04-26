@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart'; // for formatting date
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
+import 'dart:io';
+import 'package:absen/inventaris/datainventaris.dart';
 
 class InventoryScreen extends StatefulWidget {
   @override
@@ -10,26 +16,117 @@ class InventoryScreen extends StatefulWidget {
 
 class _InventoryScreenState extends State<InventoryScreen> {
   final _formKey = GlobalKey<FormState>();
-  String? id;
   String name = '';
   String keterangan = '';
   List<dynamic> _inventoryList = [];
-  int _currentPage = 0;
   String? userId;
-  final int _rowsPerPage = 10;
+  String tanggalPembelian = '';
+  String tanggalPeminjaman = '';
+  final ImagePicker _picker = ImagePicker();
+  File? _image;
+  bool _isImageRequired = false;
   bool isLoading = false;
+  DateTime? _tanggalPembelian;
+  DateTime? _tanggalPeminjaman;
+  String formattedDate = '';
+  bool _istanggalPeminjamanEmpty = false;
+  bool _isNameEmpty = false;
+  bool _isKeteranganEmpty = false;
 
   @override
   void initState() {
     super.initState();
     fetchInventory();
+    getProfil();
   }
 
-  List<dynamic> get _pagedInventory {
-    int start = _currentPage * _rowsPerPage;
-    int end = start + _rowsPerPage;
-    end = end > _inventoryList.length ? _inventoryList.length : end;
-    return _inventoryList.sublist(start, end);
+  // *Menampilkan dialog pilihan sumber gambar*
+  Future<void> _pickImage() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Ambil dari Kamera'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // *Mengambil gambar dari sumber yang dipilih*
+  Future<void> _getImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _isImageRequired = false;
+      });
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isPembelian) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isPembelian) {
+          _tanggalPembelian = picked;
+          tanggalPembelian = DateFormat('yyyy-MM-dd').format(picked);
+        } else {
+          _tanggalPeminjaman = picked;
+          tanggalPeminjaman = DateFormat('yyyy-MM-dd').format(picked);
+        }
+      });
+    }
+  }
+
+  Future<void> getProfil() async {
+    try {
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-profile');
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      var request = http.MultipartRequest('GET', url);
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      setState(() {
+        userId = data['data']['user_id'].toString();
+      });
+
+      // Simpan user_id ke SharedPreferences
+      localStorage.setInt('user_id', data['data']['id']);
+
+      print("Profil pengguna: ${data['data']}");
+    } catch (e) {
+      print("Error mengambil profil pengguna: $e");
+    }
   }
 
   Future<void> fetchInventory() async {
@@ -75,6 +172,51 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> addInventory() async {
+    setState(() {
+      _isNameEmpty = name.isEmpty;
+      _isKeteranganEmpty = keterangan.isEmpty;
+      _istanggalPeminjamanEmpty = tanggalPeminjaman.isEmpty;
+    });
+
+    if (_isNameEmpty || _isKeteranganEmpty || _istanggalPeminjamanEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All fields are required.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Show loading dialog
+
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_image == null) {
+      // Show error if no image is uploaded
+      setState(() {
+        _isImageRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a photo before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return; // Stop submission if no image
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: const Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
     try {
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/add-self-inventory');
@@ -86,22 +228,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
         return;
       }
 
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'name': name,
-          'keterangan': keterangan,
-        }),
-      );
+      var request = http.MultipartRequest('POST', url)
+        ..headers['Authorization'] = 'Bearer $token'
+        ..fields['name'] = name
+        ..fields['keterangan'] = keterangan
+        ..fields['tanggal_pembelian'] = tanggalPembelian
+        ..fields['tanggal_peminjaman'] = tanggalPeminjaman;
 
-      print('Response Add: ${response.body}');
+      request.files.add(await http.MultipartFile.fromPath(
+        'foto_barang',
+        _image!.path,
+        contentType: MediaType('image', 'jpg'),
+      ));
+
+      final response = await request.send();
+
+      final resBody = await response.stream.bytesToString();
+      print('Response Add: $resBody');
 
       if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
+        final result = jsonDecode(resBody);
         if (result['status'] == 'success') {
           await fetchInventory();
         }
@@ -113,16 +259,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Future<void> updateInventory(String id) async {
     try {
+      // Panggil getProfil untuk memastikan user_id sudah tersimpan
+      await getProfil();
+
       final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/edit-inventory/$id');
+          'https://portal.eksam.cloud/api/v1/other/edit-self-inventory/$id');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       String token = localStorage.getString('token') ?? '';
+      int? userId = localStorage.getInt('user_id');
 
-      var request = http.MultipartRequest('PUT', url); // Sesuaikan metode
+      if (userId == null) {
+        print('User ID tidak ditemukan.');
+        return;
+      }
+
+      var request = http.MultipartRequest('POST', url);
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['name'] = name;
       request.fields['keterangan'] = keterangan;
       request.fields['status'] = '2';
+      request.fields['user_id'] = userId.toString();
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -130,7 +286,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       if (rp.statusCode == 200) {
         await fetchInventory();
       } else {
-        print('Gagal update: ${rp.statusCode}');
+        print('Gagal update: ${rp.statusCode} - ${rp.body}');
       }
     } catch (e) {
       print('Error updateInventory: $e');
@@ -160,231 +316,295 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  void _showEditDialog(Map item) {
-    name = item['name'];
-    keterangan = item['keterangan'];
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Edit Inventaris'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              initialValue: item['name'],
-              decoration: InputDecoration(labelText: 'Nama'),
-              onChanged: (val) => name = val,
-            ),
-            TextFormField(
-              initialValue: item['keterangan'],
-              decoration: InputDecoration(labelText: 'Keterangan'),
-              onChanged: (val) => keterangan = val,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              if (_formKey.currentState!.validate()) {
-                await updateInventory(item['id'].toString());
-                Navigator.pop(context);
-              }
-            },
-            child: Text('Simpan'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getStatusColor(int status) {
-    switch (status) {
-      case 1:
-        return Colors.green;
-      case 2:
-        return Colors.grey;
-      case 3:
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Inventaris Kantor')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(children: [
-          Form(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
             key: _formKey,
             child: Column(children: [
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Nama Barang',
-                  labelStyle: TextStyle(color: Colors.purple),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.purple),
-                  ),
+                  labelStyle:
+                      const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
+                  floatingLabelBehavior:
+                      FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.purple),
+                    borderSide: BorderSide(
+                        color: _isNameEmpty
+                            ? Colors.red
+                            : const Color.fromARGB(255, 101, 19, 116)),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 101, 19, 116), width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Colors.red), // Border saat error
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Colors.red), // Border saat error dan fokus
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  errorText: _isNameEmpty ? 'Tolong Isi Nama Barang' : null,
                 ),
-                validator: (val) => val!.isEmpty ? 'Wajib diisi' : null,
-                onChanged: (val) => name = val,
+                onChanged: (value) {
+                  setState(() {
+                    name = value;
+                    _isNameEmpty = false;
+                  });
+                },
               ),
               SizedBox(height: 10),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Keterangan',
-                  labelStyle: TextStyle(color: Colors.purple),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.purple),
-                  ),
+                  labelStyle:
+                      const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
+                  floatingLabelBehavior:
+                      FloatingLabelBehavior.always, // Always show label on top
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.purple),
+                    borderSide: BorderSide(
+                        color: _isKeteranganEmpty
+                            ? Colors.red
+                            : const Color.fromARGB(255, 101, 19, 116)),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Color.fromARGB(255, 101, 19, 116), width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Colors.red), // Border saat error
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                        color: Colors.red), // Border saat error dan fokus
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  errorText:
+                      _isKeteranganEmpty ? 'Tolong Isi Nama Barang' : null,
                 ),
-                validator: (val) => val!.isEmpty ? 'Wajib diisi' : null,
-                onChanged: (val) => keterangan = val,
+                onChanged: (value) {
+                  setState(() {
+                    keterangan = value;
+                    _isKeteranganEmpty = false;
+                  });
+                },
               ),
               SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    addInventory();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  minimumSize:
-                      Size(double.infinity, 50), // lebar penuh & tinggi 50
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(40), // bikin melengkung penuh
+              InkWell(
+                onTap: () => _selectDate(context, true),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Tanggal Pembelian',
+                    labelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 101, 19, 116)),
+                    floatingLabelBehavior: FloatingLabelBehavior
+                        .always, // Always show label on top
+                    border: const OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  elevation: 4,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _tanggalPembelian == null
+                            ? 'Select Start Date'
+                            : DateFormat('yyyy-MM-dd')
+                                .format(_tanggalPembelian!),
+                      ),
+                      const Icon(Icons.calendar_today, color: Colors.orange),
+                    ],
+                  ),
                 ),
-                child: Text(
-                  'Tambah',
-                  style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: () => _selectDate(context, false),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Tanggal Peminjaman',
+                    labelStyle: const TextStyle(
+                        color: Color.fromARGB(255, 101, 19, 116)),
+                    floatingLabelBehavior: FloatingLabelBehavior
+                        .always, // Always show label on top
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: _istanggalPeminjamanEmpty
+                              ? Colors.red
+                              : const Color.fromARGB(255, 101, 19, 116)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 101, 19, 116), width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error dan fokus
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorText: _istanggalPeminjamanEmpty
+                        ? 'Tolong Isi Tanggal Peminjaman'
+                        : null, // Error message
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _tanggalPeminjaman == null
+                            ? 'Select Start Date'
+                            : DateFormat('yyyy-MM-dd')
+                                .format(_tanggalPeminjaman!),
+                      ),
+                      const Icon(Icons.calendar_today, color: Colors.orange),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Upload Photo Button
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 130,
+                  width: 150,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _isImageRequired
+                          ? Colors.red
+                          : (_image == null
+                              ? const Color.fromRGBO(101, 19, 116, 1)
+                              : Colors.orange),
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.camera_alt,
+                        size: 35,
+                        color: _isImageRequired
+                            ? Colors.red
+                            : (_image == null
+                                ? const Color.fromRGBO(101, 19, 116, 1)
+                                : Colors.orange),
+                      ),
+                      const SizedBox(height: 3),
+                      if (_image == null && !_isImageRequired)
+                        const Text(
+                          'Upload Photo Anda',
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Color.fromRGBO(101, 19, 116, 1)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              if (_image != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (kIsWeb)
+                                  Image.network(_image!.path, fit: BoxFit.cover)
+                                else
+                                  Image.file(_image!, fit: BoxFit.cover),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: const Text(
+                      'Lihat Photo',
+                      style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.orange,
+                          decoration: TextDecoration.underline),
+                    ),
+                  ),
+                ),
+              SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await addInventory();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Tambah',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              Align(
+                alignment: Alignment.center,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => dataInventory(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Data Inventaris',
+                    style: TextStyle(
+                      color: Colors.blue, // Warna teks biru
+                      decoration: TextDecoration.underline, // Garis bawah
+                      decorationColor: Colors.blue, // Warna garis bawah biru
+                      decorationThickness: 2, // Ketebalan garis bawah
+                    ),
+                  ),
                 ),
               ),
             ]),
           ),
-          SizedBox(height: 20),
-          Expanded(
-            child: isLoading
-                ? Center(child: CircularProgressIndicator())
-                : _inventoryList.isEmpty
-                    ? Center(child: Text('Belum ada data inventaris'))
-                    : Scrollbar(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              headingRowHeight: 40,
-                              dataRowHeight: 48,
-                              columnSpacing: 20,
-                              columns: const [
-                                DataColumn(
-                                    label: Text('No',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
-                                DataColumn(
-                                    label: Text('Nama',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
-                                DataColumn(
-                                    label: Text('Keterangan',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
-                                DataColumn(
-                                    label: Text('Status',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
-                                DataColumn(
-                                    label: Text('',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
-                              ],
-                              rows: List<DataRow>.generate(
-                                  _pagedInventory.length, (index) {
-                                final item = _pagedInventory[index];
-                                final status = item['status'];
-                                final statusText =
-                                    (status is Map && status['name'] != null)
-                                        ? status['name'].toString()
-                                        : 'Tidak diketahui';
-                                return DataRow(cells: [
-                                  DataCell(Text(
-                                      '${_currentPage * _rowsPerPage + index + 1}',
-                                      style: TextStyle(fontSize: 12))),
-                                  DataCell(Text(item['name'] ?? '-',
-                                      style: TextStyle(fontSize: 12))),
-                                  DataCell(Text(item['keterangan'] ?? '-',
-                                      style: TextStyle(fontSize: 12))),
-                                  DataCell(Text(
-                                    statusText,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color:
-                                          _getStatusColor(status?['id'] ?? 0),
-                                    ),
-                                  )),
-                                  DataCell(Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.edit, size: 18),
-                                        onPressed: () => _showEditDialog(item),
-                                        padding: EdgeInsets.zero,
-                                        constraints: BoxConstraints(),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.delete, size: 18),
-                                        onPressed: () => deleteInventory(
-                                            item['id'].toString()),
-                                        padding: EdgeInsets.zero,
-                                        constraints: BoxConstraints(),
-                                      ),
-                                    ],
-                                  )),
-                                ]);
-                              }),
-                            ),
-                          ),
-                        ),
-                      ),
-          ),
-          // if (_inventoryList.isEmpty)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: _currentPage > 0
-                    ? () => setState(() => _currentPage--)
-                    : null,
-              ),
-              Text('Halaman ${_currentPage + 1}'),
-              IconButton(
-                icon: Icon(Icons.arrow_forward),
-                onPressed:
-                    (_currentPage + 1) * _rowsPerPage < _inventoryList.length
-                        ? () => setState(() => _currentPage++)
-                        : null,
-              ),
-            ],
-          ),
-        ]),
+        ),
       ),
     );
   }

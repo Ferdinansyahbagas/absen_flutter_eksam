@@ -19,17 +19,17 @@ class ClockOutLupaScreen extends StatefulWidget {
 }
 
 class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
-  File? _image;
   String note = '';
   String formattedDate = '';
   String formattedTime = '';
+  String? _absenId; // Tambahan untuk ID absen
+  String? userStatus; // Tambahan untuk menyimpan user level
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
-  String? _absenId; // Tambahan untuk ID absen
+  File? _image;
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
   bool _isTimeEmpty = false;
-  String? userStatus; // Tambahan untuk menyimpan user level
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
   TimeOfDay? _selectedTime; // Variabel untuk menyimpan waktu clock-out

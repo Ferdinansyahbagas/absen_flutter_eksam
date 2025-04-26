@@ -20,11 +20,11 @@ class TimeOffScreen extends StatefulWidget {
 
 class _TimeOffScreenState extends State<TimeOffScreen> {
   String? limit;
+  bool isLoading = false;
+  bool hasUnreadNotifications = false;
   List<dynamic> historyData = []; // Tambahkan list untuk menyimpan data history
   List<dynamic> notifications = [];
   List<Map<String, dynamic>> quotaData = [];
-  bool hasUnreadNotifications = false;
-  bool isLoading = false;
 
   @override
   void initState() {

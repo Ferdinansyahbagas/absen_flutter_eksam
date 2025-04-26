@@ -19,11 +19,11 @@ class ClockOutScreen extends StatefulWidget {
 }
 
 class _ClockOutScreenState extends State<ClockOutScreen> {
-  File? _image;
   String note = '';
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
   String? userStatus; // Tambahan untuk menyimpan user level
+  File? _image;
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
   bool isWithinRange = true; // Default true agar tidak menghalangi WFH

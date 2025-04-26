@@ -11,7 +11,9 @@ import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
 import 'package:absen/inventaris/inventaris.dart';
 import 'package:absen/inventaris/peraturan.dart';
 import 'dart:async'; // Untuk timer
+import 'dart:convert';
 import 'package:intl/intl.dart'; //unntuk format tanggal
+import 'package:http/http.dart' as http;
 import 'package:geocoding/geocoding.dart'; //kordinat
 import 'package:geolocator/geolocator.dart'; //tempat
 import 'package:absen/utils/notification_helper.dart';
@@ -19,8 +21,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:absen/service/api_service.dart'; // Import ApiService
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,8 +29,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final PageController _pageController =
-      PageController(); // PageController for PageView
   String? name = ""; // Variabel untuk name pengguna
   String? message; //variabel untuk th messange
   String? avatarUrl; // Variable untuk avatar gambar
@@ -41,11 +39,11 @@ class _HomePageState extends State<HomePage> {
   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
+  int? userId;
   int currentIndex = 0; // Default to the home page
   int _currentIndex = 0;
   // ignore: unused_field
   int _currentPage = 0; // Variable to keep track of the current page
-  int? userId;
   int hariBulanIni = 0;
   int menitBulanIni = 0;
   int telatBulanIni = 0;
@@ -88,6 +86,8 @@ class _HomePageState extends State<HomePage> {
   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
   Map<String, dynamic> targetData = {};
   Position? lastKnownPosition; // Simpan lokasi terakhir
+  final PageController _pageController =
+      PageController(); // PageController for PageView
 
   @override
   void initState() {

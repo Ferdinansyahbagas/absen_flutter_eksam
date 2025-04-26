@@ -24,8 +24,8 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // int _currentIndex = 0; // Untuk mengatur indeks dari BottomNavigationBar
   final PageController _pageController = PageController();
+  final ImagePicker _picker = ImagePicker();
   String? profileImageUrl;
   String? idCardImageUrl;
   String? cvImageUrl;
@@ -47,7 +47,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? selectedAvatarUrl; // Variabel untuk menyimpan URL avatar default
   bool _obscureText = true; // Kontrol visibilitas password di dialog edit
   bool hasUnreadNotifications = false;
-  final ImagePicker _picker = ImagePicker();
   List<String> pendidikanOptions = [];
   List<String> bankOptions = [];
   List<dynamic> notifications = [];

@@ -10,8 +10,8 @@ class PeraturanScreen extends StatefulWidget {
 }
 
 class _PeraturanScreenState extends State<PeraturanScreen> {
-  List<dynamic> peraturanList = [];
   bool isLoading = true;
+  List<dynamic> peraturanList = [];
 
   @override
   void initState() {

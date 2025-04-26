@@ -18,8 +18,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String Totalday = '';
   String menitTelat = '';
   String? lastClockOutDate;
-  List<dynamic> lupaClockOutList = [];
   bool isLupaClockOut = false; // Tambahkan variabel untuk cek lupa clock out
+  List<dynamic> lupaClockOutList = [];
 
   @override
   void initState() {
@@ -195,13 +195,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
     // TextEditingController searchController = TextEditingController();
     List filteredData = List.from(historyData);
 
-    void filterData(int days) {
-      DateTime today = DateTime.now();
+    void filterDataByDateRange(DateTime startDate, DateTime endDate) {
       filteredData = historyData.where((item) {
-        DateTime itemDate = DateTime.parse(item['date']);
-        return today.difference(itemDate).inDays <= days;
+        DateTime itemDate =
+            DateTime.parse(item['date']); // Pastikan ini tipe DateTime
+        return itemDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
+            itemDate.isBefore(endDate.add(const Duration(days: 1)));
       }).toList();
     }
+    // void filterData(int days) {
+    //   DateTime today = DateTime.now();
+    //   filteredData = historyData.where((item) {
+    //     DateTime itemDate = DateTime.parse(item['date']);
+    //     return today.difference(itemDate).inDays <= days;
+    //   }).toList();
+    // }
 
     // void searchHistory(String query) {
     //   filteredData = historyData.where((item) {
@@ -231,85 +239,72 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(
-                                  color:
-                                      const Color.fromARGB(255, 101, 19, 116)),
-                              borderRadius: BorderRadius.circular(30.0),
-                            ),
-                            child: PopupMenuButton<int>(
-                              onSelected: (value) {
+                        const Text(
+                          'History',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 101, 19, 116),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                                color: const Color.fromARGB(255, 101, 19, 116)),
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                          child: InkWell(
+                            onTap: () async {
+                              final DateTimeRange? picked =
+                                  await showDateRangePicker(
+                                context: context,
+                                useRootNavigator:
+                                    false, // <-- ini yang bikin dia gak fullscreen
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime.now(),
+                                initialDateRange: DateTimeRange(
+                                  start: DateTime.now()
+                                      .subtract(const Duration(days: 30)),
+                                  end: DateTime.now(),
+                                ),
+                                builder: (BuildContext context, Widget? child) {
+                                  return Center(
+                                    // biar dia muncul di tengah dengan ukuran kecil
+                                    child: ConstrainedBox(
+                                      constraints:
+                                          const BoxConstraints(maxWidth: 400),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                              );
+                              if (picked != null) {
                                 setState(() {
-                                  filterData(value);
+                                  filterDataByDateRange(
+                                      picked.start, picked.end);
                                 });
-                              },
-                              itemBuilder: (BuildContext context) =>
-                                  <PopupMenuEntry<int>>[
-                                const PopupMenuItem<int>(
-                                  value: 10,
-                                  child: Text(
-                                    'in the last 10 days',
+                              }
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 12.0),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Filter',
                                     style: TextStyle(
-                                      color: Colors.black,
+                                      color: Color.fromARGB(255, 101, 19, 116),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ),
-                                const PopupMenuItem<int>(
-                                  value: 25,
-                                  child: Text(
-                                    'in the last 25 days',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.orange,
                                   ),
-                                ),
-                                const PopupMenuItem<int>(
-                                  value: 50,
-                                  child: Text(
-                                    'in the last 50 days',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                const PopupMenuItem<int>(
-                                  value: 100,
-                                  child: Text(
-                                    'in the last 100 days',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 16.0, vertical: 16.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Filter',
-                                      style: TextStyle(
-                                        color:
-                                            Color.fromARGB(255, 101, 19, 116),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_drop_down,
-                                      color: Colors.orange,
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
                           ),

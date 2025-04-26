@@ -17,6 +17,7 @@ class TimeOff extends StatefulWidget {
 class _TimeOffState extends State<TimeOff> {
   String formatStarttedDate = '';
   String formatEndtedDate = '';
+  String _quotaWarning = ''; // Pesan peringatan kuota
   String Reason = '';
   String? _selectedType = '';
   String? iduser;
@@ -26,7 +27,6 @@ class _TimeOffState extends State<TimeOff> {
   bool _isStartDateEmpty = false;
   bool _isEndDateEmpty = false;
   bool _isQuotaEmpty = false; // Tambahan: cek jika kuota habis
-  String _quotaWarning = ''; // Pesan peringatan kuota
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
