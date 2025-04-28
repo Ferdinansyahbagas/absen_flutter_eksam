@@ -566,12 +566,12 @@ class _HomePageState extends State<HomePage> {
           name = profileData['data']['name'];
           Id = profileData['data']['id'].toString(); // ID WFH
 
-          double officeLatitude =
-              double.tryParse(profileData['data']['latitude'].toString()) ??
-                  0.0;
-          double officeLongitude =
-              double.tryParse(profileData['data']['longitude'].toString()) ??
-                  0.0;
+          double officeLatitude = double.tryParse(
+                  profileData['data']['gedung']['latitude'].toString()) ??
+              0.0;
+          double officeLongitude = double.tryParse(
+                  profileData['data']['gedung']['longitude'].toString()) ??
+              0.0;
 
           // Hitung jarak user dengan kantor
           double distance = Geolocator.distanceBetween(
@@ -581,7 +581,7 @@ class _HomePageState extends State<HomePage> {
           if (userStatus == "1" || userStatus == "2") {
             if (!isWFARequested) {
               // Jika tidak request WFA, cek jarak
-              print("Jarak dari kantor: $distance meter");
+              print("Jarak dari gedung: $distance meter");
               jarak = distance > 500; // Jarak untuk Clock In dihitung
             } else {
               jarak = false; // Jika user request WFA, jarak tidak berjalan
@@ -652,7 +652,7 @@ class _HomePageState extends State<HomePage> {
         var overtimeOutData =
             await ApiService.sendRequest(endpoint: 'attendance/is-lembur-out');
         if (overtimeOutData != null) {
-          setState(() {
+          setState(() {   
             hasClockedOutOvertime =
                 overtimeOutData['message'] != 'belum clock-out';
           });

@@ -40,6 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String bankAccount = '';
   String bank = '';
   String Limit = '';
+  String Divisi = '';
   File? profileImage;
   File? _idCardImage;
   File? _cvImage;
@@ -266,6 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bank = data['data']['bank']['name'].toString();
           bankAccount = data['data']['no_rekening'].toString();
           Limit = data['data']['batas_cuti'].toString();
+          Divisi = data['data']['divisi']['divisi'].toString();
         });
         saveImageUrls(
             profileUrl: profileImageUrl,
@@ -971,6 +973,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onEdit: (newValue) => setState(() {
                           name = newValue; // Update value setelah edit
                         }),
+                      ),
+                        _buildProfileItem(
+                        title: 'Divisi',
+                        value: Divisi,
+                        isEditable: false, // Tidak bisa diedit
                       ),
                       _buildProfileItem(
                         title: 'Email',

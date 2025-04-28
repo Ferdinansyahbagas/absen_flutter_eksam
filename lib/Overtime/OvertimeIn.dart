@@ -1,5 +1,5 @@
-import 'package:absen/susses&failde/berhasilV1.dart';
-import 'package:absen/susses&failde/gagalV1.dart';
+import 'package:absen/susses&failde/berhasilOvertimein.dart';
+import 'package:absen/susses&failde/gagalV2I.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -13,14 +13,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-class ClockInPage extends StatefulWidget {
-  const ClockInPage({super.key});
+class Overtimein extends StatefulWidget {
+  const Overtimein({super.key});
 
   @override
-  _ClockInPageState createState() => _ClockInPageState();
+  _OvertimeinState createState() => _OvertimeinState();
 }
 
-class _ClockInPageState extends State<ClockInPage> {
+class _OvertimeinState extends State<Overtimein> {
   String? Id; // Simpan ID WFH jika ada
   String? userStatus;
   String? _selectedWorkType = 'Reguler';
@@ -41,8 +41,6 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _initializeData() async {
     await Future.wait([
-      _setWorkTypesBasedOnDay(),
-      _setWorkTypeLembur(),
       getStatus(),
       getLocation(),
       getData(),
@@ -206,6 +204,7 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
+
   Future<void> getLocation() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/get-location-parameter');
@@ -230,119 +229,6 @@ class _ClockInPageState extends State<ClockInPage> {
       }
     } catch (e) {
       print('Error occurred: $e');
-    }
-  }
-
-  Future<void> _setWorkTypeLembur() async {
-    try {
-      if (userStatus == '3') {
-        setState(() {
-          workTypes = ['Reguler'];
-          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-        });
-        return; // Stop di sini kalau user level 3
-      }
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-clock-in');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      if (response.statusCode == 200) {
-        bool hasClockedIn = data['message'] != 'belum clock-in';
-        // Cek status clock-in
-        setState(() {
-          if (hasClockedIn) {
-            // Jika sudah clock-in, hanya munculkan Lembur
-            workTypes = ['Lembur'];
-            _selectedWorkType = 'Lembur';
-          } else {
-            // Jika belum clock-in, munculkan opsi Reguler dan Lembur
-            workTypes = ['Reguler', 'Lembur'];
-            _selectedWorkType = 'Reguler';
-          }
-        });
-      } else {
-        print("Error mengecek status clock-in: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Error mengecek status clock-in: $e");
-    }
-  }
-
-  Future<void> _setWorkTypesBasedOnDay() async {
-    try {
-      if (userStatus == '3') {
-        setState(() {
-          workTypes = ['Reguler'];
-          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-        });
-        return;
-      }
-      // Get current day
-      final int currentDay = DateTime.now().weekday;
-      // Check if today is a weekend
-      if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
-        setState(() {
-          _isHoliday = true;
-          workTypes = ['Lembur'];
-          _selectedWorkType = 'Lembur';
-        });
-        return;
-      }
-
-      // Fetch holiday data from API
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
-
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      print(data);
-      if (response.statusCode == 200) {
-        setState(() {
-          _isHoliday = data['data']['libur'];
-          // _isHoliday = data['data']['attendance_status_id'];
-        });
-
-        // Check if today is in the holiday list
-        if (_isHoliday) {
-          setState(() {
-            workTypes = ['Lembur'];
-            _selectedWorkType = 'Lembur';
-          });
-        } else {
-          setState(() {
-            _isHoliday = false;
-            workTypes = ['Reguler', 'Lembur'];
-            _selectedWorkType = 'Reguler';
-          });
-        }
-      } else {
-        // Handle API error
-        print('Failed to fetch holidays: ${response.statusCode}');
-        setState(() {
-          workTypes = ['Reguler', 'Lembur']; // Default options
-        });
-      }
-    } catch (e) {
-      print('Error checking holidays: $e');
-      setState(() {
-        workTypes = ['Reguler', 'Lembur']; // Default options
-      });
     }
   }
 
@@ -441,7 +327,7 @@ class _ClockInPageState extends State<ClockInPage> {
 
       if (response.statusCode == 200) {
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const SuccessPage()));
+            MaterialPageRoute(builder: (context) => const SuccessOvertime()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -450,7 +336,7 @@ class _ClockInPageState extends State<ClockInPage> {
           ),
         );
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const FailurePage()));
+            MaterialPageRoute(builder: (context) => const FailurePage2I()));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -460,7 +346,7 @@ class _ClockInPageState extends State<ClockInPage> {
         ),
       );
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const FailurePage()));
+          MaterialPageRoute(builder: (context) => const FailurePage2I()));
     }
   }
 

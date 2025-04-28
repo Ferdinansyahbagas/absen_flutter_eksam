@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart'; // for formatting date
 import 'package:image_picker/image_picker.dart';
-// import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'dart:io';
 
@@ -24,7 +23,6 @@ class _dataInventoryState extends State<dataInventory> {
   final int _rowsPerPage = 15;
   final ImagePicker _picker = ImagePicker();
   File? _image;
-  // bool _isImageRequired = false;
   bool isLoading = false;
   DateTime? _tanggalPembelian;
   DateTime? _tanggalPeminjaman;
@@ -75,13 +73,12 @@ class _dataInventoryState extends State<dataInventory> {
     );
   }
 
-  // *Mengambil gambar dari sumber yang dipilih*
+// Mengambil gambar dari sumber yang dipilih
   Future<void> _getImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() {
-        _image = File(pickedFile.path);
-        // _isImageRequired = false;
+        _image = File(pickedFile.path); // Update gambar yang dipilih
       });
     }
   }
@@ -175,50 +172,8 @@ class _dataInventoryState extends State<dataInventory> {
     }
   }
 
-  Future<void> addInventory() async {
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/add-self-inventory');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      String? token = localStorage.getString('token');
-
-      if (token == null) {
-        print('Token tidak ditemukan');
-        return;
-      }
-
-      var request = http.MultipartRequest('POST', url)
-        ..headers['Authorization'] = 'Bearer $token'
-        ..fields['name'] = name
-        ..fields['keterangan'] = keterangan
-        ..fields['tanggal_pembelian'] = tanggalPembelian
-        ..fields['tanggal_peminjaman'] = tanggalPeminjaman;
-
-      request.files.add(await http.MultipartFile.fromPath(
-        'foto_barang',
-        _image!.path,
-        contentType: MediaType('image', 'jpg'),
-      ));
-
-      final response = await request.send();
-
-      final resBody = await response.stream.bytesToString();
-      print('Response Add: $resBody');
-
-      if (response.statusCode == 200) {
-        final result = jsonDecode(resBody);
-        if (result['status'] == 'success') {
-          await fetchInventory();
-        }
-      }
-    } catch (e) {
-      print('Error addInventory: $e');
-    }
-  }
-
   Future<void> updateInventory(String id) async {
     try {
-      // Panggil getProfil untuk memastikan user_id sudah tersimpan
       await getProfil();
 
       final url = Uri.parse(
@@ -241,19 +196,33 @@ class _dataInventoryState extends State<dataInventory> {
       request.fields['tanggal_pembelian'] = tanggalPembelian;
       request.fields['tanggal_peminjaman'] = tanggalPeminjaman;
 
-      request.files.add(await http.MultipartFile.fromPath(
-        'foto_barang',
-        _image!.path,
-        contentType: MediaType('image', 'jpg'),
-      ));
-
+      if (_image != null) {
+        // Jika user pilih gambar baru, upload gambar
+        request.files.add(await http.MultipartFile.fromPath(
+          'foto_barang',
+          _image!.path,
+          contentType: MediaType('image', 'jpg'),
+        ));
+      }
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
 
+      print('Status Code: ${rp.statusCode}');
+      print(
+          'Response Body: ${rp.body}'); // <<< Tambah ini, supaya kelihatan isinya
+
       if (rp.statusCode == 200) {
-        await fetchInventory();
+        final result = jsonDecode(rp.body);
+        if (result['status'] == 'success') {
+          await fetchInventory();
+          print('Inventory berhasil diupdate.');
+        } else {
+          print('Update gagal (status success != "success"): ${result}');
+        }
       } else {
-        print('Gagal update: ${rp.statusCode} - ${rp.body}');
+        print('Gagal update, status bukan 200: ${rp.statusCode}');
+        print(
+            'Isi response saat gagal: ${rp.body}'); // <<< Cetak lagi kalau status bukan 200
       }
     } catch (e) {
       print('Error updateInventory: $e');
@@ -289,7 +258,7 @@ class _dataInventoryState extends State<dataInventory> {
       keterangan = item['keterangan'] ?? '';
       tanggalPembelian = item['tanggal_pembelian'] ?? '';
       tanggalPeminjaman = item['tanggal_peminjaman'] ?? '';
-      _image = null; // reset gambar dulu
+      // _image = null; // reset gambar dulu
     });
 
     _tanggalPembelian =
@@ -322,12 +291,27 @@ class _dataInventoryState extends State<dataInventory> {
                   child: InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Tanggal Pembelian',
-                      border: OutlineInputBorder(),
+                      labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 101, 19, 116)),
+                      floatingLabelBehavior: FloatingLabelBehavior
+                          .always, // Always show label on top
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Color.fromARGB(255, 101, 19, 116), width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text(
-                      _tanggalPembelian != null
-                          ? DateFormat('yyyy-MM-dd').format(_tanggalPembelian!)
-                          : 'Pilih Tanggal',
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _tanggalPembelian == null
+                              ? 'Select Start Date'
+                              : DateFormat('yyyy-MM-dd')
+                                  .format(_tanggalPembelian!),
+                        ),
+                        const Icon(Icons.calendar_today, color: Colors.orange),
+                      ],
                     ),
                   ),
                 ),
@@ -338,14 +322,27 @@ class _dataInventoryState extends State<dataInventory> {
                     'Tanggal Peminjaman: ${DateFormat('yyyy-MM-dd').format(_tanggalPeminjaman!)}',
                   ),
                 SizedBox(height: 10),
-                _image != null
-                    ? Image.file(_image!, height: 100)
-                    : item['foto_barang'] != null
-                        ? Image.network(item['foto_barang'], height: 100)
-                        : Container(),
-                ElevatedButton(
-                  onPressed: () => _pickImage(),
-                  child: Text('Ganti Foto Barang'),
+                Image.network(
+                  item['foto_barang'].startsWith('http')
+                      ? item['foto_barang']
+                      : 'https://portal.eksam.cloud/storage/${item['foto_barang']}',
+                  height: 100,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Text('Gagal load gambar');
+                  },
+                ),
+                SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () =>
+                      _pickImage(), // Ketika pengguna memilih gambar baru
+                  child: Text(
+                    'Ganti Foto Barang',
+                    style: TextStyle(
+                      decoration: TextDecoration.underline,
+                      color: Colors.blue,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -463,23 +460,41 @@ class _dataInventoryState extends State<dataInventory> {
                                           _getStatusColor(status?['id'] ?? 0),
                                     ),
                                   )),
-                                  DataCell(Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.edit, size: 18),
-                                        onPressed: () => _showEditDialog(item),
-                                        padding: EdgeInsets.zero,
-                                        constraints: BoxConstraints(),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(Icons.delete, size: 18),
-                                        onPressed: () => deleteInventory(
-                                            item['id'].toString()),
-                                        padding: EdgeInsets.zero,
-                                        constraints: BoxConstraints(),
-                                      ),
-                                    ],
-                                  )),
+                                  DataCell(
+                                    PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        if (value == 'edit') {
+                                          _showEditDialog(item);
+                                        } else if (value == 'delete') {
+                                          deleteInventory(
+                                              item['id'].toString());
+                                        }
+                                      },
+                                      itemBuilder: (BuildContext context) => [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.edit, size: 18),
+                                              SizedBox(width: 8),
+                                              Text('Edit'),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete, size: 18),
+                                              SizedBox(width: 8),
+                                              Text('Delete'),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                      child: Icon(Icons.more_vert),
+                                    ),
+                                  ),
                                 ]);
                               }),
                             ),
@@ -487,7 +502,6 @@ class _dataInventoryState extends State<dataInventory> {
                         ),
                       ),
           ),
-          // if (_inventoryList.isEmpty)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

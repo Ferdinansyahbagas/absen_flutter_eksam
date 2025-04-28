@@ -30,6 +30,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   DateTime? _tanggalPeminjaman;
   String formattedDate = '';
   bool _istanggalPeminjamanEmpty = false;
+  bool _istanggalPembelianEmpty = false;
   bool _isNameEmpty = false;
   bool _isKeteranganEmpty = false;
 
@@ -176,9 +177,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
       _isNameEmpty = name.isEmpty;
       _isKeteranganEmpty = keterangan.isEmpty;
       _istanggalPeminjamanEmpty = tanggalPeminjaman.isEmpty;
+      _istanggalPembelianEmpty = tanggalPembelian.isEmpty;
     });
 
-    if (_isNameEmpty || _isKeteranganEmpty || _istanggalPeminjamanEmpty) {
+    if (_isNameEmpty ||
+        _isKeteranganEmpty ||
+        _istanggalPeminjamanEmpty ||
+        _istanggalPembelianEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('All fields are required.'),
@@ -206,18 +211,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
       return; // Stop submission if no image
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog
-      builder: (BuildContext context) {
-        return Center(
-          child: CircularProgressIndicator(
-            color: const Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
     try {
+      // 1) tampilkan loading dialog
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/add-self-inventory');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -242,77 +244,57 @@ class _InventoryScreenState extends State<InventoryScreen> {
       ));
 
       final response = await request.send();
-
       final resBody = await response.stream.bytesToString();
       print('Response Add: $resBody');
+
+      // 2) Tutup loading dialog
+      Navigator.of(context).pop();
 
       if (response.statusCode == 200) {
         final result = jsonDecode(resBody);
         if (result['status'] == 'success') {
           await fetchInventory();
+
+          // 3) Tampilkan pop-up sukses
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text('Sukses'),
+              content: const Text('Inventory berhasil ditambahkan!'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal: ${result['message'] ?? 'Unknown error'}'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Server error: ${response.statusCode}'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
+      // pastikan loading ditutup kalau terjadi error
+      Navigator.of(context).pop();
       print('Error addInventory: $e');
-    }
-  }
-
-  Future<void> updateInventory(String id) async {
-    try {
-      // Panggil getProfil untuk memastikan user_id sudah tersimpan
-      await getProfil();
-
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/edit-self-inventory/$id');
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      String token = localStorage.getString('token') ?? '';
-      int? userId = localStorage.getInt('user_id');
-
-      if (userId == null) {
-        print('User ID tidak ditemukan.');
-        return;
-      }
-
-      var request = http.MultipartRequest('POST', url);
-      request.headers['Authorization'] = 'Bearer $token';
-      request.fields['name'] = name;
-      request.fields['keterangan'] = keterangan;
-      request.fields['status'] = '2';
-      request.fields['user_id'] = userId.toString();
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-
-      if (rp.statusCode == 200) {
-        await fetchInventory();
-      } else {
-        print('Gagal update: ${rp.statusCode} - ${rp.body}');
-      }
-    } catch (e) {
-      print('Error updateInventory: $e');
-    }
-  }
-
-  Future<void> deleteInventory(String id) async {
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/delete-inventory/$id');
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
-
-      var request = http.MultipartRequest('DELETE', url); // Sesuaikan metode
-      request.headers['Authorization'] = 'Bearer $token';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-
-      if (rp.statusCode == 200) {
-        fetchInventory();
-      } else {
-        print('Gagal hapus data: ${rp.statusCode}');
-      }
-    } catch (e) {
-      print('Error deleteInventory: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -412,12 +394,30 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         color: Color.fromARGB(255, 101, 19, 116)),
                     floatingLabelBehavior: FloatingLabelBehavior
                         .always, // Always show label on top
-                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: _istanggalPembelianEmpty
+                              ? Colors.red
+                              : const Color.fromARGB(255, 101, 19, 116)),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderSide: const BorderSide(
                           color: Color.fromARGB(255, 101, 19, 116), width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                          color: Colors.red), // Border saat error dan fokus
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    errorText: _istanggalPembelianEmpty
+                        ? 'Tolong Isi Tanggal Pembelian'
+                        : null, // Error message
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
