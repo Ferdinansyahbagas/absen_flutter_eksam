@@ -21,8 +21,8 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
   String? type = '1';
   // ignore: unused_field
   String? _selectedType = ' ';
-  DateTime? selectedDate;
   bool isQuotaEmpty = false; // Tambahkan state untuk cek kuota kosong
+  DateTime? selectedDate;
   List<String> workTypes = []; // Dynamically set work types
   List<String> workPlaceTypes = []; // Dynamically set work types
   List<String> _quotaOptions = [];

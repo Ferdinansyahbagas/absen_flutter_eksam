@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:absen/susses&failde/berhasilV1II.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
 
 class ClockOutScreen extends StatefulWidget {
   const ClockOutScreen({super.key});
@@ -92,7 +92,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
             userLatitude, userLongitude, officeLatitude, officeLongitude);
 
         print("Jarak dari kantor: $distance meter");
-
       } else {
         print("Error mengambil profil pengguna: ${rp.statusCode}");
       }
@@ -122,7 +121,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
         });
 
         // Jika user memilih WFO, lakukan validasi jarak
-    
       } else {
         print('Error fetching history data: ${rp.statusCode}');
       }
@@ -173,7 +171,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   }
 
   Future<void> _submitData() async {
-
     if (_noteController.text.isEmpty) {
       setState(() {
         _isNoteRequired = true;

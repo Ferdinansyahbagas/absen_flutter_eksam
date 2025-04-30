@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:absen/firebase_api.dart';
 import 'package:absen/screen/loadingwelcome.dart'; // SplashScreen
+import 'package:firebase_core/firebase_core.dart';
 import 'package:absen/utils/device_utils.dart'; 
+import 'package:absen/firebase_api.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

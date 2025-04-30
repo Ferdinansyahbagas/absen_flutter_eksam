@@ -1,5 +1,7 @@
 import 'package:absen/susses&failde/berhasilV1.dart';
 import 'package:absen/susses&failde/gagalV1.dart';
+import 'package:absen/susses&failde/berhasilOvertimein.dart';
+import 'package:absen/susses&failde/gagalV2I.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -27,11 +29,13 @@ class _ClockInPageState extends State<ClockInPage> {
   String? _selectedWorkplaceType = 'WFO';
   File? _image; // To store the image file
   bool _isImageRequired = false; // Flag to indicate if image is required
+  bool _isNoteRequired = false;
   bool _isHoliday = false; // Flag for holiday status
   List<String> workTypes = []; // Dynamically set work types
   List<String> workplaceTypes = [];
   Position? lastKnownPosition; // Simpan lokasi terakhir
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController _noteController = TextEditingController();
 
   @override
   void initState() {
@@ -70,6 +74,16 @@ class _ClockInPageState extends State<ClockInPage> {
     );
   }
 
+  Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _isImageRequired = false;
+      });
+    }
+  }
   bool _isFakeLocation(Position position) {
     // Cek apakah lokasi di-mock (hanya support di beberapa device Android)
     if (position.isMocked) {
@@ -194,7 +208,7 @@ class _ClockInPageState extends State<ClockInPage> {
             _selectedWorkplaceType = 'WFA';
           } else {
             // Kalau dalam 500 meter, bisa pilih WFO atau WFA
-            workplaceTypes = ['WFO', 'WFA'];
+            workplaceTypes = ['WFO', ''];
             _selectedWorkplaceType = 'WFO';
           }
         });
@@ -346,14 +360,118 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
-    if (pickedFile != null) {
+
+  Future<void> _submitDataovertimein() async {
+    if (_noteController.text.isEmpty) {
       setState(() {
-        _image = File(pickedFile.path);
-        _isImageRequired = false;
+        _isNoteRequired = true;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in the note before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (_image == null) {
+      setState(() {
+        _isImageRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please upload a photo before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
+    try {
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      String token = localStorage.getString('token') ?? '';
+
+      // Get current location
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      double latitude = position.latitude;
+      double longitude = position.longitude;
+
+      // Convert coordinates to address
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(latitude, longitude);
+      Placemark place = placemarks.isNotEmpty ? placemarks[0] : Placemark();
+      String city = place.locality ?? "Lokasi tidak tersedia";
+
+      // Siapkan request ke API OvertimeIn
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/attendance/overtime-in'); 
+      var request = http.MultipartRequest('POST', url);
+
+      request.headers['Authorization'] = 'Bearer $token';
+      request.fields['geolocation'] = city;
+      request.fields['location'] =
+          (_selectedWorkplaceType == "WFA") ? '2' : '1';
+      request.fields['notes'] =
+          _noteController.text; // Optional notes, pastikan _notesController ada
+
+      // Upload foto
+      request.files.add(await http.MultipartFile.fromPath(
+        'foto',
+        _image!.path,
+        contentType: MediaType('image', 'jpeg'),
+      ));
+
+      // Kirim request
+      var response = await request.send();
+      // var rp = await http.Response.fromStream(response);
+      // var data = jsonDecode(rp.body);
+
+      Navigator.pop(context); // Tutup loading dialog
+
+      if (response.statusCode == 200) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(
+        //     content: Text('Overtime clock-in berhasil!'),
+        //     backgroundColor: Colors.green,
+        //   ),
+        // );
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const SuccessOvertime()));
+      } else {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(data['message'] ?? 'Gagal clock-in overtime.'),
+        //     backgroundColor: Colors.red,
+        //   ),
+        // );
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const FailurePage2I()));
+      }
+    } catch (e) {
+      // Navigator.pop(context); // Pastikan tutup loading saat error
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('Terjadi kesalahan: $e'),
+      //     backgroundColor: Colors.red,
+      //   ),
+      // );
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const FailurePage2I()));
     }
   }
 
@@ -646,9 +764,72 @@ class _ClockInPageState extends State<ClockInPage> {
                     ),
                   ),
                 ),
+              if (_selectedWorkType == "Lembur" &&
+                  (userStatus == "1" || userStatus == "2")) ...[
+                const Text(
+                  'Note',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color.fromRGBO(101, 19, 116, 1)),
+                ),
+                const SizedBox(height: 10),
+                // TextField for Note
+                TextField(
+                  controller: _noteController,
+                  decoration: InputDecoration(
+                    labelText: 'Note',
+                    labelStyle: TextStyle(
+                      color: _isNoteRequired ? Colors.red : Colors.grey,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _isNoteRequired
+                            ? Colors.red
+                            : const Color.fromRGBO(101, 19, 116, 1),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: _isNoteRequired
+                            ? Colors.red
+                            : const Color.fromRGBO(101, 19, 116, 1),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    if (value.isNotEmpty) {
+                      setState(() {
+                        _isNoteRequired = false;
+                      });
+                    }
+                  },
+                ),
+              ],
               const SizedBox(height: 160),
               // Submit Button
-              if (_selectedWorkplaceType == "WFA" &&
+              if (_selectedWorkType == "Lembur" &&
+                  (userStatus == "1" || userStatus == "2")) ...[
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitDataovertimein,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      iconColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Ajukan Lembur',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
+                    ),
+                  ),
+                )
+              ] else if (_selectedWorkplaceType == "WFA" &&
                   _selectedWorkType == "Reguler" &&
                   (userStatus == "1" || userStatus == "2")) ...[
                 Center(

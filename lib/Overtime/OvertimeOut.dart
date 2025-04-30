@@ -130,6 +130,196 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     }
   }
 
+  Future<void> _submitDataovertimeout() async {
+  if (_noteController.text.isEmpty) {
+    setState(() {
+      _isNoteRequired = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Silakan isi catatan terlebih dahulu.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  if (_image == null) {
+    setState(() {
+      _isImageRequired = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Silakan unggah foto terlebih dahulu.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 101, 19, 116),
+        ),
+      );
+    },
+  );
+
+  try {
+    final url =
+        Uri.parse('https://portal.eksam.cloud/api/v1//attendance/overtime-out-new');
+    var request = http.MultipartRequest('POST', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    // Tambahkan Authorization Bearer Token
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    // Tambahkan field notes
+    request.fields['notes'] = _noteController.text;
+
+    // Tambahkan file foto
+    request.files.add(await http.MultipartFile.fromPath(
+      'foto',
+      _image!.path,
+      contentType: MediaType('image', 'jpg'),
+    ));
+
+    var response = await request.send();
+    var rp = await http.Response.fromStream(response);
+    var data = jsonDecode(rp.body);
+
+    Navigator.pop(context); // Tutup dialog loading
+
+    if (response.statusCode == 200) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SuccessPageII()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal submit: ${data['message']}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePage()),
+      );
+    }
+  } catch (e) {
+    Navigator.pop(context); // Tutup dialog loading kalau error
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Terjadi kesalahan: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const FailurePage()),
+    );
+  }
+}
+
+Future<void> _submitDataover() async {
+  if (_noteController.text.isEmpty) {
+    setState(() {
+      _isNoteRequired = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Silakan isi catatan terlebih dahulu.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  if (_image == null) {
+    setState(() {
+      _isImageRequired = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Silakan unggah foto terlebih dahulu.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 101, 19, 116),
+        ),
+      );
+    },
+  );
+
+  try {
+    final url = Uri.parse('https://portal.eksam.cloud/api/v1/attendance/overtime-out-approved');
+    var request = http.MultipartRequest('POST', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    String? token = localStorage.getString('token');
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.fields['notes'] = _noteController.text;
+
+    request.files.add(await http.MultipartFile.fromPath(
+      'foto',
+      _image!.path,
+      contentType: MediaType('image', 'jpeg'), // Pastikan sesuai format yang dikirim
+    ));
+
+    var response = await request.send();
+    var rp = await http.Response.fromStream(response);
+    var data = jsonDecode(rp.body);
+
+    Navigator.pop(context); // Tutup loading
+
+    if (response.statusCode == 200) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SuccessPageII()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal kirim: ${data['message']}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePage()),
+      );
+    }
+  } catch (e) {
+    Navigator.pop(context); // Tutup loading
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Terjadi kesalahan: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const FailurePage()),
+    );
+  }
+}
+
   Future<void> _submitData() async {
 
     if (_noteController.text.isEmpty) {

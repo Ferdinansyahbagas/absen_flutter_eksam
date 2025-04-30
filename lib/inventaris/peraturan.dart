@@ -94,17 +94,17 @@ class _PeraturanScreenState extends State<PeraturanScreen> {
                             },
                           ),
                           SizedBox(height: 8),
-                          Html(
-                            data: item['deskripsi'] ?? '-',
-                            style: {
-                              "body": Style(
-                                textAlign: TextAlign.left,
-                                fontSize: FontSize(16.0),
-                                fontWeight: FontWeight.normal,
-                                color: Colors.black87,
-                              ),
-                            },
-                          ),
+                          // Html(
+                          //   data: item['deskripsi'] ?? '-',
+                          //   style: {
+                          //     "body": Style(
+                          //       textAlign: TextAlign.left,
+                          //       fontSize: FontSize(16.0),
+                          //       fontWeight: FontWeight.normal,
+                          //       color: Colors.black87,
+                          //     ),
+                          //   },
+                          // ),
                         ],
                       ),
                     ),

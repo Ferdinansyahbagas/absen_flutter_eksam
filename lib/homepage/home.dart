@@ -581,7 +581,7 @@ class _HomePageState extends State<HomePage> {
           if (userStatus == "1" || userStatus == "2") {
             if (!isWFARequested) {
               // Jika tidak request WFA, cek jarak
-              print("Jarak dari gedung: $distance meter");
+              print("Jarak dari kantor: $distance meter");
               jarak = distance > 500; // Jarak untuk Clock In dihitung
             } else {
               jarak = false; // Jika user request WFA, jarak tidak berjalan
@@ -591,7 +591,6 @@ class _HomePageState extends State<HomePage> {
           }
         });
       }
-
       // Cek status clock-in
       var clockInData =
           await ApiService.sendRequest(endpoint: 'attendance/is-clock-in');
@@ -652,7 +651,7 @@ class _HomePageState extends State<HomePage> {
         var overtimeOutData =
             await ApiService.sendRequest(endpoint: 'attendance/is-lembur-out');
         if (overtimeOutData != null) {
-          setState(() {   
+          setState(() {
             hasClockedOutOvertime =
                 overtimeOutData['message'] != 'belum clock-out';
           });

@@ -28,10 +28,12 @@ class _OvertimeinState extends State<Overtimein> {
   File? _image; // To store the image file
   bool _isImageRequired = false; // Flag to indicate if image is required
   bool _isHoliday = false; // Flag for holiday status
+  bool _isNoteRequired = false;
   List<String> workTypes = []; // Dynamically set work types
   List<String> workplaceTypes = [];
   Position? lastKnownPosition; // Simpan lokasi terakhir
   final ImagePicker _picker = ImagePicker();
+  final TextEditingController _noteController = TextEditingController();
 
   @override
   void initState() {
@@ -105,6 +107,13 @@ class _OvertimeinState extends State<Overtimein> {
 
   // Check if today is a weekend or holiday from API
   Future<void> getStatus() async {
+    try {
+      setState(() {
+        workTypes = ['Lembur'];
+      });
+    } catch (e) {
+      print('Error occurred: $e');
+    }
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/get-type-parameter');
     var request = http.MultipartRequest('GET', url);
@@ -204,7 +213,6 @@ class _OvertimeinState extends State<Overtimein> {
     }
   }
 
-
   Future<void> getLocation() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/get-location-parameter');
@@ -244,8 +252,19 @@ class _OvertimeinState extends State<Overtimein> {
   }
 
   // // Function to submit data to API
-
-  Future<void> _submitData() async {
+  Future<void> _submitDataovertimein() async {
+    if (_noteController.text.isEmpty) {
+      setState(() {
+        _isNoteRequired = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in the note before submitting.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     if (_image == null) {
       setState(() {
         _isImageRequired = true;
@@ -278,60 +297,56 @@ class _OvertimeinState extends State<Overtimein> {
 
       // Get current location
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-
+        desiredAccuracy: LocationAccuracy.high,
+      );
       double latitude = position.latitude;
       double longitude = position.longitude;
 
       // Convert coordinates to address
       List<Placemark> placemarks =
           await placemarkFromCoordinates(latitude, longitude);
-      Placemark place = placemarks[0];
+      Placemark place = placemarks.isNotEmpty ? placemarks[0] : Placemark();
+      String city = place.locality ?? "Lokasi tidak tersedia";
 
-      String city = place.locality ?? "Unknown City";
-
-      // Tentukan tipe kerja dan lokasi
-      String type = (_selectedWorkType == "Lembur") ? '2' : '1';
-      String location = (_selectedWorkplaceType == "WFA") ? '2' : '1';
-
-      // Siapkan request ke API clock-in
-      final url =
-          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/clock-in');
+      // Siapkan request ke API OvertimeIn
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/attendance/overtime-in'); // <- Pastikan endpoint ini sesuai
       var request = http.MultipartRequest('POST', url);
 
       request.headers['Authorization'] = 'Bearer $token';
-      request.fields['type'] = type;
-      request.fields['status'] = '1';
-      request.fields['location'] = location;
       request.fields['geolocation'] = city;
-      request.fields['latitude'] = latitude.toString();
-      request.fields['longitude'] = longitude.toString();
+      request.fields['location'] =
+          (_selectedWorkplaceType == "WFA") ? '2' : '1';
+      request.fields['notes'] =
+          _noteController.text; // Optional notes, pastikan _notesController ada
 
-      // Tambahkan foto
-      if (_image != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'foto',
-          _image!.path,
-          contentType: MediaType('image', 'jpg'),
-        ));
-      }
+      // Upload foto
+      request.files.add(await http.MultipartFile.fromPath(
+        'foto',
+        _image!.path,
+        contentType: MediaType('image', 'jpeg'),
+      ));
 
-      // Kirim request ke API
+      // Kirim request
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
+      var data = jsonDecode(rp.body);
 
-      print(data);
-
-      Navigator.pop(context); // Tutup loading
+      Navigator.pop(context); // Tutup loading dialog
 
       if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Overtime clock-in berhasil!'),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => const SuccessOvertime()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit: ${data['message']}'),
+            content: Text(data['message'] ?? 'Gagal clock-in overtime.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -339,9 +354,10 @@ class _OvertimeinState extends State<Overtimein> {
             MaterialPageRoute(builder: (context) => const FailurePage2I()));
       }
     } catch (e) {
+      Navigator.pop(context); // Pastikan tutup loading saat error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('An error occurred: $e'),
+          content: Text('Terjadi kesalahan: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -532,14 +548,57 @@ class _OvertimeinState extends State<Overtimein> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 160),
+              const SizedBox(height: 20),
+// Note (Catatan)
+              const Text(
+                'Note',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromRGBO(101, 19, 116, 1)),
+              ),
+              const SizedBox(height: 10),
+              // TextField for Note
+              TextField(
+                controller: _noteController,
+                decoration: InputDecoration(
+                  labelText: 'Note',
+                  labelStyle: TextStyle(
+                    color: _isNoteRequired ? Colors.red : Colors.grey,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _isNoteRequired
+                          ? Colors.red
+                          : const Color.fromRGBO(101, 19, 116, 1),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _isNoteRequired
+                          ? Colors.red
+                          : const Color.fromRGBO(101, 19, 116, 1),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    setState(() {
+                      _isNoteRequired = false;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 140),
               // Submit Button
               if (_selectedWorkplaceType == "WFA" &&
                   _selectedWorkType == "Reguler" &&
                   (userStatus == "1" || userStatus == "2")) ...[
                 Center(
                   child: ElevatedButton(
-                    onPressed: _submitData,
+                    onPressed: _submitDataovertimein,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       iconColor: Colors.white,
@@ -559,7 +618,7 @@ class _OvertimeinState extends State<Overtimein> {
                   userStatus == "3") ...[
                 Center(
                   child: ElevatedButton(
-                    onPressed: _submitData,
+                    onPressed: _submitDataovertimein,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       iconColor: Colors.white,

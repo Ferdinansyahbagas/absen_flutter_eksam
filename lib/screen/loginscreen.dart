@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/screen/forpasscreen.dart';
 import 'package:absen/screen/welcome_screen.dart';
-import 'package:absen/utils/preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:absen/utils/preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

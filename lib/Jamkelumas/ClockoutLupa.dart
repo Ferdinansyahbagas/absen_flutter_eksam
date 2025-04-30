@@ -32,8 +32,8 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   bool _isTimeEmpty = false;
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
-  TimeOfDay? _selectedTime; // Variabel untuk menyimpan waktu clock-out
   DateTime? selectedDate;
+  TimeOfDay? _selectedTime; // Variabel untuk menyimpan waktu clock-out
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _noteController = TextEditingController();
 
@@ -43,7 +43,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     _loadSelectedValues();
     getProfil();
     getDatalupa();
-    // _setWorkTypeLembur();
   }
 
   Future<void> _loadSelectedValues() async {

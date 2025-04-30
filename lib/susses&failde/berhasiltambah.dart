@@ -6,14 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // Package to format the date and time
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SuccessOvertime extends StatefulWidget {
-  const SuccessOvertime({super.key});
+class Successinventory extends StatefulWidget {
+  const Successinventory({super.key});
 
   @override
-  _SuccessOvertimeState createState() => _SuccessOvertimeState();
+  _SuccessinventoryState createState() => _SuccessinventoryState();
 }
 
-class _SuccessOvertimeState extends State<SuccessOvertime> {
+class _SuccessinventoryState extends State<Successinventory> {
   String datetime = '';
 
   @override
@@ -72,7 +72,7 @@ class _SuccessOvertimeState extends State<SuccessOvertime> {
             children: [
               const SizedBox(height: 150),
               const Text(
-                'Anda Berhasil Mengirim',
+                'Anda Berhasil Menambahkan',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -81,7 +81,7 @@ class _SuccessOvertimeState extends State<SuccessOvertime> {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Pengajuan Lembur​',
+                'Inventaris',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,

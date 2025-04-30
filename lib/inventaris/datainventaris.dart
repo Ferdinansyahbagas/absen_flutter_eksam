@@ -27,6 +27,7 @@ class _dataInventoryState extends State<dataInventory> {
   DateTime? _tanggalPembelian;
   DateTime? _tanggalPeminjaman;
   String formattedDate = '';
+  String? oldImagePath;
 
   @override
   void initState() {
@@ -130,6 +131,29 @@ class _dataInventoryState extends State<dataInventory> {
     }
   }
 
+  Future<void> deleteInventory(String id) async {
+    try {
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/other/delete-inventory/$id');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+
+      var request = http.MultipartRequest('DELETE', url); // Sesuaikan metode
+      request.headers['Authorization'] = 'Bearer $token';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+
+      if (rp.statusCode == 200) {
+        fetchInventory();
+      } else {
+        print('Gagal hapus data: ${rp.statusCode}');
+      }
+    } catch (e) {
+      print('Error deleteInventory: $e');
+    }
+  }
+
   Future<void> fetchInventory() async {
     setState(() {
       isLoading = true;
@@ -154,7 +178,10 @@ class _dataInventoryState extends State<dataInventory> {
         if (data['data'] != null && data['data'] is List) {
           setState(() {
             _inventoryList = data['data'];
-            print("Data inventory: $_inventoryList");
+            // Simpan path foto dari data pertama atau sesuai kebutuhan
+            if (_inventoryList.isNotEmpty) {
+              oldImagePath = _inventoryList[0]['foto_barang'];
+            }
           });
         } else {
           print('Format respons tidak sesuai: ${data['message']}');
@@ -196,13 +223,19 @@ class _dataInventoryState extends State<dataInventory> {
       request.fields['tanggal_pembelian'] = tanggalPembelian;
       request.fields['tanggal_peminjaman'] = tanggalPeminjaman;
 
+      // Cek apakah gambar ada, jika ada baru dikirim
       if (_image != null) {
-        // Jika user pilih gambar baru, upload gambar
+        // Jika user memilih gambar baru
+        print('Mengirim gambar baru...');
         request.files.add(await http.MultipartFile.fromPath(
           'foto_barang',
           _image!.path,
           contentType: MediaType('image', 'jpg'),
         ));
+      } else if (oldImagePath != null) {
+        // Jika tidak pilih gambar baru, kirim path lama sebagai field
+        request.fields['foto_barang'] = oldImagePath!;
+        print('Mengirim path gambar lama: $oldImagePath');
       }
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -229,36 +262,14 @@ class _dataInventoryState extends State<dataInventory> {
     }
   }
 
-  Future<void> deleteInventory(String id) async {
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/delete-inventory/$id');
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
-
-      var request = http.MultipartRequest('DELETE', url); // Sesuaikan metode
-      request.headers['Authorization'] = 'Bearer $token';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-
-      if (rp.statusCode == 200) {
-        fetchInventory();
-      } else {
-        print('Gagal hapus data: ${rp.statusCode}');
-      }
-    } catch (e) {
-      print('Error deleteInventory: $e');
-    }
-  }
-
   void _showEditDialog(Map item) {
     setState(() {
       name = item['name'] ?? '';
       keterangan = item['keterangan'] ?? '';
       tanggalPembelian = item['tanggal_pembelian'] ?? '';
       tanggalPeminjaman = item['tanggal_peminjaman'] ?? '';
-      // _image = null; // reset gambar dulu
+      _image = null; // reset gambar baru
+      oldImagePath = item['foto_barang']; // simpan path lama
     });
 
     _tanggalPembelian =
@@ -291,12 +302,11 @@ class _dataInventoryState extends State<dataInventory> {
                   child: InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Tanggal Pembelian',
-                      labelStyle: const TextStyle(
-                          color: Color.fromARGB(255, 101, 19, 116)),
-                      floatingLabelBehavior: FloatingLabelBehavior
-                          .always, // Always show label on top
+                      labelStyle:
+                          TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
                       focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
+                        borderSide: BorderSide(
                             color: Color.fromARGB(255, 101, 19, 116), width: 2),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -310,31 +320,38 @@ class _dataInventoryState extends State<dataInventory> {
                               : DateFormat('yyyy-MM-dd')
                                   .format(_tanggalPembelian!),
                         ),
-                        const Icon(Icons.calendar_today, color: Colors.orange),
+                        Icon(Icons.calendar_today, color: Colors.orange),
                       ],
                     ),
                   ),
                 ),
                 SizedBox(height: 10),
-                // Menampilkan tanggal peminjaman yang sudah ada
+
+                // Tanggal peminjaman
                 if (_tanggalPeminjaman != null)
                   Text(
                     'Tanggal Peminjaman: ${DateFormat('yyyy-MM-dd').format(_tanggalPeminjaman!)}',
                   ),
                 SizedBox(height: 10),
-                Image.network(
-                  item['foto_barang'].startsWith('http')
-                      ? item['foto_barang']
-                      : 'https://portal.eksam.cloud/storage/${item['foto_barang']}',
-                  height: 100,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Text('Gagal load gambar');
-                  },
-                ),
+
+                // Tampilkan foto lama atau preview foto baru
+                _image == null
+                    ? (oldImagePath != null
+                        ? Image.network(
+                            oldImagePath!.startsWith('http')
+                                ? oldImagePath!
+                                : 'https://portal.eksam.cloud/storage/$oldImagePath',
+                            height: 100,
+                          )
+                        : Text('Tidak ada gambar'))
+                    : Image.file(_image!, height: 100),
+
                 SizedBox(height: 8),
+
                 GestureDetector(
-                  onTap: () =>
-                      _pickImage(), // Ketika pengguna memilih gambar baru
+                  onTap: () async {
+                    await _pickImage();
+                  },
                   child: Text(
                     'Ganti Foto Barang',
                     style: TextStyle(

@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'dart:io';
 import 'package:absen/inventaris/datainventaris.dart';
+import 'package:absen/susses&failde/berhasiltambah.dart';
+import 'package:absen/susses&failde/gagalinven.dart';
 
 class InventoryScreen extends StatefulWidget {
   @override
@@ -193,12 +195,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
       return;
     }
 
-    // Show loading dialog
-
     if (!_formKey.currentState!.validate()) return;
 
     if (_image == null) {
-      // Show error if no image is uploaded
       setState(() {
         _isImageRequired = true;
       });
@@ -208,25 +207,30 @@ class _InventoryScreenState extends State<InventoryScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      return; // Stop submission if no image
+      return;
     }
 
     try {
-      // 1) tampilkan loading dialog
+      // Tampilkan loading
       showDialog(
-        barrierDismissible: false,
         context: context,
-        builder: (_) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
       );
+
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/add-self-inventory');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       String? token = localStorage.getString('token');
 
       if (token == null) {
-        print('Token tidak ditemukan');
+        Navigator.of(context).pop(); // tutup loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Token tidak ditemukan.'),
+            backgroundColor: Colors.red,
+          ),
+        );
         return;
       }
 
@@ -245,55 +249,40 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
       final response = await request.send();
       final resBody = await response.stream.bytesToString();
-      print('Response Add: $resBody');
+      final result = jsonDecode(resBody);
 
-      // 2) Tutup loading dialog
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // tutup loading
 
-      if (response.statusCode == 200) {
-        final result = jsonDecode(resBody);
-        if (result['status'] == 'success') {
-          await fetchInventory();
-
-          // 3) Tampilkan pop-up sukses
-          showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: const Text('Sukses'),
-              content: const Text('Inventory berhasil ditambahkan!'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal: ${result['message'] ?? 'Unknown error'}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+      if (response.statusCode == 200 && result['status'] == 'success') {
+        await fetchInventory();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Successinventory()),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Server error: ${response.statusCode}'),
+            content: Text(
+                'Failed to submit: ${result['message'] ?? 'Unknown error'}'),
             backgroundColor: Colors.red,
           ),
         );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const FailurePageinven()),
+        );
       }
     } catch (e) {
-      // pastikan loading ditutup kalau terjadi error
-      Navigator.of(context).pop();
-      print('Error addInventory: $e');
+      Navigator.of(context).pop(); // pastikan dialog tertutup
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('An error occurred: $e'),
           backgroundColor: Colors.red,
         ),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePageinven()),
       );
     }
   }
