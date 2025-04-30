@@ -1,7 +1,7 @@
 import 'package:absen/susses&failde/berhasilV1.dart';
 import 'package:absen/susses&failde/gagalV1.dart';
 import 'package:absen/susses&failde/berhasilOvertimein.dart';
-import 'package:absen/susses&failde/gagalV2I.dart';
+import 'package:absen/susses&failde/gagalovertime.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -84,6 +84,7 @@ class _ClockInPageState extends State<ClockInPage> {
       });
     }
   }
+
   bool _isFakeLocation(Position position) {
     // Cek apakah lokasi di-mock (hanya support di beberapa device Android)
     if (position.isMocked) {
@@ -360,7 +361,6 @@ class _ClockInPageState extends State<ClockInPage> {
     }
   }
 
-
   Future<void> _submitDataovertimein() async {
     if (_noteController.text.isEmpty) {
       setState(() {
@@ -418,8 +418,8 @@ class _ClockInPageState extends State<ClockInPage> {
       String city = place.locality ?? "Lokasi tidak tersedia";
 
       // Siapkan request ke API OvertimeIn
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/overtime-in'); 
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/overtime-in');
       var request = http.MultipartRequest('POST', url);
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -459,8 +459,10 @@ class _ClockInPageState extends State<ClockInPage> {
         //     backgroundColor: Colors.red,
         //   ),
         // );
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const FailurePage2I()));
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const FailurePageovertime()));
       }
     } catch (e) {
       // Navigator.pop(context); // Pastikan tutup loading saat error
@@ -471,7 +473,7 @@ class _ClockInPageState extends State<ClockInPage> {
       //   ),
       // );
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const FailurePage2I()));
+          MaterialPageRoute(builder: (context) => const FailurePageovertime()));
     }
   }
 
@@ -766,13 +768,6 @@ class _ClockInPageState extends State<ClockInPage> {
                 ),
               if (_selectedWorkType == "Lembur" &&
                   (userStatus == "1" || userStatus == "2")) ...[
-                const Text(
-                  'Note',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(101, 19, 116, 1)),
-                ),
                 const SizedBox(height: 10),
                 // TextField for Note
                 TextField(
