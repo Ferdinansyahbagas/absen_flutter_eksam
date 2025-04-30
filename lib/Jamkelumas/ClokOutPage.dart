@@ -27,6 +27,9 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
   bool _isNoteRequired = false;
   bool _isImageRequired = false;
   bool isWithinRange = true; // Default true agar tidak menghalangi WFH
+    bool panding = false; 
+  bool approve = false;
+  bool reject = false;
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
   final ImagePicker _picker = ImagePicker();
@@ -169,6 +172,167 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       print("Error mengecek status clock-in: $e");
     }
   }
+
+  Future<void> getDataOvertime() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/cek-approval-lembur');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    final token = localStorage.getString('token');
+
+    try {
+      var response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        setState(() {
+          panding = data['message'] != 'Pengajuan lembur masih pending';
+          reject = data['message'] != 'Pengajuan lembur ditolak';
+          approve = data['message'] != 'Pengajuan lembur sudah di-approve';
+        });
+      } else {
+        print('Error fetching overtime data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> _submitDataovertimeout() async {
+    if (_noteController.text.isEmpty) {
+      setState(() {
+        _isNoteRequired = true;
+      });
+      return;
+    }
+
+    if (_image == null) {
+      setState(() {
+        _isImageRequired = true;
+      });
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
+    try {
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1//attendance/overtime-out-new');
+      var request = http.MultipartRequest('POST', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+      // Tambahkan Authorization Bearer Token
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+      request.fields['notes'] = _noteController.text;
+      request.files.add(await http.MultipartFile.fromPath(
+        'foto',
+        _image!.path,
+        contentType: MediaType('image', 'jpg'),
+      ));
+
+      var response = await request.send();
+      Navigator.pop(context); // Tutup dialog loading
+
+      if (response.statusCode == 200) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SuccessPageII()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const FailurePage()),
+        );
+      }
+    } catch (e) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePage()),
+      );
+    }
+  }
+
+  Future<void> _submitDataovertimeapprove() async {
+    if (_noteController.text.isEmpty) {
+      setState(() {
+        _isNoteRequired = true;
+      });
+      return;
+    }
+
+    if (_image == null) {
+      setState(() {
+        _isImageRequired = true;
+      });
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color.fromARGB(255, 101, 19, 116),
+          ),
+        );
+      },
+    );
+
+    try {
+      final url = Uri.parse(
+          'https://portal.eksam.cloud/api/v1/attendance/overtime-out-approved');
+      var request = http.MultipartRequest('POST', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      String? token = localStorage.getString('token');
+
+      request.headers['Authorization'] = 'Bearer $token';
+      request.fields['notes'] = _noteController.text;
+      request.files.add(await http.MultipartFile.fromPath(
+        'foto',
+        _image!.path,
+        contentType:
+            MediaType('image', 'jpeg'), // Pastikan sesuai format yang dikirim
+      ));
+
+      var response = await request.send();
+      Navigator.pop(context); // Tutup loading
+
+      if (response.statusCode == 200) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SuccessPageII()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const FailurePage()),
+        );
+      }
+    } catch (e) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePage()),
+      );
+    }
+  }
+
 
   Future<void> _submitData() async {
     if (_noteController.text.isEmpty) {
@@ -456,9 +620,50 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                 },
               ),
               const SizedBox(height: 120),
+           if (_selectedWorkType == "Lembur" &&
+                (userStatus == "1" || userStatus == "2")) ...[
+              if (panding || reject)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitDataovertimeout,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      iconColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Submit Overtime Out',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
+                    ),
+                  ),
+                )
+              else if (approve)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitDataovertimeapprove,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      iconColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Submit Overtime Approved',
+                      style: TextStyle(fontSize: 15, color: Colors.white),
+                    ),
+                  ),
+                )
+            ] else if (userStatus == "1" ||
+                userStatus == "2" ||
+                userStatus == "3") ...[
               Center(
                 child: ElevatedButton(
-                  onPressed: _submitData, // Call the function to submit data
+                  onPressed: _submitData,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                     iconColor: Colors.white,
@@ -472,11 +677,12 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                     style: TextStyle(fontSize: 15, color: Colors.white),
                   ),
                 ),
-              ),
+              )
             ],
-          ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

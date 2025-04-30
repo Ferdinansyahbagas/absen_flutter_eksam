@@ -44,65 +44,26 @@ class _dataInventoryState extends State<dataInventory> {
   }
 
   // *Menampilkan dialog pilihan sumber gambar*
-  Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Ambil dari Kamera'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _getImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Pilih dari Galeri'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _getImage(ImageSource.gallery);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-// Mengambil gambar dari sumber yang dipilih
-  Future<void> _getImage(ImageSource source) async {
-    final XFile? pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path); // Update gambar yang dipilih
-      });
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context, bool isPembelian) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isPembelian) {
-          _tanggalPembelian = picked;
-          tanggalPembelian = DateFormat('yyyy-MM-dd').format(picked);
-        } else {
-          _tanggalPeminjaman = picked;
-          tanggalPeminjaman = DateFormat('yyyy-MM-dd').format(picked);
-        }
-      });
-    }
-  }
+  // Future<void> _selectDate(BuildContext context, bool isPembelian) async {
+  //   final DateTime? picked = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now(),
+  //     firstDate: DateTime(2000),
+  //     lastDate: DateTime(2101),
+  //   );
+  //   if (picked != null) {
+  //     setState(() {
+  //       if (isPembelian) {
+  //         _tanggalPembelian = picked;
+  //         tanggalPembelian = DateFormat('yyyy-MM-dd').format(picked);
+  //       } else {
+  //         _tanggalPeminjaman = picked;
+  //         tanggalPeminjaman = DateFormat('yyyy-MM-dd').format(picked);
+  //       }
+  //     });
+  //   }
+  // }
 
   Future<void> getProfil() async {
     try {
@@ -151,6 +112,46 @@ class _dataInventoryState extends State<dataInventory> {
       }
     } catch (e) {
       print('Error deleteInventory: $e');
+    }
+  }
+
+  Future<void> _pickImage() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Ambil dari Kamera'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+// Mengambil gambar dari sumber yang dipilih
+  Future<void> _getImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path); // Update gambar yang dipilih
+      });
     }
   }
 
@@ -232,10 +233,16 @@ class _dataInventoryState extends State<dataInventory> {
           _image!.path,
           contentType: MediaType('image', 'jpg'),
         ));
-      } else if (oldImagePath != null) {
-        // Jika tidak pilih gambar baru, kirim path lama sebagai field
-        request.fields['foto_barang'] = oldImagePath!;
-        print('Mengirim path gambar lama: $oldImagePath');
+      } else if (oldImagePath != null && oldImagePath!.startsWith('/data')) {
+        // Kalau ternyata path lama adalah file lokal (bukan URL), kirim ulang file-nya
+        request.files.add(await http.MultipartFile.fromPath(
+          'foto_barang',
+          oldImagePath!,
+          contentType: MediaType('image', 'jpg'),
+        ));
+      } else {
+        // Tidak mengirim field foto_barang, biarkan server tetap pakai gambar lama
+        print('Tidak mengirim gambar, tetap pakai yang lama.');
       }
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
@@ -268,7 +275,6 @@ class _dataInventoryState extends State<dataInventory> {
       keterangan = item['keterangan'] ?? '';
       tanggalPembelian = item['tanggal_pembelian'] ?? '';
       tanggalPeminjaman = item['tanggal_peminjaman'] ?? '';
-      _image = null; // reset gambar baru
       oldImagePath = item['foto_barang']; // simpan path lama
     });
 
@@ -298,7 +304,22 @@ class _dataInventoryState extends State<dataInventory> {
                 ),
                 SizedBox(height: 10),
                 InkWell(
-                  onTap: () => _selectDate(context, true),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _tanggalPembelian ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+
+                    if (picked != null) {
+                      setState(() {
+                        _tanggalPembelian = picked;
+                        tanggalPembelian =
+                            DateFormat('yyyy-MM-dd').format(picked);
+                      });
+                    }
+                  },
                   child: InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Tanggal Pembelian',
@@ -333,19 +354,25 @@ class _dataInventoryState extends State<dataInventory> {
                     'Tanggal Peminjaman: ${DateFormat('yyyy-MM-dd').format(_tanggalPeminjaman!)}',
                   ),
                 SizedBox(height: 10),
-
-                // Tampilkan foto lama atau preview foto baru
-                _image == null
-                    ? (oldImagePath != null
-                        ? Image.network(
-                            oldImagePath!.startsWith('http')
-                                ? oldImagePath!
-                                : 'https://portal.eksam.cloud/storage/$oldImagePath',
-                            height: 100,
-                          )
-                        : Text('Tidak ada gambar'))
-                    : Image.file(_image!, height: 100),
-
+                Builder(
+                  builder: (context) {
+                    if (_image != null) {
+                      return Image.file(_image!, height: 100);
+                    } else if (oldImagePath != null &&
+                        oldImagePath!.isNotEmpty) {
+                      return Image.network(
+                        oldImagePath!.startsWith('http')
+                            ? oldImagePath!
+                            : 'https://portal.eksam.cloud/storage/$oldImagePath',
+                        height: 100,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Text('Gagal muat gambar lama'),
+                      );
+                    } else {
+                      return Text('Tidak ada gambar');
+                    }
+                  },
+                ),
                 SizedBox(height: 8),
 
                 GestureDetector(
@@ -435,7 +462,7 @@ class _dataInventoryState extends State<dataInventory> {
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold))),
                                 DataColumn(
-                                    label: Text('Tanggal Pembelian',
+                                    label: Text('Tanggal Peminjaman',
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold))),
                                 DataColumn(
