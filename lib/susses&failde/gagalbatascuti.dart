@@ -1,4 +1,4 @@
-//Time Off (liburan, urusan keluarga dsb.) FailurePage2I
+// Batas cuti
 import 'package:flutter/material.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart';
 

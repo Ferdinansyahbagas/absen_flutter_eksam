@@ -29,10 +29,10 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
   @override
   void initState() {
     super.initState();
-    getProfile();
-    getHistoryData(); // Panggil fungsi untuk mengambil data history
     getNotif();
+    getProfile();
     getDatakuota();
+    getHistoryData(); // Panggil fungsi untuk mengambil data history
   }
 
   // fungsi untuk memanggil bacaan notifikasi
@@ -84,50 +84,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
     }
   }
 
-  Future<void> getDatakuota() async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-    try {
-      var response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer ${localStorage.getString('token')}',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        print("Response API Kuota: ${jsonEncode(data)}");
-
-        if (data['data'] == null || (data['data'] as List).isEmpty) {
-          setState(() {
-            quotaData = [];
-          });
-          return;
-        }
-
-        List<Map<String, dynamic>> parsedQuota = [];
-
-        for (var item in data['data']) {
-          parsedQuota.add({
-            "type": item['type']['name'],
-            "remaining": item['kuota'],
-            "max": item['type']['max_quota'],
-          });
-        }
-
-        setState(() {
-          quotaData = parsedQuota;
-        });
-      } else {
-        print('Gagal mengambil data: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Terjadi kesalahan: $e');
-    }
-  }
 
   Future<void> deleteCuti(String id) async {
     final url = Uri.parse(
@@ -191,6 +147,51 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
         print('Error retrieving profile: ${rp.statusCode}');
         print(rp.body);
       }
+    }
+  }
+  
+  Future<void> getDatakuota() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    try {
+      var response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer ${localStorage.getString('token')}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        print("Response API Kuota: ${jsonEncode(data)}");
+
+        if (data['data'] == null || (data['data'] as List).isEmpty) {
+          setState(() {
+            quotaData = [];
+          });
+          return;
+        }
+
+        List<Map<String, dynamic>> parsedQuota = [];
+
+        for (var item in data['data']) {
+          parsedQuota.add({
+            "type": item['type']['name'],
+            "remaining": item['kuota'],
+            "max": item['type']['max_quota'],
+          });
+        }
+
+        setState(() {
+          quotaData = parsedQuota;
+        });
+      } else {
+        print('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
     }
   }
 

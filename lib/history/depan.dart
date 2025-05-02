@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:absen/Jamkelumas/ClockoutLupa.dart';
+import 'package:absen/Jamkelumas/Overtimeoutlupa.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -18,19 +19,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String Totalday = '';
   String menitTelat = '';
   String? lastClockOutDate;
-  bool isLupaClockOut = false; // Tambahkan variabel untuk cek lupa clock out
+  bool isLupaClockOut = false;
   List<dynamic> lupaClockOutList = [];
+  List<dynamic> lupaovertimeOutList = [];
 
   @override
   void initState() {
     super.initState();
-    getMenit();
     getData();
+    getMenit();
     getHistoryData;
+    getDatalupaOvertime();
   }
 
   Future<void> getData() async {
-    // Cek status clock-in
     try {
       final url =
           Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-lupa');
@@ -53,7 +55,92 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  void _showLupaClockOutModal() {
+  Future<void> getDatalupaOvertime() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/is-self-overtime-lupa');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+
+      if (rp.statusCode == 200) {
+        var data = jsonDecode(rp.body.toString());
+        print(data);
+        setState(() {
+          lupaovertimeOutList = data['data'] ?? [];
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  // void _showLupaClockOutModal() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+  //     ),
+  //     isScrollControlled: true,
+  //     builder: (context) {
+  //       return FractionallySizedBox(
+  //         heightFactor: 0.6,
+  //         child: Container(
+  //           padding: EdgeInsets.all(16.0),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text("Lupa Clock Out",
+  //                   style:
+  //                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+  //               SizedBox(height: 10),
+  //               Expanded(
+  //                 child: lupaClockOutList.isNotEmpty
+  //                     ? ListView.builder(
+  //                         itemCount: lupaClockOutList.length,
+  //                         itemBuilder: (context, index) {
+  //                           var item = lupaClockOutList[index];
+  //                           String formattedDate = DateFormat('yyyy-MM-dd')
+  //                               .format(DateTime.parse(item['date']));
+  //                           return Card(
+  //                             margin: EdgeInsets.symmetric(vertical: 5),
+  //                             child: ListTile(
+  //                               title: Text("Belum Clock Out"),
+  //                               subtitle: Text(formattedDate),
+  //                               trailing: ElevatedButton(
+  //                                 onPressed: () {
+  //                                   Navigator.pushReplacement(
+  //                                       context,
+  //                                       MaterialPageRoute(
+  //                                           builder: (context) =>
+  //                                               ClockOutLupaScreen()));
+  //                                 },
+  //                                 child: Text("Clock Out"),
+  //                               ),
+  //                             ),
+  //                           );
+  //                         },
+  //                       )
+  //                     : Center(child: Text("Tidak ada data lupa clock out")),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+  void _showLupaClockOutModal() async {
+    await getData(); // ambil data lupa clock out
+    await getDatalupaOvertime(); // ambil data lupa overtime
+
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -61,52 +148,119 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       isScrollControlled: true,
       builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.6,
-          child: Container(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Lupa Clock Out",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 10),
-                Expanded(
-                  child: lupaClockOutList.isNotEmpty
-                      ? ListView.builder(
-                          itemCount: lupaClockOutList.length,
-                          itemBuilder: (context, index) {
-                            var item = lupaClockOutList[index];
-                            String formattedDate = DateFormat('yyyy-MM-dd')
-                                .format(DateTime.parse(item['date']));
-                            return Card(
-                              margin: EdgeInsets.symmetric(vertical: 5),
-                              child: ListTile(
-                                title: Text("Belum Clock Out"),
-                                subtitle: Text(formattedDate),
-                                trailing: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                ClockOutLupaScreen()));
-                                  },
-                                  child: Text("Clock Out"),
-                                ),
-                              ),
-                            );
+        String selectedTab = 'lupaClockOut';
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return FractionallySizedBox(
+              heightFactor: 0.7,
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Pilih Jenis Lupa",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ChoiceChip(
+                          label: Text("Lupa Clock Out"),
+                          selected: selectedTab == 'lupaClockOut',
+                          onSelected: (val) {
+                            setModalState(() {
+                              selectedTab = 'lupaClockOut';
+                            });
                           },
-                        )
-                      : Center(child: Text("Tidak ada data lupa clock out")),
+                        ),
+                        ChoiceChip(
+                          label: Text("Lupa Overtime"),
+                          selected: selectedTab == 'lupaOvertime',
+                          onSelected: (val) {
+                            setModalState(() {
+                              selectedTab = 'lupaOvertime';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Expanded(
+                      child: selectedTab == 'lupaClockOut'
+                          ? _buildLupaClockOutList()
+                          : _buildLupaOvertimeList(),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
+  }
+
+  Widget _buildLupaClockOutList() {
+    return lupaClockOutList.isNotEmpty
+        ? ListView.builder(
+            itemCount: lupaClockOutList.length,
+            itemBuilder: (context, index) {
+              var item = lupaClockOutList[index];
+              String formattedDate =
+                  DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 5),
+                child: ListTile(
+                  title: Text("Belum Clock Out"),
+                  subtitle: Text(formattedDate),
+                  trailing: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ClockOutLupaScreen(),
+                        ),
+                      );
+                    },
+                    child: Text("Clock Out"),
+                  ),
+                ),
+              );
+            },
+          )
+        : Center(child: Text("Tidak ada data lupa clock out"));
+  }
+
+  Widget _buildLupaOvertimeList() {
+    return lupaovertimeOutList.isNotEmpty
+        ? ListView.builder(
+            itemCount: lupaovertimeOutList.length,
+            itemBuilder: (context, index) {
+              var item = lupaovertimeOutList[index];
+              String formattedDate =
+                  DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 5),
+                child: ListTile(
+                  title: Text("Belum Isi Lupa Overtime"),
+                  subtitle: Text(formattedDate),
+                  trailing: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Overtimeoutlupa(),
+                        ),
+                      );
+                    },
+                    child: Text("Isi Overtime"),
+                  ),
+                ),
+              );
+            },
+          )
+        : Center(child: Text("Tidak ada data lupa overtime"));
   }
 
 // total telat api

@@ -33,7 +33,7 @@ class FailurePageovertime extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Pengajuan​ Lembur😑​🙏​',
+                'Pengajuan\n​Lembur😑​🙏​',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,

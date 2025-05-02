@@ -43,9 +43,9 @@ class _OvertimeinState extends State<Overtimein> {
 
   Future<void> _initializeData() async {
     await Future.wait([
+      getData(),
       getStatus(),
       getLocation(),
-      getData(),
     ]);
   }
 

@@ -1,12 +1,57 @@
-//Time Off (Sakit) SuccessPage2II
+//Clock Out SuccessPage
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'dart:convert';
 
-class SuccessPageWFA extends StatelessWidget {
-  const SuccessPageWFA({super.key});
+class Successovertimelupa extends StatefulWidget {
+  const Successovertimelupa({super.key});
+
+  @override
+  _SuccessovertimelupaState createState() => _SuccessovertimelupaState();
+}
+
+class _SuccessovertimelupaState extends State<Successovertimelupa> {
+  String datetime = '';
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  Future<void> getData() async {
+    try {
+      final url = Uri.parse('https://portal.eksam.cloud/api/v1/get-time');
+      var request = http.MultipartRequest('GET', url);
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      request.headers['Authorization'] =
+          'Bearer ${localStorage.getString('token')}';
+
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          datetime = data['data']['time'];
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('d MMMM yyyy').format(now);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -24,9 +69,9 @@ class SuccessPageWFA extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 220),
+              const SizedBox(height: 150),
               const Text(
-                'Berhasil Mengirim',
+                'Absen Lembur keluar Anda Telah',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -35,7 +80,7 @@ class SuccessPageWFA extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Pengajuan',
+                'Berhasil Di Rekam✨​ ',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -44,14 +89,31 @@ class SuccessPageWFA extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Data inventaris berhasil ditambahkan!✨',
+                'Kerja selesai, saatnya istirahat! 🔥✅​',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.white70,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 240),
+              const SizedBox(height: 60),
+              Text(
+                formattedDate,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                datetime,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 200),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,

@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:absen/history/depan.dart'; // Mengimpor halaman history
-import 'package:absen/susses&failde/gagalV1I.dart';
-import 'package:absen/susses&failde/berhasilV1II.dart';
+import 'package:absen/susses&failde/gagalovertimelupa.dart';
+import 'package:absen/susses&failde/berhasilovertimelupa.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'dart:convert';
-import 'dart:io';
 
-class ClockOutLupaScreen extends StatefulWidget {
-  const ClockOutLupaScreen({super.key});
+class Overtimeoutlupa extends StatefulWidget {
+  const Overtimeoutlupa({super.key});
 
   @override
-  _ClockOutLupaScreenState createState() => _ClockOutLupaScreenState();
+  _OvertimeoutlupaState createState() => _OvertimeoutlupaState();
 }
 
-class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
+class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
   String note = '';
   String formattedDate = '';
   String formattedTime = '';
@@ -26,15 +22,12 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   String? userStatus; // Tambahan untuk menyimpan user level
   String? _selectedWorkType;
   String? _selectedWorkplaceType;
-  File? _image;
-  bool _isNoteRequired = false;
-  bool _isImageRequired = false;
   bool _isTimeEmpty = false;
+  bool _isNoteRequired = false;
   List<String> WorkTypes = [];
   List<String> WorkplaceTypes = [];
   DateTime? selectedDate;
   TimeOfDay? _selectedTime; // Variabel untuk menyimpan waktu clock-out
-  final ImagePicker _picker = ImagePicker();
   final TextEditingController _noteController = TextEditingController();
 
   @override
@@ -42,7 +35,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     super.initState();
     _loadSelectedValues();
     getProfil();
-    getDatalupa();
+    getDatalupaOvertime();
   }
 
   Future<void> _loadSelectedValues() async {
@@ -52,17 +45,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       setState(() {
         _selectedWorkType = localStorage.getString('workType');
         _selectedWorkplaceType = localStorage.getString('workplaceType');
-      });
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-        _isImageRequired = false;
       });
     }
   }
@@ -115,9 +97,9 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
     }
   }
 
-  Future<void> getDatalupa() async {
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+  Future<void> getDatalupaOvertime() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/overtime-detail/{id}');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -132,7 +114,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
         print(data);
         setState(() {
           _selectedWorkType = data['data']['type']['name'];
-          _selectedWorkplaceType = data['data']['location']['name'];
+          _selectedWorkplaceType = data['data']['attendance_location']['name'];
           formattedDate = data['data']['date'];
           _absenId = data['data']['id'].toString(); // Ambil ID absen
         });
@@ -148,12 +130,10 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   Future<void> _submitData() async {
     setState(() {
       _isTimeEmpty = _selectedTime == null;
-      _isImageRequired = _image == null;
       _isNoteRequired = _noteController.text.isEmpty;
     });
 
-    if (
-        _isTimeEmpty || _isImageRequired || _isNoteRequired) {
+    if (_isTimeEmpty || _isNoteRequired || _absenId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Harap isi semua field sebelum submit.'),
@@ -180,33 +160,26 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
 
     try {
       final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/clock-out-lupa-id');
+          'https://portal.eksam.cloud/api/v1/attendance/overtime-forgot/$_absenId');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       request.headers['Authorization'] =
           'Bearer ${localStorage.getString('token')}';
 
-      print(formattedTime);
       request.fields['id'] = _absenId!;
       request.fields['notes'] = _noteController.text;
-      request.fields['jam_clock_out'] = formattedTime; // Kirim waktu clock-out
+      request.fields['jam_clock_out'] = formattedTime;
       request.fields['date'] = formattedDate;
-
-      if (_image != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'foto',
-          _image!.path,
-          contentType: MediaType('image', 'jpg'),
-        ));
-      }
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
       var data = jsonDecode(rp.body.toString());
 
+      Navigator.pop(context); // Tutup loading
+
       if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => SuccessPageII()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => Successovertimelupa()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -214,18 +187,19 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
             backgroundColor: Colors.red,
           ),
         );
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => FailurePageI()));
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => Failureovertimelupa()));
       }
     } catch (e) {
+      Navigator.pop(context); // Tutup loading
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('An error occurred: $e'),
           backgroundColor: Colors.red,
         ),
       );
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => FailurePageI()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => Failureovertimelupa()));
     }
   }
 
@@ -372,97 +346,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
                 ),
               ),
 
-              const SizedBox(height: 20),
-
-              // Upload Photo Button
-              GestureDetector(
-                onTap: _pickImage, // Langsung panggil kamera
-                child: Container(
-                  height: 130,
-                  width: 150,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: _isImageRequired
-                          ? Colors.red
-                          : (_image == null
-                              ? const Color.fromRGBO(101, 19, 116, 1)
-                              : Colors.orange), // Red if image is required
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt,
-                        size: 35,
-                        color: _isImageRequired
-                            ? Colors.red
-                            : (_image == null
-                                ? const Color.fromRGBO(101, 19, 116, 1)
-                                : Colors
-                                    .orange), // Red icon if image is required
-                      ),
-                      const SizedBox(height: 3),
-                      if (_image == null && !_isImageRequired)
-                        const Text(
-                          'Upload Photo Anda',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color.fromRGBO(101, 19, 116, 1),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              // Preview Photo Button
-              if (_image != null)
-                Align(
-                  alignment: Alignment.centerLeft, // Atur posisi teks di kiri
-                  child: InkWell(
-                    onTap: () {
-                      // Show dialog to preview the photo
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (kIsWeb)
-                                  // Jika platform adalah Web
-                                  Image.network(
-                                    _image!.path,
-                                    fit: BoxFit.cover,
-                                  )
-                                else
-                                  // Jika platform bukan Web (mobile)
-                                  Image.file(
-                                    _image!,
-                                    fit: BoxFit.cover,
-                                  ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: const Text(
-                      'Lihat Photo',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.orange, // Warna teks seperti hyperlink
-                        decoration: TextDecoration
-                            .underline, // Garis bawah untuk efek hyperlink
-                      ),
-                    ),
-                  ),
-                ),
               const SizedBox(height: 20),
               // TextField for Note
               TextField(

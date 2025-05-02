@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart'; // for formatting date
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; 
+import 'dart:convert';
 import 'dart:io';
 
 class dataInventory extends StatefulWidget {
@@ -15,25 +15,65 @@ class dataInventory extends StatefulWidget {
 class _dataInventoryState extends State<dataInventory> {
   String name = '';
   String keterangan = '';
-  List<dynamic> _inventoryList = [];
-  int _currentPage = 0;
-  String? userId;
+  String formattedDate = '';
   String tanggalPembelian = '';
   String tanggalPeminjaman = '';
-  final int _rowsPerPage = 15;
-  final ImagePicker _picker = ImagePicker();
+  String? oldImagePath;
+  String? userId;
   File? _image;
+  int _currentPage = 0;
   bool isLoading = false;
   DateTime? _tanggalPembelian;
   DateTime? _tanggalPeminjaman;
-  String formattedDate = '';
-  String? oldImagePath;
+  List<dynamic> _inventoryList = [];
+  final int _rowsPerPage = 15;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    fetchInventory();
     getProfil();
+    fetchInventory();
+  }
+
+  Future<void> _pickImage() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Ambil dari Kamera'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _getImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+// Mengambil gambar dari sumber yang dipilih
+  Future<void> _getImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path); // Update gambar yang dipilih
+      });
+    }
   }
 
   List<dynamic> get _pagedInventory {
@@ -115,45 +155,6 @@ class _dataInventoryState extends State<dataInventory> {
     }
   }
 
-  Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Ambil dari Kamera'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _getImage(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Pilih dari Galeri'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _getImage(ImageSource.gallery);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-// Mengambil gambar dari sumber yang dipilih
-  Future<void> _getImage(ImageSource source) async {
-    final XFile? pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path); // Update gambar yang dipilih
-      });
-    }
-  }
 
   Future<void> fetchInventory() async {
     setState(() {
@@ -374,7 +375,6 @@ class _dataInventoryState extends State<dataInventory> {
                   },
                 ),
                 SizedBox(height: 8),
-
                 GestureDetector(
                   onTap: () async {
                     await _pickImage();

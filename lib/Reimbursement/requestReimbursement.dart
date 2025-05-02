@@ -73,6 +73,24 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
     }
   }
 
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStartDate) {
+          selectedDate = picked;
+          formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+          _isDateEmpty = false;
+        }
+      });
+    }
+  }
+  
   Future<void> _submitData() async {
     setState(() {
       _isDescriptionEmpty = description.isEmpty;
@@ -88,12 +106,11 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
         ),
       );
       return;
+
     }
 
     // Show loading dialog
-
     if (!_formKey.currentState!.validate()) return;
-
     if (_image == null) {
       // Show error if no image is uploaded
       setState(() {
@@ -123,7 +140,6 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
       final url = Uri.parse(
           'https://portal.eksam.cloud/api/v1/other/add-self-reimbursement');
       var request = http.MultipartRequest('POST', url);
-
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       String? token = localStorage.getString('token');
 
@@ -135,7 +151,6 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
       request.fields['harga'] = totalReimbursement;
       request.fields['date'] = formattedDate;
       request.fields['name'] = description;
-
       request.files.add(await http.MultipartFile.fromPath(
         'invoice',
         _image!.path,
@@ -171,23 +186,6 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isStartDate) {
-          selectedDate = picked;
-          formattedDate = DateFormat('yyyy-MM-dd').format(picked);
-          _isDateEmpty = false;
-        }
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

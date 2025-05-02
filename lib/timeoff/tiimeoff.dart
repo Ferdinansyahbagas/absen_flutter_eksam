@@ -15,18 +15,18 @@ class TimeOff extends StatefulWidget {
 }
 
 class _TimeOffState extends State<TimeOff> {
-  String formatStarttedDate = '';
-  String formatEndtedDate = '';
-  String _quotaWarning = ''; // Pesan peringatan kuota
   String Reason = '';
+  String _quotaWarning = ''; // Pesan peringatan kuota
+  String formatEndtedDate = '';
+  String formatStarttedDate = '';
   String? _selectedType = '';
+  String? type = '';
   String? iduser;
   String? limit;
-  String? type = '';
-  bool _isReasonEmpty = false;
-  bool _isStartDateEmpty = false;
-  bool _isEndDateEmpty = false;
   bool _isQuotaEmpty = false; // Tambahan: cek jika kuota habis
+  bool _isReasonEmpty = false;
+  bool _isEndDateEmpty = false;
+  bool _isStartDateEmpty = false;
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   DateTime? selectedDate;
@@ -38,7 +38,6 @@ class _TimeOffState extends State<TimeOff> {
   void initState() {
     super.initState();
     getProfile();
-    // getData();
     getDatakuota();
   }
 
@@ -187,9 +186,6 @@ class _TimeOffState extends State<TimeOff> {
       request.fields['type'] = _typeMap[_selectedType] ?? '';
 
       var response = await request.send();
-      // var rp = await http.Response.fromStream(response);
-      // var data = jsonDecode(rp.body.toString());
-
       if (response.statusCode == 200) {
         Navigator.pushReplacement(
           context,

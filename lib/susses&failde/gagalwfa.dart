@@ -1,62 +1,59 @@
-//Time Off (Sakit) SuccessPage2II
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 
-class SuccessPageWFA extends StatelessWidget {
-  const SuccessPageWFA({super.key});
+class FailurePageWFA extends StatelessWidget {
+  const FailurePageWFA({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.orange,
-              Colors.pink,
-              Color.fromARGB(255, 101, 19, 116),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        color: Colors.white,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 220),
+              const SizedBox(height: 200),
               const Text(
-                'Berhasil Mengirim',
+                'Anda Gagal',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Pengajuan',
+                'Mengirimkan',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Data inventaris berhasil ditambahkan!✨',
+                'Pengajuan WFA​😑​🙏​',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Text(
+                'Coba Lagi',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white70,
+                  color: Colors.black54,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 240),
+              const SizedBox(height: 200),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: Colors.pink,
                   foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     side: const BorderSide(color: Colors.white, width: 1),
                     borderRadius: BorderRadius.circular(8),
@@ -67,7 +64,8 @@ class SuccessPageWFA extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    MaterialPageRoute(
+                        builder: (context) => const HomePage()),
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },

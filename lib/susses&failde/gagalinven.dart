@@ -1,6 +1,6 @@
-//Time Off (Sakit) SuccessPage2II
+// Gagal Inventaris
 import 'package:flutter/material.dart';
-import 'package:absen/timeoff/TimeoffScreen.dart';
+import 'package:absen/inventaris/inventaris.dart';
 
 class FailurePageinven extends StatelessWidget {
   const FailurePageinven({super.key});
@@ -43,7 +43,7 @@ class FailurePageinven extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const Text(
-                'Coba Lagi Nanti',
+                'Coba Lagi',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.black54,
@@ -66,7 +66,7 @@ class FailurePageinven extends StatelessWidget {
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const TimeOffScreen()),
+                        builder: (context) => InventoryScreen()),
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },

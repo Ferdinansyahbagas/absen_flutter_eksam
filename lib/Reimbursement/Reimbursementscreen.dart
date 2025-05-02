@@ -27,8 +27,14 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
   @override
   void initState() {
     super.initState();
-    getHistoryData(); // Fetch history data when the page loads
     getNotif();
+    getHistoryData(); // Fetch history data when the page loads
+  }
+
+  String formatCurrency(String amount) {
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'id', symbol: 'IDR. ', decimalDigits: 0);
+    return currencyFormatter.format(double.tryParse(amount) ?? 0);
   }
 
 // fungsi untuk memanggil bacaan notifikasi
@@ -122,11 +128,6 @@ class _ReimbursementPageState extends State<ReimbursementPage> {
     }
   }
 
-  String formatCurrency(String amount) {
-    final currencyFormatter =
-        NumberFormat.currency(locale: 'id', symbol: 'IDR. ', decimalDigits: 0);
-    return currencyFormatter.format(double.tryParse(amount) ?? 0);
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,10 +1,10 @@
-//Clock In SuccessPage
+// Inventaris SuccessPage
 import 'package:flutter/material.dart';
-import 'package:absen/homepage/home.dart';
-import 'dart:convert';
+import 'package:absen/inventaris/inventaris.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart'; // Package to format the date and time
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class Successinventory extends StatefulWidget {
   const Successinventory({super.key});
@@ -130,7 +130,7 @@ class _SuccessinventoryState extends State<Successinventory> {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    MaterialPageRoute(builder: (context) => InventoryScreen()),
                     (route) => false,
                   ); // Action when back to menu button is pressed
                 },

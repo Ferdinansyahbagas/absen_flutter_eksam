@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:absen/homepage/notif.dart'; // Mengimpor halaman notif
-import 'package:absen/Jamkelumas/ClockInPage.dart'; // Mengimpor halaman clockin
-import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor halaman Reimbursement
 import 'package:absen/history/depan.dart'; // Mengimpor halaman history
-import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
-import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clockout
-import 'package:absen/Jamkelumas/Clockinwfa.dart';
-import 'package:absen/Jamkelumas/ClockoutLupa.dart';
+import 'package:absen/homepage/notif.dart'; // Mengimpor halaman notif
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
-import 'package:absen/inventaris/inventaris.dart';
-import 'package:absen/inventaris/peraturan.dart';
-import 'dart:async'; // Untuk timer
-import 'dart:convert';
-import 'package:intl/intl.dart'; //unntuk format tanggal
-import 'package:http/http.dart' as http;
-import 'package:geocoding/geocoding.dart'; //kordinat
-import 'package:geolocator/geolocator.dart'; //tempat
-import 'package:absen/utils/notification_helper.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/inventaris/peraturan.dart'; // Mengimpor halaman peraturan
+import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
+import 'package:absen/Jamkelumas/Clockinwfa.dart'; // Mengimpor halaman pengajuan wfa
+import 'package:absen/inventaris/inventaris.dart'; // Mengimpor halaman inventaris
+import 'package:absen/Jamkelumas/ClockInPage.dart'; // Mengimpor halaman clock in
+import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clock out
+import 'package:absen/Jamkelumas/ClockoutLupa.dart'; // Mengimpor halaman clock out lupa
+import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor halaman Reimbursement
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/utils/notification_helper.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:absen/service/api_service.dart'; // Import ApiService
+import 'package:geolocator/geolocator.dart'; // Mengimpor tempat
+import 'package:geocoding/geocoding.dart'; // Mengimpor kordinat
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; // untuk format tanggal
+import 'dart:convert';
+import 'dart:async'; // Untuk timer
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,14 +29,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? name = ""; // Variabel untuk name pengguna
+  String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
+  String? Id; // Simpan ID WFH jika ada
   String? message; //variabel untuk th messange
   String? avatarUrl; // Variable untuk avatar gambar
+  String? name = ""; // Variabel untuk name pengguna
+  String? userStatus;
   String? currentCity; // Menyimpan nama kota
   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
-  String? userStatus;
-  String? Id; // Simpan ID WFH jika ada
-  String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
   Timer? _timer; // Timer untuk memperbarui jam setiap detik
   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
   int? userId;
@@ -92,15 +92,15 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
     _startClock(); // Memulai timer untuk jam
+    _getCurrentLocation();
     Future.delayed(Duration(milliseconds: 500), () {
       getData(); // Panggil API setelah sedikit delay
-      getPengumuman();
       getNotif();
       getcekwfa();
       getTarget();
       getUserInfo();
+      getPengumuman();
     });
     _pageController.addListener(() {
       setState(() {

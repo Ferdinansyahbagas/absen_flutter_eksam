@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:absen/susses&failde/gagalwfa.dart';
 import 'package:absen/susses&failde/berhasilWFA&WFH.dart';
-import 'package:absen/susses&failde/gagalV2I.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'dart:convert';
 
 class ClockinwfaPage extends StatefulWidget {
@@ -256,7 +256,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const FailurePage2I()),
+          MaterialPageRoute(builder: (context) => const FailurePageWFA()),
         );
       }
     } catch (e) {
@@ -264,7 +264,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
       print(e);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const FailurePage2I()),
+        MaterialPageRoute(builder: (context) => const FailurePageWFA()),
       );
     }
   }

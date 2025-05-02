@@ -1,19 +1,19 @@
-import 'package:absen/susses&failde/berhasilV1.dart';
-import 'package:absen/susses&failde/gagalV1.dart';
-import 'package:absen/susses&failde/berhasilOvertimein.dart';
-import 'package:absen/susses&failde/gagalovertime.dart';
-import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:absen/homepage/home.dart';
+import 'package:absen/susses&failde/gagalV1.dart';
+import 'package:absen/susses&failde/berhasilV1.dart';
+import 'package:absen/susses&failde/gagalovertime.dart';
+import 'package:absen/susses&failde/berhasilOvertimein.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
 
 class ClockInPage extends StatefulWidget {
   const ClockInPage({super.key});
@@ -45,11 +45,11 @@ class _ClockInPageState extends State<ClockInPage> {
 
   Future<void> _initializeData() async {
     await Future.wait([
-      _setWorkTypesBasedOnDay(),
-      _setWorkTypeLembur(),
+      getData(),
       getStatus(),
       getLocation(),
-      getData(),
+      _setWorkTypeLembur(),
+      _setWorkTypesBasedOnDay(),
     ]);
   }
 
@@ -74,16 +74,6 @@ class _ClockInPageState extends State<ClockInPage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-        _isImageRequired = false;
-      });
-    }
-  }
 
   bool _isFakeLocation(Position position) {
     // Cek apakah lokasi di-mock (hanya support di beberapa device Android)
@@ -120,6 +110,17 @@ class _ClockInPageState extends State<ClockInPage> {
     return false;
   }
 
+  Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _isImageRequired = false;
+      });
+    }
+  }
+
   // Check if today is a weekend or holiday from API
   Future<void> getStatus() async {
     final url = Uri.parse(
@@ -137,6 +138,34 @@ class _ClockInPageState extends State<ClockInPage> {
       if (rp.statusCode == 200) {
         setState(() {
           workTypes =
+              List<String>.from(data['data'].map((item) => item['name']));
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+
+  Future<void> getLocation() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/get-location-parameter');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          workplaceTypes =
               List<String>.from(data['data'].map((item) => item['name']));
         });
       } else {
@@ -218,33 +247,6 @@ class _ClockInPageState extends State<ClockInPage> {
       }
     } catch (e) {
       print("Error mengambil data lokasi: $e");
-    }
-  }
-
-  Future<void> getLocation() async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/attendance/get-location-parameter');
-    var request = http.MultipartRequest('GET', url);
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    request.headers['Authorization'] =
-        'Bearer ${localStorage.getString('token')}';
-
-    try {
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      if (rp.statusCode == 200) {
-        setState(() {
-          workplaceTypes =
-              List<String>.from(data['data'].map((item) => item['name']));
-        });
-      } else {
-        print('Error fetching history data: ${rp.statusCode}');
-        print(rp.body);
-      }
-    } catch (e) {
-      print('Error occurred: $e');
     }
   }
 
@@ -438,40 +440,17 @@ class _ClockInPageState extends State<ClockInPage> {
 
       // Kirim request
       var response = await request.send();
-      // var rp = await http.Response.fromStream(response);
-      // var data = jsonDecode(rp.body);
-
       Navigator.pop(context); // Tutup loading dialog
-
       if (response.statusCode == 200) {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   const SnackBar(
-        //     content: Text('Overtime clock-in berhasil!'),
-        //     backgroundColor: Colors.green,
-        //   ),
-        // );
         Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => const SuccessOvertime()));
       } else {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(
-        //     content: Text(data['message'] ?? 'Gagal clock-in overtime.'),
-        //     backgroundColor: Colors.red,
-        //   ),
-        // );
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
                 builder: (context) => const FailurePageovertime()));
       }
     } catch (e) {
-      // Navigator.pop(context); // Pastikan tutup loading saat error
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text('Terjadi kesalahan: $e'),
-      //     backgroundColor: Colors.red,
-      //   ),
-      // );
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (context) => const FailurePageovertime()));
     }

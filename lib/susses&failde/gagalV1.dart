@@ -1,4 +1,4 @@
-//Clock In and Out FailurePage
+//Clock In FailurePage
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 

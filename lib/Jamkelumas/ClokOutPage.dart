@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
-import 'package:absen/susses&failde/gagalV1.dart';
+import 'package:absen/susses&failde/gagalV1I.dart';
 import 'package:absen/susses&failde/berhasilV1II.dart';
+import 'package:absen/susses&failde/gagalovertimeout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
@@ -42,6 +43,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     getData();
     getProfil();
     _setWorkTypeLembur();
+    getDataOvertime();
   }
 
   Future<void> _loadSelectedValues() async {
@@ -163,8 +165,8 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
             _selectedWorkType = 'Lembur';
           } else {
             // Jika belum clock-in, munculkan opsi Reguler dan Lembur
-            WorkTypes = ['Reguler', 'Lembur'];
-            _selectedWorkType = 'Reguler';
+            // WorkTypes = ['Reguler', 'Lembur'];
+            // _selectedWorkType = 'Reguler';
           }
         });
       } else {
@@ -177,7 +179,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
 
   Future<void> getDataOvertime() async {
     final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/attendance/cek-approval-lembur');
+        'https://portal.eksam.cloud/api/v1/attendance/is-overtime-approved'); // Ganti URL sesuai dengan API endpoint
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     final token = localStorage.getString('token');
 
@@ -191,11 +193,50 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       );
 
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
+        final jsonResponse = json.decode(response.body);
+        final status = jsonResponse['status'];
+        final message = jsonResponse['message'];
+        final date = jsonResponse['date'];
+
         setState(() {
-          panding = data['message'] != 'Pengajuan lembur masih pending';
-          reject = data['message'] != 'Pengajuan lembur ditolak';
-          approve = data['message'] != 'Pengajuan lembur sudah di-approve';
+          // Menangani status berdasarkan respons API
+          if (status == 'approved') {
+            approve = true;
+            panding = false;
+            reject = false;
+          } else if (status == 'pending') {
+            approve = false;
+            panding = true;
+            reject = false;
+          } else if (status == 'rejected') {
+            approve = false;
+            panding = false;
+            reject = true;
+          }
+          approve = status == 'approved';
+          panding = status == 'pending'; // Typo? Harusnya pending?
+          reject = status == 'rejected';
+          // else if (status == 'multiple_pending') {
+          //   // Handle status multiple_pending
+          //   approve = false;
+          //   panding = true;
+          //   reject = false;
+          // } else if (status == 'kosong') {
+          //   approve = false;
+          //   panding = false;
+          //   reject = false;
+          // } else {
+          //   // Status lainnya
+          //   approve = false;
+          //   panding = false;
+          //   reject = false;
+          // }
+
+          // Print message jika perlu
+          print(message);
+          if (date != null) {
+            print('Tanggal lembur: $date');
+          }
         });
       } else {
         print('Error fetching overtime data: ${response.statusCode}');
@@ -259,13 +300,14 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const FailurePage()),
+          MaterialPageRoute(
+              builder: (context) => const FailurePageovertimeout()),
         );
       }
     } catch (e) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const FailurePage()),
+        MaterialPageRoute(builder: (context) => const FailurePageovertimeout()),
       );
     }
   }
@@ -324,13 +366,14 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const FailurePage()),
+          MaterialPageRoute(
+              builder: (context) => const FailurePageovertimeout()),
         );
       }
     } catch (e) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const FailurePage()),
+        MaterialPageRoute(builder: (context) => const FailurePageovertimeout()),
       );
     }
   }
@@ -407,7 +450,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
           ),
         );
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const FailurePage()));
+            MaterialPageRoute(builder: (context) => const FailurePageI()));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -417,7 +460,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
         ),
       );
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const FailurePage()));
+          MaterialPageRoute(builder: (context) => const FailurePageI()));
     }
   }
 
@@ -624,7 +667,58 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
               // Tombol berdasarkan kondisi userStatus dan tipe kerja
               if (_selectedWorkType == "Lembur" &&
                   (userStatus == "1" || userStatus == "2")) ...[
-                if (panding || reject)
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                //   children: [
+                //     ElevatedButton(
+                //       onPressed: panding || reject
+                //           ? null
+                //           : _submitDataovertimeout, // disabled jika approve
+                //       style: ButtonStyle(
+                //         backgroundColor:
+                //             MaterialStateProperty.resolveWith<Color>(
+                //           (states) => states.contains(MaterialState.disabled)
+                //               ? Colors.grey // warna abu saat disabled
+                //               : Colors.orange,
+                //         ),
+                //         foregroundColor:
+                //             MaterialStateProperty.all(Colors.white),
+                //         padding: MaterialStateProperty.all(
+                //           const EdgeInsets.symmetric(
+                //               horizontal: 25, vertical: 15),
+                //         ),
+                //       ),
+                //       child: const Text(
+                //         'Submit Overtime Out',
+                //         style: TextStyle(fontSize: 12),
+                //       ),
+                //     ),
+                //     ElevatedButton(
+                //       onPressed: approve
+                //           ? null
+                //           : _submitDataovertimeapprove, // disabled jika pending/reject
+                //       style: ButtonStyle(
+                //         backgroundColor:
+                //             MaterialStateProperty.resolveWith<Color>(
+                //           (states) => states.contains(MaterialState.disabled)
+                //               ? Colors.grey
+                //               : Colors.orange,
+                //         ),
+                //         foregroundColor:
+                //             MaterialStateProperty.all(Colors.white),
+                //         padding: MaterialStateProperty.all(
+                //           const EdgeInsets.symmetric(
+                //               horizontal: 25, vertical: 15),
+                //         ),
+                //       ),
+                //       child: const Text(
+                //         'Submit Overtime Approve',
+                //         style: TextStyle(fontSize: 12),
+                //       ),
+                //     ),
+                //   ],
+                // ),
+                if (panding)
                   Center(
                     child: ElevatedButton(
                       onPressed: _submitDataovertimeout,
@@ -638,7 +732,25 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                       ),
                       child: const Text(
                         'Submit Overtime Out',
-                        style: TextStyle(fontSize: 15),
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  )
+                else if (reject)
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _submitDataovertimeout,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 120,
+                          vertical: 15,
+                        ),
+                      ),
+                      child: const Text(
+                        'Submit Overtime Out',
+                        style: TextStyle(fontSize: 13),
                       ),
                     ),
                   )
@@ -656,7 +768,7 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                       ),
                       child: const Text(
                         'Submit Overtime Approved',
-                        style: TextStyle(fontSize: 15),
+                        style: TextStyle(fontSize: 13),
                       ),
                     ),
                   )

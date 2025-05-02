@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart'; // for formatting date
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http_parser/http_parser.dart';
-import 'dart:io';
+import 'package:absen/susses&failde/gagalinven.dart';
 import 'package:absen/inventaris/datainventaris.dart';
 import 'package:absen/susses&failde/berhasiltambah.dart';
-import 'package:absen/susses&failde/gagalinven.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart'; // for formatting date
+import 'dart:convert';
+import 'dart:io';
 
 class InventoryScreen extends StatefulWidget {
   @override
@@ -17,30 +17,30 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  final _formKey = GlobalKey<FormState>();
   String name = '';
   String keterangan = '';
-  List<dynamic> _inventoryList = [];
-  String? userId;
+  String formattedDate = '';
   String tanggalPembelian = '';
   String tanggalPeminjaman = '';
-  final ImagePicker _picker = ImagePicker();
+  String? userId;
   File? _image;
-  bool _isImageRequired = false;
   bool isLoading = false;
+  bool _isNameEmpty = false;
+  bool _isImageRequired = false;
+  bool _isKeteranganEmpty = false;
+  bool _istanggalPembelianEmpty = false;
+  bool _istanggalPeminjamanEmpty = false;
   DateTime? _tanggalPembelian;
   DateTime? _tanggalPeminjaman;
-  String formattedDate = '';
-  bool _istanggalPeminjamanEmpty = false;
-  bool _istanggalPembelianEmpty = false;
-  bool _isNameEmpty = false;
-  bool _isKeteranganEmpty = false;
+  List<dynamic> _inventoryList = [];
+  final _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    fetchInventory();
     getProfil();
+    fetchInventory();
   }
 
   // *Menampilkan dialog pilihan sumber gambar*
@@ -515,7 +515,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-
               if (_image != null)
                 Align(
                   alignment: Alignment.centerLeft,
@@ -549,7 +548,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                   ),
                 ),
-              SizedBox(height: 10),
+              SizedBox(height: 110),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

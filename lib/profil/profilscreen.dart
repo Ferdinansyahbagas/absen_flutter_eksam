@@ -24,11 +24,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final PageController _pageController = PageController();
-  final ImagePicker _picker = ImagePicker();
-  String? profileImageUrl;
-  String? idCardImageUrl;
-  String? cvImageUrl;
   String name = '';
   String email = '';
   String phoneNumber = '';
@@ -41,6 +36,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String bank = '';
   String Limit = '';
   String Divisi = '';
+  String? profileImageUrl;
+  String? idCardImageUrl;
+  String? cvImageUrl;
   File? profileImage;
   File? _idCardImage;
   File? _cvImage;
@@ -51,14 +49,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<String> pendidikanOptions = [];
   List<String> bankOptions = [];
   List<dynamic> notifications = [];
+  final ImagePicker _picker = ImagePicker();
+  final PageController _pageController = PageController();
 
   @override
   void initState() {
     super.initState();
     getPendidikan();
     _getBank();
-    loadProfileImage();
     getProfile();
+    loadProfileImage();
   }
 
   Future<void> saveImageUrls({
