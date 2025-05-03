@@ -1153,7 +1153,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ] else
                             // Tampilkan Clock In & Out jika belum Clock Out
-                            if (!hasClockedOut) ...[
+                            if (!hasClockedOut && hasCuti || hasholiday) ...[
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -1239,8 +1239,8 @@ class _HomePageState extends State<HomePage> {
                                 ],
                               ),
                             ] else
-                              // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                              ...[
+                            // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
+                            if (hasClockedIn || hasClockedOut) ...[
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
