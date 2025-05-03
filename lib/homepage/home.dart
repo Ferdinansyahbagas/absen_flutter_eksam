@@ -97,7 +97,6 @@ class _HomePageState extends State<HomePage> {
     Future.delayed(Duration(milliseconds: 500), () {
       getData(); // Panggil API setelah sedikit delay
       getNotif();
-      getcekwfa();
       getTarget();
       getUserInfo();
       getPengumuman();
@@ -484,24 +483,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<void> getcekwfa() async {
-    var data =
-        await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
-    if (data != null && data['message'] == 'User sudah mengajukan WFA') {
-      setState(() {
-        isWFARequested = true;
-        Id = data['data']['id'].toString();
-      });
-    } else {
-      setState(() {
-        isWFARequested = false;
-        Id = null;
-        _isApiLoaded = true;
-        _startClock(); // Mulai timer hanya setelah data selesai di-load
-      });
-    }
-  }
-
   bool _isFakeLocation(Position position) {
     // Cek apakah lokasi di-mock (hanya support di beberapa device Android)
     if (position.isMocked) {
@@ -553,7 +534,6 @@ class _HomePageState extends State<HomePage> {
 
       // Simpan lokasi terakhir buat perbandingan nanti
       lastKnownPosition = position;
-
       double userLatitude = position.latitude;
       double userLongitude = position.longitude;
 
@@ -656,6 +636,22 @@ class _HomePageState extends State<HomePage> {
                 overtimeOutData['message'] != 'belum clock-out';
           });
         }
+      }
+
+      var data = await ApiService.sendRequest(
+          endpoint: 'request-history/is-wfa-today');
+      if (data != null && data['message'] == 'User sudah mengajukan WFA') {
+        setState(() {
+          isWFARequested = true;
+          Id = data['data']['id'].toString();
+        });
+      } else {
+        setState(() {
+          isWFARequested = false;
+          Id = null;
+          _isApiLoaded = true;
+          _startClock(); // Mulai timer hanya setelah data selesai di-load
+        });
       }
 
       // Cek status cuti
@@ -1216,7 +1212,6 @@ class _HomePageState extends State<HomePage> {
                                                   hasClockedOut = true;
                                                   hasClockedIn = false;
                                                 });
-
                                                 // Reset tombol setelah 1 detik
                                                 Future.delayed(
                                                     const Duration(seconds: 1),
