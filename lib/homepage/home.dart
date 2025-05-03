@@ -668,12 +668,21 @@ class _HomePageState extends State<HomePage> {
       }
 
       // Cek status clock-out-lupa
-      var liburData = await ApiService.sendRequest(
-          endpoint: 'other/cek-libur'); // Ganti endpoint jika perlu
+      var liburData = await ApiService.sendRequest(endpoint: 'other/cek-libur');
+
+      bool isWeekend = false;
+      DateTime now = DateTime.now();
+      if (now.weekday == DateTime.saturday || now.weekday == DateTime.sunday) {
+        isWeekend = true;
+      }
 
       if (liburData != null && liburData['libur'] != null) {
         setState(() {
-          hasholiday = liburData['libur']; // true jika lupa, false jika tidak
+          hasholiday = liburData['libur'] || isWeekend;
+        });
+      } else {
+        setState(() {
+          hasholiday = isWeekend;
         });
       }
 
@@ -1082,6 +1091,71 @@ class _HomePageState extends State<HomePage> {
                         // Jika belum request WFH, cek apakah sudah clock out
                         Column(
                           children: [
+                            if (hasCuti || hasholiday) ...[
+                              // Tampilkan hanya tombol Overtime jika sedang cuti atau hari libur
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: hasClockedInOvertime
+                                        ? null
+                                        : () async {
+                                            final result = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const ClockInPage(),
+                                              ),
+                                            );
+                                            if (result == true) {
+                                              setState(() {
+                                                hasClockedInOvertime = true;
+                                                hasClockedOutOvertime = false;
+                                              });
+                                            }
+                                          },
+                                    icon: const Icon(Icons.timer),
+                                    label: const Text('Overtime In',
+                                        style: TextStyle(fontSize: 12)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: hasClockedInOvertime
+                                          ? Colors.grey
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: (hasClockedInOvertime &&
+                                            !hasClockedOutOvertime)
+                                        ? () async {
+                                            final result = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const ClockOutScreen(),
+                                              ),
+                                            );
+                                            if (result == true) {
+                                              setState(() {
+                                                hasClockedOutOvertime = false;
+                                                hasClockedInOvertime = false;
+                                              });
+                                            }
+                                          }
+                                        : null,
+                                    icon: const Icon(Icons.timer_off),
+                                    label: const Text('Overtime Out',
+                                        style: TextStyle(fontSize: 12)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: (hasClockedInOvertime &&
+                                              !hasClockedOutOvertime)
+                                          ? Colors.white
+                                          : Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ] else
                             // Tampilkan Clock In & Out jika belum Clock Out
                             if (!hasClockedOut) ...[
                               Row(

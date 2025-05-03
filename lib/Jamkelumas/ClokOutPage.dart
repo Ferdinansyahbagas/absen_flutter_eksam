@@ -213,24 +213,25 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
             panding = false;
             reject = true;
           }
+          else if (status == 'multiple_pending') {
+            // Handle status multiple_pending
+            approve = false;
+            panding = true;
+            reject = false;
+          } else if (status == 'kosong') {
+            approve = false;
+            panding = false;
+            reject = false;
+          } else {
+            // Status lainnya
+            approve = false;
+            panding = false;
+            reject = false;
+          }
           approve = status == 'approved';
-          panding = status == 'pending'; // Typo? Harusnya pending?
+          panding = status == 'pending'; 
           reject = status == 'rejected';
-          // else if (status == 'multiple_pending') {
-          //   // Handle status multiple_pending
-          //   approve = false;
-          //   panding = true;
-          //   reject = false;
-          // } else if (status == 'kosong') {
-          //   approve = false;
-          //   panding = false;
-          //   reject = false;
-          // } else {
-          //   // Status lainnya
-          //   approve = false;
-          //   panding = false;
-          //   reject = false;
-          // }
+          panding = status == 'multiple_pending';
 
           // Print message jika perlu
           print(message);

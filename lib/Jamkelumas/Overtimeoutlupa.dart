@@ -33,8 +33,9 @@ class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
   @override
   void initState() {
     super.initState();
-    _loadSelectedValues();
     getProfil();
+    getStatus();
+    _loadSelectedValues();
     getDatalupaOvertime();
   }
 
@@ -97,6 +98,37 @@ class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
     }
   }
 
+  Future<void> getStatus() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/get-type-parameter');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+      var data = jsonDecode(rp.body.toString());
+
+      if (rp.statusCode == 200) {
+        setState(() {
+          WorkTypes = List<String>.from(
+            data['data']
+                .where(
+                    (item) => item['name'].toString().toLowerCase() == 'lembur')
+                .map((item) => item['name']),
+          );
+        });
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+        print(rp.body);
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
   Future<void> getDatalupaOvertime() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/attendance/overtime-detail/{id}');
@@ -113,7 +145,7 @@ class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
         var data = jsonDecode(rp.body.toString());
         print(data);
         setState(() {
-          _selectedWorkType = data['data']['type']['name'];
+          // _selectedWorkType = data['data']['type']['name'];
           _selectedWorkplaceType = data['data']['attendance_location']['name'];
           formattedDate = data['data']['date'];
           _absenId = data['data']['id'].toString(); // Ambil ID absen
