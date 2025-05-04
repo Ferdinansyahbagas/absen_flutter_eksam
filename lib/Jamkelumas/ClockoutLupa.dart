@@ -12,7 +12,9 @@ import 'dart:convert';
 import 'dart:io';
 
 class ClockOutLupaScreen extends StatefulWidget {
-  const ClockOutLupaScreen({super.key});
+  final String id;
+
+  const ClockOutLupaScreen({Key? key, required this.id}) : super(key: key);
 
   @override
   _ClockOutLupaScreenState createState() => _ClockOutLupaScreenState();
@@ -40,6 +42,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   @override
   void initState() {
     super.initState();
+    _absenId = widget.id;
     _loadSelectedValues();
     getProfil();
     getDatalupa();
@@ -152,8 +155,7 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
       _isNoteRequired = _noteController.text.isEmpty;
     });
 
-    if (
-        _isTimeEmpty || _isImageRequired || _isNoteRequired) {
+    if (_isTimeEmpty || _isImageRequired || _isNoteRequired) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Harap isi semua field sebelum submit.'),

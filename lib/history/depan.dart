@@ -219,7 +219,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ClockOutLupaScreen(),
+                          builder: (context) =>
+                              ClockOutLupaScreen(id: item['id'].toString()),
                         ),
                       );
                     },
@@ -250,7 +251,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => Overtimeoutlupa(),
+                          builder: (context) =>
+                              Overtimeoutlupa(id: item['id'].toString()),
                         ),
                       );
                     },

@@ -74,7 +74,6 @@ class _ClockInPageState extends State<ClockInPage> {
     );
   }
 
-
   bool _isFakeLocation(Position position) {
     // Cek apakah lokasi di-mock (hanya support di beberapa device Android)
     if (position.isMocked) {
@@ -148,7 +147,6 @@ class _ClockInPageState extends State<ClockInPage> {
       print('Error occurred: $e');
     }
   }
-
 
   Future<void> getLocation() async {
     final url = Uri.parse(
@@ -294,72 +292,65 @@ class _ClockInPageState extends State<ClockInPage> {
   }
 
   Future<void> _setWorkTypesBasedOnDay() async {
-    try {
-      if (userStatus == '3') {
+    if (userStatus == '3') {
+      setState(() {
+        workTypes = ['Reguler'];
+        _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
+      });
+      return;
+    }
+    // Fetch holiday data from API
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
+
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+
+    var request = http.MultipartRequest('GET', url);
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    var response = await request.send();
+    var rp = await http.Response.fromStream(response);
+    var data = jsonDecode(rp.body.toString());
+
+    print(data);
+    if (response.statusCode == 200) {
+      setState(() {
+        _isHoliday = data['data']['libur'];
+        // _isHoliday = data['data']['attendance_status_id'];
+      });
+
+      // Check if today is in the holiday list
+      if (_isHoliday) {
         setState(() {
-          workTypes = ['Reguler'];
-          _selectedWorkType = 'Reguler'; // User level 3 hanya bisa Reguler
-        });
-        return;
-      }
-      // Get current day
-      final int currentDay = DateTime.now().weekday;
-      // Check if today is a weekend
-      if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
-        setState(() {
-          _isHoliday = true;
           workTypes = ['Lembur'];
           _selectedWorkType = 'Lembur';
         });
-        return;
-      }
-
-      // Fetch holiday data from API
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/other/cek-libur'); // Replace with your API URL
-
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      var request = http.MultipartRequest('GET', url);
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-
-      var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body.toString());
-
-      print(data);
-      if (response.statusCode == 200) {
-        setState(() {
-          _isHoliday = data['data']['libur'];
-          // _isHoliday = data['data']['attendance_status_id'];
-        });
-
-        // Check if today is in the holiday list
-        if (_isHoliday) {
-          setState(() {
-            workTypes = ['Lembur'];
-            _selectedWorkType = 'Lembur';
-          });
-        } else {
-          setState(() {
-            _isHoliday = false;
-            workTypes = ['Reguler', 'Lembur'];
-            _selectedWorkType = 'Reguler';
-          });
-        }
       } else {
-        // Handle API error
-        print('Failed to fetch holidays: ${response.statusCode}');
         setState(() {
-          workTypes = ['Reguler', 'Lembur']; // Default options
+          _isHoliday = false;
+          workTypes = ['Reguler', 'Lembur'];
+          _selectedWorkType = 'Reguler';
         });
       }
-    } catch (e) {
-      print('Error checking holidays: $e');
+    } else {
+      // Handle API error
+      print('Failed to fetch holidays: ${response.statusCode}');
       setState(() {
         workTypes = ['Reguler', 'Lembur']; // Default options
       });
+    }
+
+    // Get current day
+    final int currentDay = DateTime.now().weekday;
+    // Check if today is a weekend
+    if (currentDay == DateTime.saturday || currentDay == DateTime.sunday) {
+      setState(() {
+        _isHoliday = true;
+        workTypes = ['Lembur'];
+        _selectedWorkType = 'Lembur';
+      });
+      return;
     }
   }
 

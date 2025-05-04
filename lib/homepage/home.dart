@@ -202,7 +202,8 @@ class _HomePageState extends State<HomePage> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ClockOutLupaScreen(),
+                    builder: (context) =>
+                        ClockOutLupaScreen(id: ['id'].toString()),
                   ),
                 );
                 if (result == true) {

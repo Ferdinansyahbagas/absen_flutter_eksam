@@ -8,7 +8,9 @@ import 'package:intl/intl.dart'; //unntuk format tanggal
 import 'dart:convert';
 
 class Overtimeoutlupa extends StatefulWidget {
-  const Overtimeoutlupa({super.key});
+  final String id;
+
+  const Overtimeoutlupa({Key? key, required this.id}) : super(key: key);
 
   @override
   _OvertimeoutlupaState createState() => _OvertimeoutlupaState();
@@ -33,6 +35,7 @@ class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
   @override
   void initState() {
     super.initState();
+    _absenId = widget.id;
     getProfil();
     getStatus();
     _loadSelectedValues();
@@ -131,7 +134,8 @@ class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
 
   Future<void> getDatalupaOvertime() async {
     final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/attendance/overtime-detail/{id}');
+      'https://portal.eksam.cloud/api/v1/attendance/overtime-detail/$_absenId',
+    );
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
