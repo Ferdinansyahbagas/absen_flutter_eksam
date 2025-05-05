@@ -318,68 +318,39 @@ class _HomePageState extends State<HomePage> {
   //   );
   // }
 
-  // Fungsi untuk mendapatkan lokasi saat ini
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  // Fungsi untuk mendapatkan lokasi saat ini (tanpa izin)
+Future<void> _getCurrentLocation() async {
+  setState(() {
+    isLoadingLocation = true;
+  });
 
-    // Mengecek apakah layanan lokasi tersedia
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Jika layanan lokasi tidak aktif, tampilkan pesan "Location not available"
+  try {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    // Menggunakan geocoding untuk mendapatkan nama kota dari koordinat
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(position.latitude, position.longitude);
+
+    if (placemarks.isNotEmpty) {
       setState(() {
-        currentCity = 'Lokasi tidak tersedia';
+        currentCity = placemarks.first.locality ?? 'Tidak diketahui';
         isLoadingLocation = false;
       });
-      return;
-    }
-
-    // Meminta izin lokasi
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Jika izin lokasi ditolak, tampilkan pesan "Location not available"
-        setState(() {
-          currentCity = 'Lokasi tidak tersedia';
-          isLoadingLocation = false;
-        });
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      // Jika izin lokasi ditolak selamanya, tampilkan pesan "Location not available"
-      setState(() {
-        currentCity = 'Lokasi tidak tersedia';
-        isLoadingLocation = false;
-      });
-      return;
-    }
-
-    // Mendapatkan posisi pengguna jika semua syarat terpenuhi
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-
-      // Menggunakan geocoding untuk mendapatkan nama kota dari koordinat
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
-
-      if (placemarks.isNotEmpty) {
-        setState(() {
-          currentCity = placemarks.first.locality; // Mengambil nama kota
-          isLoadingLocation = false; // Lokasi selesai di-load
-        });
-      }
-    } catch (e) {
-      // Jika ada error lainnya, tampilkan pesan "Location not available"
+    } else {
       setState(() {
         currentCity = 'Lokasi tidak tersedia';
         isLoadingLocation = false;
       });
     }
+  } catch (e) {
+    setState(() {
+      currentCity = 'Lokasi tidak tersedia';
+      isLoadingLocation = false;
+    });
   }
+}
+
 
 // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
