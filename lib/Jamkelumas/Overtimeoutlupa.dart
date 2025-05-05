@@ -149,10 +149,20 @@ class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
         var data = jsonDecode(rp.body.toString());
         print(data);
         setState(() {
-          // _selectedWorkType = data['data']['type']['name'];
-          _selectedWorkplaceType = data['data']['attendance_location']['name'];
           formattedDate = data['data']['date'];
-          _absenId = data['data']['id'].toString(); // Ambil ID absen
+          _selectedWorkType = "Lembur";
+          _absenId = data['data']['id'].toString();
+
+          // Set awal ke WFO/WFA
+          _selectedWorkplaceType =
+              (data['data']['attendance_location'] == 1) ? "WFO" : "WFA";
+
+          // Override jika ada location name
+          if (data['data']['location'] != null &&
+              data['data']['location']['name'] != null) {
+            _selectedWorkplaceType =
+                data['data']['location']['name'].toString();
+          }
         });
       } else {
         print('Error fetching history data: ${rp.statusCode}');
@@ -204,8 +214,8 @@ class _OvertimeoutlupaState extends State<Overtimeoutlupa> {
 
       request.fields['id'] = _absenId!;
       request.fields['notes'] = _noteController.text;
-      request.fields['jam_clock_out'] = formattedTime;
-      request.fields['date'] = formattedDate;
+      request.fields['endtime'] = formattedTime;
+      request.fields['clock_out_date'] = formattedDate;
 
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
