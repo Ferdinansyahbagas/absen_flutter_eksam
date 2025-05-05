@@ -199,7 +199,7 @@ class _OvertimeoutState extends State<Overtimeout> {
 
         setState(() {
           // Menangani status berdasarkan respons API
-         if (status == 'approved') {
+          if (status == 'approved') {
             approve = true;
           } else if (status == 'pending' || status == 'multiple_pending') {
             panding = true;
@@ -249,7 +249,7 @@ class _OvertimeoutState extends State<Overtimeout> {
 
     try {
       final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1//attendance/overtime-out-new');
+          'https://portal.eksam.cloud/api/v1/attendance/overtime-out-new');
       var request = http.MultipartRequest('POST', url);
       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
@@ -553,63 +553,60 @@ class _OvertimeoutState extends State<Overtimeout> {
               ),
               const SizedBox(height: 120),
               // Tombol berdasarkan kondisi userStatus dan tipe kerja
-              if (_selectedWorkType == "Lembur" &&
-                  (userStatus == "1" || userStatus == "2")) ...[
-                if (panding)
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _submitDataovertimeout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit Overtime Out',
-                        style: TextStyle(fontSize: 13),
+              if (panding)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitDataovertimeout,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
                       ),
                     ),
-                  )
-                else if (reject)
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _submitDataovertimeout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit Overtime Out',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  )
-                else if (approve)
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _submitDataovertimeapprove,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit Overtime Approved',
-                        style: TextStyle(fontSize: 13),
-                      ),
+                    child: const Text(
+                      'Submit Overtime Out',
+                      style: TextStyle(fontSize: 13),
                     ),
                   ),
-              ],
+                )
+              else if (reject)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitDataovertimeout,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Submit Overtime Out',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                )
+              else if (approve)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _submitDataovertimeapprove,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 120,
+                        vertical: 15,
+                      ),
+                    ),
+                    child: const Text(
+                      'Submit Overtime Approved',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
