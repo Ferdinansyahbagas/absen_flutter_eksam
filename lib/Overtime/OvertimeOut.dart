@@ -121,15 +121,12 @@ class _OvertimeoutState extends State<Overtimeout> {
       if (rp.statusCode == 200) {
         var data = jsonDecode(rp.body.toString());
         print(data);
+        setState(() {
+          _selectedWorkType = "Lembur";
+          _selectedWorkplaceType = data['data']['location']['name'];
+        });
 
-        if (data['data']['type']['name'] == 'Lembur') {
-          setState(() {
-            _selectedWorkType = data['data']['type']['name'];
-            _selectedWorkplaceType = data['data']['location']['name'];
-          });
-        } else {
-          print('Data bukan lembur, tidak diproses.');
-        }
+        // Jika user memilih WFO, lakukan validasi jarak
       } else {
         print('Error fetching history data: ${rp.statusCode}');
       }
