@@ -41,8 +41,9 @@ class _OvertimeoutState extends State<Overtimeout> {
     _loadSelectedValues();
     getData();
     getProfil();
-    _setWorkTypeLembur();
+    getDataloc();
     getDataOvertime();
+    _setWorkTypeLembur();
   }
 
   Future<void> _loadSelectedValues() async {
@@ -123,6 +124,34 @@ class _OvertimeoutState extends State<Overtimeout> {
         print(data);
         setState(() {
           _selectedWorkType = "Lembur";
+          // _selectedWorkplaceType = data['data']['location']['name'];
+        });
+
+        // Jika user memilih WFO, lakukan validasi jarak
+      } else {
+        print('Error fetching history data: ${rp.statusCode}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> getDataloc() async {
+    final url = Uri.parse(
+        'https://portal.eksam.cloud/api/v1/attendance/get-self-detail-today');
+    var request = http.MultipartRequest('GET', url);
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    request.headers['Authorization'] =
+        'Bearer ${localStorage.getString('token')}';
+
+    try {
+      var response = await request.send();
+      var rp = await http.Response.fromStream(response);
+
+      if (rp.statusCode == 200) {
+        var data = jsonDecode(rp.body.toString());
+        print(data);
+        setState(() {
           _selectedWorkplaceType = data['data']['location']['name'];
         });
 
