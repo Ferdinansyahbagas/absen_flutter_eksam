@@ -622,18 +622,20 @@ class _ClockInPageState extends State<ClockInPage> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _selectedWorkplaceType,
+                value: workplaceTypes.contains(_selectedWorkplaceType)
+                    ? _selectedWorkplaceType
+                    : null,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
-                      color: const Color.fromRGBO(
-                          101, 19, 116, 1), // Customize border color
-                      width: 2, // Customize border width
+                      color: Color.fromRGBO(101, 19, 116, 1),
+                      width: 2,
                     ),
                   ),
                 ),
-                items: workplaceTypes.map((String workplaceType) {
+                items:
+                    workplaceTypes.toSet().toList().map((String workplaceType) {
                   return DropdownMenuItem<String>(
                     value: workplaceType,
                     child: Text(workplaceType),
