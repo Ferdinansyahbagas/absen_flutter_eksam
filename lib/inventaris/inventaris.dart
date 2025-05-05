@@ -260,13 +260,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
           MaterialPageRoute(builder: (context) => const Successinventory()),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Failed to submit: ${result['message'] ?? 'Unknown error'}'),
-            backgroundColor: Colors.red,
-          ),
-        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const FailurePageinven()),
@@ -274,12 +267,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
       }
     } catch (e) {
       Navigator.of(context).pop(); // pastikan dialog tertutup
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const FailurePageinven()),

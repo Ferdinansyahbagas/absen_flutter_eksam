@@ -121,7 +121,8 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
         var data = jsonDecode(rp.body.toString());
         print(data);
         setState(() {
-          _selectedWorkType = data['data']['type']['name'];
+          // _selectedWorkType = data['data']['type']['name'];
+          _selectedWorkType = "Reguler";
           _selectedWorkplaceType = data['data']['location']['name'];
         });
 
@@ -462,24 +463,24 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
               ),
               const SizedBox(height: 120),
               // Tombol berdasarkan kondisi userStatus dan tipe kerja
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _submitData,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 120,
-                        vertical: 15,
-                      ),
-                    ),
-                    child: const Text(
-                      'Submit',
-                      style: TextStyle(fontSize: 15),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _submitData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 120,
+                      vertical: 15,
                     ),
                   ),
+                  child: const Text(
+                    'Submit',
+                    style: TextStyle(fontSize: 15),
+                  ),
                 ),
-              ],
+              ),
+            ],
           ),
         ),
       ),

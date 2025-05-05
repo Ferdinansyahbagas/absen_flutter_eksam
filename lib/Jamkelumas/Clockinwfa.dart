@@ -223,7 +223,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
       await getProfile();
 
       final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/request-history/make-wfa-request');
+          'https://portal.eksam.cloud/api/v1/request-history/make-wfa-self-request');
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       String? token = localStorage.getString('token');
 
@@ -236,7 +236,7 @@ class _ClockinwfaPageState extends State<ClockinwfaPage> {
       var response = await http.post(
         url,
         headers: {
-          'Authorization': 'Bearer $token',
+          'Authorization': 'Bearer $token',   
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
