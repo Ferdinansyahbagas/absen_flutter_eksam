@@ -646,6 +646,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           isWFARequested = true;
           Id = data['data']['id'].toString();
+          jarak = false;
         });
       } else {
         setState(() {
