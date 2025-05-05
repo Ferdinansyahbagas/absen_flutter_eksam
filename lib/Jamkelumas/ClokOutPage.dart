@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:absen/susses&failde/gagalV1I.dart';
 import 'package:absen/susses&failde/berhasilV1II.dart';
-import 'package:absen/susses&failde/gagalovertimeout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
@@ -43,7 +42,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
     getData();
     getProfil();
     _setWorkTypeLembur();
-    getDataOvertime();
   }
 
   Future<void> _loadSelectedValues() async {
@@ -174,208 +172,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
       }
     } catch (e) {
       print("Error mengecek status clock-in: $e");
-    }
-  }
-
-  Future<void> getDataOvertime() async {
-    final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/attendance/is-overtime-approved'); // Ganti URL sesuai dengan API endpoint
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    final token = localStorage.getString('token');
-
-    try {
-      var response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        final status = jsonResponse['status'];
-        final message = jsonResponse['message'];
-        final date = jsonResponse['date'];
-
-        setState(() {
-          // Menangani status berdasarkan respons API
-          if (status == 'approved') {
-            approve = true;
-            panding = false;
-            reject = false;
-          } else if (status == 'pending') {
-            approve = false;
-            panding = true;
-            reject = false;
-          } else if (status == 'rejected') {
-            approve = false;
-            panding = false;
-            reject = true;
-          }
-          else if (status == 'multiple_pending') {
-            // Handle status multiple_pending
-            approve = false;
-            panding = true;
-            reject = false;
-          } else if (status == 'kosong') {
-            approve = false;
-            panding = false;
-            reject = false;
-          } else {
-            // Status lainnya
-            approve = false;
-            panding = false;
-            reject = false;
-          }
-          approve = status == 'approved';
-          panding = status == 'pending'; 
-          reject = status == 'rejected';
-          panding = status == 'multiple_pending';
-
-          // Print message jika perlu
-          print(message);
-          if (date != null) {
-            print('Tanggal lembur: $date');
-          }
-        });
-      } else {
-        print('Error fetching overtime data: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  Future<void> _submitDataovertimeout() async {
-    if (_noteController.text.isEmpty) {
-      setState(() {
-        _isNoteRequired = true;
-      });
-      return;
-    }
-
-    if (_image == null) {
-      setState(() {
-        _isImageRequired = true;
-      });
-      return;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
-
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1//attendance/overtime-out-new');
-      var request = http.MultipartRequest('POST', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-
-      // Tambahkan Authorization Bearer Token
-      request.headers['Authorization'] =
-          'Bearer ${localStorage.getString('token')}';
-      request.fields['notes'] = _noteController.text;
-      request.files.add(await http.MultipartFile.fromPath(
-        'foto',
-        _image!.path,
-        contentType: MediaType('image', 'jpg'),
-      ));
-
-      var response = await request.send();
-      Navigator.pop(context); // Tutup dialog loading
-
-      if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SuccessPageII()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const FailurePageovertimeout()),
-        );
-      }
-    } catch (e) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FailurePageovertimeout()),
-      );
-    }
-  }
-
-  Future<void> _submitDataovertimeapprove() async {
-    if (_noteController.text.isEmpty) {
-      setState(() {
-        _isNoteRequired = true;
-      });
-      return;
-    }
-
-    if (_image == null) {
-      setState(() {
-        _isImageRequired = true;
-      });
-      return;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color.fromARGB(255, 101, 19, 116),
-          ),
-        );
-      },
-    );
-
-    try {
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/overtime-out-approved');
-      var request = http.MultipartRequest('POST', url);
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      String? token = localStorage.getString('token');
-
-      request.headers['Authorization'] = 'Bearer $token';
-      request.fields['notes'] = _noteController.text;
-      request.files.add(await http.MultipartFile.fromPath(
-        'foto',
-        _image!.path,
-        contentType:
-            MediaType('image', 'jpeg'), // Pastikan sesuai format yang dikirim
-      ));
-
-      var response = await request.send();
-      Navigator.pop(context); // Tutup loading
-
-      if (response.statusCode == 200) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SuccessPageII()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const FailurePageovertimeout()),
-        );
-      }
-    } catch (e) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FailurePageovertimeout()),
-      );
     }
   }
 
@@ -666,116 +462,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
               ),
               const SizedBox(height: 120),
               // Tombol berdasarkan kondisi userStatus dan tipe kerja
-              if (_selectedWorkType == "Lembur" &&
-                  (userStatus == "1" || userStatus == "2")) ...[
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                //   children: [
-                //     ElevatedButton(
-                //       onPressed: panding || reject
-                //           ? null
-                //           : _submitDataovertimeout, // disabled jika approve
-                //       style: ButtonStyle(
-                //         backgroundColor:
-                //             MaterialStateProperty.resolveWith<Color>(
-                //           (states) => states.contains(MaterialState.disabled)
-                //               ? Colors.grey // warna abu saat disabled
-                //               : Colors.orange,
-                //         ),
-                //         foregroundColor:
-                //             MaterialStateProperty.all(Colors.white),
-                //         padding: MaterialStateProperty.all(
-                //           const EdgeInsets.symmetric(
-                //               horizontal: 25, vertical: 15),
-                //         ),
-                //       ),
-                //       child: const Text(
-                //         'Submit Overtime Out',
-                //         style: TextStyle(fontSize: 12),
-                //       ),
-                //     ),
-                //     ElevatedButton(
-                //       onPressed: approve
-                //           ? null
-                //           : _submitDataovertimeapprove, // disabled jika pending/reject
-                //       style: ButtonStyle(
-                //         backgroundColor:
-                //             MaterialStateProperty.resolveWith<Color>(
-                //           (states) => states.contains(MaterialState.disabled)
-                //               ? Colors.grey
-                //               : Colors.orange,
-                //         ),
-                //         foregroundColor:
-                //             MaterialStateProperty.all(Colors.white),
-                //         padding: MaterialStateProperty.all(
-                //           const EdgeInsets.symmetric(
-                //               horizontal: 25, vertical: 15),
-                //         ),
-                //       ),
-                //       child: const Text(
-                //         'Submit Overtime Approve',
-                //         style: TextStyle(fontSize: 12),
-                //       ),
-                //     ),
-                //   ],
-                // ),
-                if (panding)
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _submitDataovertimeout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit Overtime Out',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  )
-                else if (reject)
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _submitDataovertimeout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit Overtime Out',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  )
-                else if (approve)
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _submitDataovertimeapprove,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 120,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit Overtime Approved',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  )
-              ] else if (userStatus == "1" ||
-                  userStatus == "2" ||
-                  userStatus == "3") ...[
                 Center(
                   child: ElevatedButton(
                     onPressed: _submitData,
@@ -794,7 +480,6 @@ class _ClockOutScreenState extends State<ClockOutScreen> {
                   ),
                 ),
               ],
-            ],
           ),
         ),
       ),

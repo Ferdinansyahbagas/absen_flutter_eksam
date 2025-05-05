@@ -119,8 +119,8 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
   }
 
   Future<void> getDatalupa() async {
-    final url =
-        Uri.parse('https://portal.eksam.cloud/api/v1/attendance/is-lupa');
+    final url = Uri.parse(
+        "https://portal.eksam.cloud/api/v1/attendance/get-detail/$_absenId");
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
@@ -137,7 +137,6 @@ class _ClockOutLupaScreenState extends State<ClockOutLupaScreen> {
           _selectedWorkType = data['data']['type']['name'];
           _selectedWorkplaceType = data['data']['location']['name'];
           formattedDate = data['data']['date'];
-          _absenId = data['data']['id'].toString(); // Ambil ID absen
         });
       } else {
         print('Error fetching history data: ${rp.statusCode}');

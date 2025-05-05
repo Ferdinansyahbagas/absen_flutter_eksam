@@ -3,6 +3,7 @@ import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/homepage/notif.dart'; // Mengimpor halaman notif
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
 import 'package:absen/inventaris/peraturan.dart'; // Mengimpor halaman peraturan
+import 'package:absen/Overtime/OvertimeOut.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
 import 'package:absen/Jamkelumas/Clockinwfa.dart'; // Mengimpor halaman pengajuan wfa
 import 'package:absen/inventaris/inventaris.dart'; // Mengimpor halaman inventaris
@@ -1129,7 +1130,7 @@ class _HomePageState extends State<HomePage> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const ClockOutScreen(),
+                                                    const Overtimeout(),
                                               ),
                                             );
                                             if (result == true) {
@@ -1154,7 +1155,9 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ] else
                             // Tampilkan Clock In & Out jika belum Clock Out
-                            if (!hasClockedOut && hasCuti || hasholiday) ...[
+                            if (!hasClockedOut
+                                // && !hasCuti || !hasholiday
+                                ) ...[
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -1240,8 +1243,9 @@ class _HomePageState extends State<HomePage> {
                                 ],
                               ),
                             ] else
-                            // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                            if (hasClockedIn || hasClockedOut) ...[
+                              // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
+                              // if (hasClockedIn || hasClockedOut)
+                              ...[
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -1283,7 +1287,7 @@ class _HomePageState extends State<HomePage> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const ClockOutScreen(),
+                                                    const Overtimeout(),
                                               ),
                                             );
                                             if (result == true) {
