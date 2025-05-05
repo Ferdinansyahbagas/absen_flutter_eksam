@@ -108,7 +108,7 @@ class _OvertimeoutState extends State<Overtimeout> {
 
   Future<void> getData() async {
     final url = Uri.parse(
-        'https://portal.eksam.cloud/api/v1/attendance/get-self-detail-today');
+        'https://portal.eksam.cloud/api/v1/attendance/get-latest-overtime');
     var request = http.MultipartRequest('GET', url);
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     request.headers['Authorization'] =
