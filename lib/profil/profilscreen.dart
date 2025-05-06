@@ -36,6 +36,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String bank = '';
   String Limit = '';
   String Divisi = '';
+  String gedung = '';
+  String shift = '';
   String? profileImageUrl;
   String? idCardImageUrl;
   String? cvImageUrl;
@@ -269,6 +271,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bankAccount = data['data']['no_rekening'].toString();
           Limit = data['data']['batas_cuti'].toString();
           Divisi = data['data']['divisi']['divisi'].toString();
+          gedung = data['data']['gedung']['nama'].toString();
+          shift = data['data']['shift']['shift'].toString();
         });
         saveImageUrls(
             profileUrl: profileImageUrl,
@@ -975,11 +979,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           name = newValue; // Update value setelah edit
                         }),
                       ),
-                        _buildProfileItem(
-                        title: 'Divisi',
-                        value: Divisi,
-                        isEditable: false, // Tidak bisa diedit
-                      ),
                       _buildProfileItem(
                         title: 'Email',
                         value: email,
@@ -1019,6 +1018,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
+                      ),
+                      _buildProfileItem(
+                        title: 'Divisi',
+                        value: Divisi,
+                        isEditable: false, // Tidak bisa diedit
+                      ),
+                      _buildProfileItem(
+                        title: 'Shift',
+                        value: shift,
+                        isEditable: false, // Tidak bisa diedit
+                      ),
+                      _buildProfileItem(
+                        title: 'Gedung',
+                        value: gedung,
+                        isEditable: false, // Tidak bisa diedit
                       ),
                       _buildNohp(
                         title: 'Nomor HP',

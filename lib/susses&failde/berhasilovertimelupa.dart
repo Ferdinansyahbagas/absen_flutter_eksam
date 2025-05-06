@@ -71,7 +71,7 @@ class _SuccessovertimelupaState extends State<Successovertimelupa> {
             children: [
               const SizedBox(height: 150),
               const Text(
-                'Absen Lembur keluar Anda Telah',
+                'Absen Lembur kelua \nAnda Telah',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
