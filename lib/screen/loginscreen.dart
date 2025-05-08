@@ -209,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
         title: const Text(
-          'Log In',
+          'Kembali',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
@@ -223,9 +223,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const SizedBox(height: 30.0),
+                  const SizedBox(height: 100.0),
                   const Text(
-                    "Log in",
+                    "Log In",
                     style: TextStyle(
                       fontSize: 32.0,
                       fontWeight: FontWeight.bold,
@@ -292,7 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         minimumSize: const Size(double.infinity, 50),
                       ),
                       child: const Text(
-                        'Log In',
+                        'Masuk',
                         style: TextStyle(fontSize: 18.0, color: Colors.white),
                       ),
                     ),

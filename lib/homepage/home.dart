@@ -319,38 +319,37 @@ class _HomePageState extends State<HomePage> {
   // }
 
   // Fungsi untuk mendapatkan lokasi saat ini (tanpa izin)
-Future<void> _getCurrentLocation() async {
-  setState(() {
-    isLoadingLocation = true;
-  });
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      isLoadingLocation = true;
+    });
 
-  try {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
 
-    // Menggunakan geocoding untuk mendapatkan nama kota dari koordinat
-    List<Placemark> placemarks =
-        await placemarkFromCoordinates(position.latitude, position.longitude);
+      // Menggunakan geocoding untuk mendapatkan nama kota dari koordinat
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
 
-    if (placemarks.isNotEmpty) {
-      setState(() {
-        currentCity = placemarks.first.locality ?? 'Tidak diketahui';
-        isLoadingLocation = false;
-      });
-    } else {
+      if (placemarks.isNotEmpty) {
+        setState(() {
+          currentCity = placemarks.first.locality ?? 'Tidak diketahui';
+          isLoadingLocation = false;
+        });
+      } else {
+        setState(() {
+          currentCity = 'Lokasi tidak tersedia';
+          isLoadingLocation = false;
+        });
+      }
+    } catch (e) {
       setState(() {
         currentCity = 'Lokasi tidak tersedia';
         isLoadingLocation = false;
       });
     }
-  } catch (e) {
-    setState(() {
-      currentCity = 'Lokasi tidak tersedia';
-      isLoadingLocation = false;
-    });
   }
-}
-
 
 // fungsi untuk memanggil bacaan notifikasi
   Future<void> getNotif() async {
@@ -688,7 +687,6 @@ Future<void> _getCurrentLocation() async {
         final bulanLalu = data['data_bulan_lalu'];
 
         setState(() {
-          name = data['data']['nama'];
           hariBulanIni = bulanIni['hari'];
           menitBulanIni = bulanIni['menit'];
           telatBulanIni = bulanIni['menit_telat'];
