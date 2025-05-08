@@ -77,11 +77,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           },
         ),
         title: const Text(
-          'Reset Password',
+          'Kembali',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -148,7 +148,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Tolong Masukan Password Anda';
+                        return 'masukan konfirmasi password baru';
                       }
                       return null;
                     },
@@ -191,7 +191,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Yolong konfirmasi Terlebih Dahulu Password Baru Anda';
+                        return 'tolong masukan konfirmasi password baru';
                       } else if (value != _emailController.text) {
                         return 'Password Tidak Sesuai';
                       }

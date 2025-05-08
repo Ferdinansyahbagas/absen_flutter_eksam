@@ -18,6 +18,11 @@ class _CodecekscreenState extends State<Codecekscreen> {
   final TextEditingController _emailController = TextEditingController();
 
   Future<void> _submit() async {
+    // Cek validasi form terlebih dahulu
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     try {
       Response response = await post(
         Uri.parse('https://portal.eksam.cloud/api/v1/auth/password/code-check'),
@@ -30,9 +35,6 @@ class _CodecekscreenState extends State<Codecekscreen> {
         var data = jsonDecode(response.body.toString());
         print(data['message']);
 
-        // Reset pesan error jika login berhasil
-        setState(() {
-        });
         SharedPreferences localStorage = await SharedPreferences.getInstance();
         localStorage.setString('code', _emailController.text);
 
@@ -43,11 +45,13 @@ class _CodecekscreenState extends State<Codecekscreen> {
         );
       } else {
         setState(() {
+          errorMessage = "Kode verifikasi tidak valid.";
         });
       }
     } catch (e) {
       print(e.toString());
       setState(() {
+        errorMessage = "Terjadi kesalahan. Coba lagi nanti.";
       });
     }
   }
@@ -67,11 +71,11 @@ class _CodecekscreenState extends State<Codecekscreen> {
           },
         ),
         title: const Text(
-          'Verifikasi',
+          'Kembali',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -79,7 +83,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'Verifikasi',
+              'Kode Verifikasi',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -87,7 +91,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Masukan Code Verifikasi',
+              'Masukan Kode Verifikasi',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -106,7 +110,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Tolong Masukan Code Verifikasi';
+                        return 'Masukkan kode verifikasi terlebih dahulu';
                       }
                       return null;
                     },

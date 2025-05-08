@@ -57,8 +57,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     } catch (e) {
       print(e.toString());
       setState(() {
-        _errorMessage =
-            "Terjadi kesalahan. Coba lagi nanti."; // Pesan error umum
+        _errorMessage = "email tidak valid"; // Pesan error umum
       });
     }
   }
@@ -77,7 +76,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           },
         ),
         title: const Text(
-          'Forgot Password',
+          'Kembali',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
@@ -89,7 +88,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 120),
+              const SizedBox(height: 150),
               const Text(
                 'Forgot Password',
                 style: TextStyle(
