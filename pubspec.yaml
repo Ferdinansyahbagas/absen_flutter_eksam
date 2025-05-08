@@ -57,6 +57,7 @@ dependencies:
   device_info_plus: ^11.3.3
   html: ^0.15.5+1
   html_unescape: ^2.0.0
+  loader_overlay: ^5.0.0
 
 
 dependency_overrides:

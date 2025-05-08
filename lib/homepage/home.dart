@@ -14,6 +14,7 @@ import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor hala
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:absen/utils/notification_helper.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:absen/service/api_service.dart'; // Import ApiService
 import 'package:geolocator/geolocator.dart'; // Mengimpor tempat
@@ -93,18 +94,28 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _startClock(); // Memulai timer untuk jam
-    _getCurrentLocation();
-    Future.delayed(Duration(milliseconds: 500), () {
-      getData(); // Panggil API setelah sedikit delay
-      getNotif();
-      getTarget();
-      getUserInfo();
-      getPengumuman();
-    });
-    _pageController.addListener(() {
-      setState(() {
-        _currentPage = _pageController.page!.round();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      context.loaderOverlay.show();
+
+      try {
+        _startClock();
+        _getCurrentLocation();
+        await getData();
+        await getNotif();
+        await getTarget();
+        await getUserInfo();
+        await getPengumuman();
+      } catch (e) {
+        print('Error during init: $e');
+      } finally {
+        context.loaderOverlay.hide();
+      }
+
+      _pageController.addListener(() {
+        setState(() {
+          _currentPage = _pageController.page!.round();
+        });
       });
     });
   }
@@ -1517,35 +1528,26 @@ class _HomePageState extends State<HomePage> {
                     ),
                   const SizedBox(height: 20),
                   // Bagian Announcement
-                  const Text(
-                    'Pengumuman',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 101, 19, 116),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  // // Slider untuk pengumuman
-                  Container(
-                    height: 150,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.grey[300],
-                    ),
-                    child: announcements.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'Hari ini tidak ada pengumuman',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          )
-                        : Stack(
+                  if (announcements.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pengumuman',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 101, 19, 116),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 150,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.grey[300],
+                          ),
+                          child: Stack(
                             alignment: Alignment.bottomCenter,
                             children: [
                               PageView.builder(
@@ -1615,7 +1617,9 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ],
                           ),
-                  ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 20),
                   // Target Kehadiran
                   buildProgressBox(
