@@ -223,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const SizedBox(height: 100.0),
+                  const SizedBox(height: 130.0),
                   const Text(
                     "Log In",
                     style: TextStyle(
@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8.0),
                   Text(
-                    "Silakan Login Terlebih Dahulu Sebelum Masuk✨",
+                    "Silahkan isi email dan password anda",
                     style: TextStyle(fontSize: 16.0, color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),

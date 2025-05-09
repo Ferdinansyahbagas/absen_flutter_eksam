@@ -53,11 +53,11 @@ class _TimeOffState extends State<TimeOff> {
         if (isStartDate) {
           _selectedStartDate = picked;
           _isStartDateEmpty = false;
-          formatStarttedDate = DateFormat('yyyy-MM-dd').format(picked);
+          formatStarttedDate = DateFormat('dd-MM-yyyy').format(picked);
         } else {
           _selectedEndDate = picked;
           _isEndDateEmpty = false;
-          formatEndtedDate = DateFormat('yyyy-MM-dd').format(picked);
+          formatEndtedDate = DateFormat('dd-MM-yyyy').format(picked);
         }
       });
     }
@@ -220,7 +220,7 @@ class _TimeOffState extends State<TimeOff> {
           },
         ),
         title: const Text(
-          'Time Off',
+          'Izin Cuti',
           style: TextStyle(
             color: Colors.black,
             fontSize: 30,
@@ -341,7 +341,7 @@ class _TimeOffState extends State<TimeOff> {
                       Text(
                         _selectedStartDate == null
                             ? 'Select Start Date'
-                            : DateFormat('yyyy-MM-dd')
+                            : DateFormat('dd-MM-yyyy')
                                 .format(_selectedStartDate!),
                       ),
                       const Icon(Icons.calendar_today, color: Colors.orange),
@@ -391,7 +391,7 @@ class _TimeOffState extends State<TimeOff> {
                       Text(
                         _selectedEndDate == null
                             ? 'Select Start Date'
-                            : DateFormat('yyyy-MM-dd')
+                            : DateFormat('dd-MM-yyyy')
                                 .format(_selectedEndDate!),
                       ),
                       const Icon(Icons.calendar_today, color: Colors.orange),
@@ -408,7 +408,7 @@ class _TimeOffState extends State<TimeOff> {
                     style: TextStyle(color: Colors.red, fontSize: 14),
                   ),
                 ),
-              const SizedBox(height: 180),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

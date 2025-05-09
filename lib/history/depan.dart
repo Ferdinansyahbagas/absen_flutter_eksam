@@ -82,61 +82,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  // void _showLupaClockOutModal() {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-  //     ),
-  //     isScrollControlled: true,
-  //     builder: (context) {
-  //       return FractionallySizedBox(
-  //         heightFactor: 0.6,
-  //         child: Container(
-  //           padding: EdgeInsets.all(16.0),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text("Lupa Clock Out",
-  //                   style:
-  //                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-  //               SizedBox(height: 10),
-  //               Expanded(
-  //                 child: lupaClockOutList.isNotEmpty
-  //                     ? ListView.builder(
-  //                         itemCount: lupaClockOutList.length,
-  //                         itemBuilder: (context, index) {
-  //                           var item = lupaClockOutList[index];
-  //                           String formattedDate = DateFormat('yyyy-MM-dd')
-  //                               .format(DateTime.parse(item['date']));
-  //                           return Card(
-  //                             margin: EdgeInsets.symmetric(vertical: 5),
-  //                             child: ListTile(
-  //                               title: Text("Belum Clock Out"),
-  //                               subtitle: Text(formattedDate),
-  //                               trailing: ElevatedButton(
-  //                                 onPressed: () {
-  //                                   Navigator.pushReplacement(
-  //                                       context,
-  //                                       MaterialPageRoute(
-  //                                           builder: (context) =>
-  //                                               ClockOutLupaScreen()));
-  //                                 },
-  //                                 child: Text("Clock Out"),
-  //                               ),
-  //                             ),
-  //                           );
-  //                         },
-  //                       )
-  //                     : Center(child: Text("Tidak ada data lupa clock out")),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
   void _showLupaClockOutModal() async {
     await getData(); // ambil data lupa clock out
     await getDatalupaOvertime(); // ambil data lupa overtime
@@ -208,7 +153,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             itemBuilder: (context, index) {
               var item = lupaClockOutList[index];
               String formattedDate =
-                  DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+                  DateFormat('dd-MM-yyyy').format(DateTime.parse(item['date']));
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 5),
                 child: ListTile(
@@ -240,7 +185,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             itemBuilder: (context, index) {
               var item = lupaovertimeOutList[index];
               String formattedDate =
-                  DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+                  DateFormat('dd-MM-yyyy').format(DateTime.parse(item['date']));
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 5),
                 child: ListTile(

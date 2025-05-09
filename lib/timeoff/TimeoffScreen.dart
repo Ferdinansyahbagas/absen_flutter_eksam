@@ -84,7 +84,6 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
     }
   }
 
-
   Future<void> deleteCuti(String id) async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/request-history/cancel-request/$id');
@@ -149,7 +148,7 @@ class _TimeOffScreenState extends State<TimeOffScreen> {
       }
     }
   }
-  
+
   Future<void> getDatakuota() async {
     final url = Uri.parse(
         'https://portal.eksam.cloud/api/v1/request-history/get-self-kuota');

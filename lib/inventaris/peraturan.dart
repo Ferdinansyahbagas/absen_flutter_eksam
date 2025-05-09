@@ -67,51 +67,61 @@ class _PeraturanScreenState extends State<PeraturanScreen> {
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: peraturanList.length,
-              itemBuilder: (context, index) {
-                final item = peraturanList[index];
-                return Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Html(
-                            data: item['peraturan'] ?? 'Tanpa Judul',
-                            style: {
-                              "body": Style(
-                                textAlign: TextAlign.left,
-                                fontSize: FontSize(16.0),
-                                fontWeight: FontWeight.bold,
-                                color: Color.fromARGB(255, 101, 19, 116),
-                              ),
-                            },
-                          ),
-                          SizedBox(height: 8),
-                          // Html(
-                          //   data: item['deskripsi'] ?? '-',
-                          //   style: {
-                          //     "body": Style(
-                          //       textAlign: TextAlign.left,
-                          //       fontSize: FontSize(16.0),
-                          //       fontWeight: FontWeight.normal,
-                          //       color: Colors.black87,
-                          //     ),
-                          //   },
-                          // ),
-                        ],
-                      ),
+          : peraturanList.isEmpty
+              ? Center(
+                  child: Text(
+                    "Tidak ada peraturan untuk hari ini",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
                     ),
                   ),
-                );
-              },
-            ),
+                )
+              : ListView.builder(
+                  itemCount: peraturanList.length,
+                  itemBuilder: (context, index) {
+                    final item = peraturanList[index];
+                    return Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Card(
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Html(
+                                data: item['peraturan'] ?? 'Tanpa Judul',
+                                style: {
+                                  "body": Style(
+                                    textAlign: TextAlign.left,
+                                    fontSize: FontSize(16.0),
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 101, 19, 116),
+                                  ),
+                                },
+                              ),
+                              SizedBox(height: 8),
+                              // Html(
+                              //   data: item['deskripsi'] ?? '-',
+                              //   style: {
+                              //     "body": Style(
+                              //       textAlign: TextAlign.left,
+                              //       fontSize: FontSize(16.0),
+                              //       fontWeight: FontWeight.normal,
+                              //       color: Colors.black87,
+                              //     ),
+                              //   },
+                              // ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }

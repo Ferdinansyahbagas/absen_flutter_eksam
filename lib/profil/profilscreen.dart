@@ -7,6 +7,7 @@ import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:absen/utils/notification_helper.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:absen/service/api_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:absen/utils/preferences.dart';
@@ -55,12 +56,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final PageController _pageController = PageController();
 
   @override
+  // void initState() {
+  //   super.initState();
+  //   getPendidikan();
+  //   _getBank();
+  //   getProfile();
+  //   loadProfileImage();
+  // }
+
   void initState() {
     super.initState();
-    getPendidikan();
-    _getBank();
-    getProfile();
-    loadProfileImage();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      context.loaderOverlay.show();
+
+      try {
+        await getPendidikan();
+        await getNotif();
+        await _getBank();
+        await getProfile();
+        await loadProfileImage();
+      } catch (e) {
+        print('Error during init: $e');
+      } finally {
+        context.loaderOverlay.hide();
+      }
+    });
   }
 
   Future<void> saveImageUrls({

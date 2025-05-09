@@ -83,7 +83,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'Kode Verifikasi',
+              'Verifikasi',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -105,7 +105,7 @@ class _CodecekscreenState extends State<Codecekscreen> {
                   TextFormField(
                     controller: _emailController,
                     decoration: const InputDecoration(
-                      labelText: 'Verifikasi Code',
+                      labelText: 'Kode Verifikasi',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {

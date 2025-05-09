@@ -1,818 +1,314 @@
 // import 'package:flutter/material.dart';
-// import 'package:absen/history/depan.dart'; // Mengimpor halaman history
-// import 'package:absen/homepage/notif.dart'; // Mengimpor halaman notif
-// import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
-// import 'package:absen/inventaris/peraturan.dart'; // Mengimpor halaman peraturan
-// import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
-// import 'package:absen/Jamkelumas/Clockinwfa.dart'; // Mengimpor halaman pengajuan wfa
-// import 'package:absen/inventaris/inventaris.dart'; // Mengimpor halaman inventaris
-// import 'package:absen/Jamkelumas/ClockInPage.dart'; // Mengimpor halaman clock in
-// import 'package:absen/Jamkelumas/ClokOutPage.dart'; // Mengimpor halaman clock out
-// import 'package:absen/Jamkelumas/ClockoutLupa.dart'; // Mengimpor halaman clock out lupa
-// import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor halaman Reimbursement
-// import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+// import 'package:absen/Jamkelumas/ClockoutLupa.dart';
+// import 'package:absen/Jamkelumas/Overtimeoutlupa.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:absen/utils/notification_helper.dart';
-// import 'package:flutter_html/flutter_html.dart';
-// import 'package:absen/service/api_service.dart'; // Import ApiService
-// import 'package:geolocator/geolocator.dart'; // Mengimpor tempat
-// import 'package:geocoding/geocoding.dart'; // Mengimpor kordinat
 // import 'package:http/http.dart' as http;
-// import 'package:intl/intl.dart'; // untuk format tanggal
+// import 'package:intl/intl.dart';
 // import 'dart:convert';
-// import 'dart:async'; // Untuk timer
 
-// class HomePage extends StatefulWidget {
-//   const HomePage({super.key});
+// class HistoryScreen extends StatefulWidget {
+//   const HistoryScreen({super.key});
+
 //   @override
-//   _HomePageState createState() => _HomePageState();
+//   _HistoryScreenState createState() => _HistoryScreenState();
 // }
 
-// class _HomePageState extends State<HomePage> {
-//   String _currentTime = ""; // Variabel untuk menyimpan jam saat ini
-//   String? Id; // Simpan ID WFH jika ada
-//   String? message; //variabel untuk th messange
-//   String? avatarUrl; // Variable untuk avatar gambar
-//   String? name = ""; // Variabel untuk name pengguna
-//   String? userStatus;
-//   String? currentCity; // Menyimpan nama kota
-//   String? clockInMessage; // Pesan yang ditampilkan berdasarkan waktu clock-in
-//   Timer? _timer; // Timer untuk memperbarui jam setiap detik
-//   Timer? resetNoteTimer; // Timer untuk mereset note, clock in & out, dan card
-//   int? userId;
-//   int currentIndex = 0; // Default to the home page
-//   int _currentIndex = 0;
-//   // ignore: unused_field
-//   int _currentPage = 0; // Variable to keep track of the current page
-//   int hariBulanIni = 0;
-//   int menitBulanIni = 0;
-//   int telatBulanIni = 0;
-//   int cutiBulanIni = 0;
-//   int hariBulanLalu = 0;
-//   int menitBulanLalu = 0;
-//   int telatBulanLalu = 0;
-//   int cutiBulanLalu = 0;
-//   int hadirHariIni = 0;
-//   int hadirMenitIni = 0;
-//   int targetHariIni = 0;
-//   int targetMenitIni = 0;
-//   int hadirHariSebelumnya = 0;
-//   int hadirMenitSebelumnya = 0;
-//   int targetHariSebelumnya = 0;
-//   int targetMenitSebelumnya = 0;
-//   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
-//   bool hasClockedIn = false; // Status clock-in biasa
-//   bool hasClockedOut = false; // Status clock-out biasa
-//   bool hasCuti = false; // Status clock-out biasa
-//   bool isLupaClockOut = false; //status lupa clock out
-//   bool hasClockedInOvertime = false; // Status clock-in lembur
-//   bool hasClockedOutOvertime = false; // Status clock-out lembur
-//   bool hasholiday = false; //status untuk libur holiday
-//   bool isCuti = false; // Status untuk menampilkan card cuti
-//   bool showNote = true; // Status untuk menampilkan note
-//   bool isSuccess = false; // Status untuk menampilkan card berhasil absen
-//   bool isLate = false; // Status untuk card terlambat
-//   bool isholiday = false; //status untuk card libur
-//   bool isovertime = false; //status untuk card lembur
-//   bool isWFHRequested = false; //status mengajukan WFH
-//   bool isWFARequested = false; //status pengajuan WFA
-//   bool jarak = false; // status untuk jarak kantor
-//   bool jarakclockout = false; // status untuk jarak kantor
-//   // ignore: unused_field
-//   bool _isApiLoaded = false; // Status apakah API sudah selesai dimuat
-//   bool hasUnreadNotifications =
-//       false; //Status untuk melihat notifikasi sudah di baca atau belum
-//   List<dynamic> notifications = []; //variabel noifiaksi
-//   List<String> announcements = []; // List untuk menyimpan pesan pengumuman
-//   Map<String, dynamic> targetData = {};
-//   Position? lastKnownPosition; // Simpan lokasi terakhir
-//   final PageController _pageController =
-//       PageController(); // PageController for PageView
+// class _HistoryScreenState extends State<HistoryScreen> {
+//   String day = '';
+//   String menit = '';
+//   String Totalday = '';
+//   String menitTelat = '';
+//   String? lastClockOutDate;
+//   bool isLupaClockOut = false;
+//   List<dynamic> lupaClockOutList = [];
+//   List<dynamic> lupaovertimeOutList = [];
 
 //   @override
 //   void initState() {
 //     super.initState();
-//     _startClock(); // Memulai timer untuk jam
-//     _getCurrentLocation();
-//     Future.delayed(Duration(milliseconds: 500), () {
-//       getData(); // Panggil API setelah sedikit delay
-//       getNotif();
-//       getcekwfa();
-//       getTarget();
-//       getUserInfo();
-//       getPengumuman();
-//     });
-//     _pageController.addListener(() {
-//       setState(() {
-//         _currentPage = _pageController.page!.round();
-//       });
-//     });
+//     getData();
+//     getMenit();
+//     getHistoryData;
+//     getDatalupaOvertime();
 //   }
 
-// // Fungsi untuk memperbarui waktu setiap detik
-//   void _startClock() {
-//     _timer?.cancel(); // Pastikan timer lama dihentikan sebelum buat baru
-//     _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
-
-//     _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
-//       if (!mounted) return; // Cegah update jika widget sudah dihapus
-//       setState(() {
-//         _currentTime = DateFormat('HH:mm:ss').format(DateTime.now());
-//       });
-//     });
-//   }
-
-//   void _showFakeGpsWarning() {
-//     showDialog(
-//       context: context,
-//       builder: (BuildContext context) {
-//         return AlertDialog(
-//           title: Text("Peringatan!"),
-//           content: Text(
-//               "Aplikasi mendeteksi penggunaan Fake GPS. Mohon matikan dan coba lagi."),
-//           actions: [
-//             TextButton(
-//               onPressed: () {
-//                 Navigator.of(context).pop();
-//               },
-//               child: Text("OK"),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   void _showClockInPopupWFA(BuildContext context) {
-//     showDialog(
-//       context: context,
-//       builder: (BuildContext context) {
-//         return AlertDialog(
-//           title: const Text("Konfirmasi Clock In WFA"),
-//           content: const Text(
-//               "Anda berada di luar jangkauan kantor. Apakah ingin mengajukan WFA?"),
-//           actions: [
-//             TextButton(
-//               onPressed: () {
-//                 Navigator.of(context).pop();
-//               },
-//               child: const Text("Batal"),
-//             ),
-//             TextButton(
-//               onPressed: () async {
-//                 Navigator.of(context).pop();
-//                 final result = await Navigator.push(
-//                   context,
-//                   MaterialPageRoute(
-//                     builder: (context) => const ClockinwfaPage(),
-//                   ),
-//                 );
-//                 if (result == true) {
-//                   setState(() {
-//                     hasClockedIn = true;
-//                     hasClockedOut = false;
-//                   });
-//                 }
-//               },
-//               child: const Text("Ajukan WFA"),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   void _showClockoutPopupjarak(BuildContext context) {
-//     showDialog(
-//       context: context,
-//       builder: (BuildContext context) {
-//         return AlertDialog(
-//           title: const Text("Konfirmasi Clock out"),
-//           content: const Text(
-//               "Anda berada di luar jangkauan kantor. Clock out sekarang?"),
-//           actions: [
-//             TextButton(
-//               onPressed: () {
-//                 Navigator.of(context).pop();
-//               },
-//               child: const Text("Batal"),
-//             ),
-//             TextButton(
-//               onPressed: () async {
-//                 Navigator.of(context).pop();
-//                 final result = await Navigator.push(
-//                   context,
-//                   MaterialPageRoute(
-//                     builder: (context) => const ClockOutLupaScreen(),
-//                   ),
-//                 );
-//                 if (result == true) {
-//                   setState(() {
-//                     hasClockedIn = true;
-//                     hasClockedOut = false;
-//                   });
-//                 }
-//               },
-//               child: const Text("Clock Out"),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   // Fungsi untuk membuat menu shortcut dengan warna ikon dan latar belakang yang bisa disesuaikan
-//   Column _buildMenuShortcut({
-//     required String label,
-//     TextStyle? labelStyle,
-//     Widget? targetPage, // Diubah ke nullable
-//     VoidCallback? onTap, // Tambahkan ini untuk handle custom aksi
-//     Color bgColor = const Color.fromARGB(255, 101, 19, 116),
-//     IconData? iconData,
-//     String? imagePath,
-//     Color iconColor = Colors.white,
-//     double? iconSize = 30,
-//   }) {
-//     return Column(
-//       children: [
-//         Container(
-//           width: 100,
-//           padding: const EdgeInsets.all(8.0),
-//           decoration: BoxDecoration(
-//             color: Colors.transparent,
-//             borderRadius: BorderRadius.circular(8.0),
-//           ),
-//           child: Column(
-//             children: [
-//               GestureDetector(
-//                 onTap: onTap ??
-//                     () {
-//                       if (targetPage != null) {
-//                         Navigator.push(
-//                           context,
-//                           MaterialPageRoute(builder: (context) => targetPage),
-//                         );
-//                       }
-//                     },
-//                 child: Container(
-//                   width: 60,
-//                   height: 60,
-//                   decoration: BoxDecoration(
-//                     color: bgColor,
-//                     borderRadius: BorderRadius.circular(50),
-//                   ),
-//                   child: Center(
-//                     child: imagePath != null
-//                         ? ColorFiltered(
-//                             colorFilter: ColorFilter.mode(
-//                               iconColor,
-//                               BlendMode.srcIn,
-//                             ),
-//                             child: Image.asset(
-//                               imagePath,
-//                               width: iconSize,
-//                               height: iconSize,
-//                               fit: BoxFit.contain,
-//                             ),
-//                           )
-//                         : Icon(
-//                             iconData,
-//                             color: iconColor,
-//                             size: iconSize,
-//                           ),
-//                   ),
-//                 ),
-//               ),
-//               const SizedBox(height: 10),
-//               Text(
-//                 label,
-//                 style: const TextStyle(
-//                   color: Colors.pink,
-//                   fontSize: 10,
-//                   fontWeight: FontWeight.bold,
-//                 ),
-//                 textAlign: TextAlign.center,
-//               ),
-//             ],
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-
-// //fungsi untuuk menampilkan pop up comiing soon
-//   // void _showComingSoonDialog(BuildContext context) {
-//   //   showDialog(
-//   //     context: context,
-//   //     builder: (_) => AlertDialog(
-//   //       title: const Text("Coming Soon"),
-//   //       content: const Text("Fitur ini akan tersedia segera."),
-//   //       actions: [
-//   //         TextButton(
-//   //           onPressed: () => Navigator.pop(context),
-//   //           child: const Text("Oke"),
-//   //         ),
-//   //       ],
-//   //     ),
-//   //   );
-//   // }
-
-//   // Fungsi untuk mendapatkan lokasi saat ini
-//   Future<void> _getCurrentLocation() async {
-//     bool serviceEnabled;
-//     LocationPermission permission;
-
-//     // Mengecek apakah layanan lokasi tersedia
-//     serviceEnabled = await Geolocator.isLocationServiceEnabled();
-//     if (!serviceEnabled) {
-//       // Jika layanan lokasi tidak aktif, tampilkan pesan "Location not available"
-//       setState(() {
-//         currentCity = 'Lokasi tidak tersedia';
-//         isLoadingLocation = false;
-//       });
-//       return;
-//     }
-
-//     // Meminta izin lokasi
-//     permission = await Geolocator.checkPermission();
-//     if (permission == LocationPermission.denied) {
-//       permission = await Geolocator.requestPermission();
-//       if (permission == LocationPermission.denied) {
-//         // Jika izin lokasi ditolak, tampilkan pesan "Location not available"
-//         setState(() {
-//           currentCity = 'Lokasi tidak tersedia';
-//           isLoadingLocation = false;
-//         });
-//         return;
-//       }
-//     }
-
-//     if (permission == LocationPermission.deniedForever) {
-//       // Jika izin lokasi ditolak selamanya, tampilkan pesan "Location not available"
-//       setState(() {
-//         currentCity = 'Lokasi tidak tersedia';
-//         isLoadingLocation = false;
-//       });
-//       return;
-//     }
-
-//     // Mendapatkan posisi pengguna jika semua syarat terpenuhi
-//     try {
-//       Position position = await Geolocator.getCurrentPosition(
-//           desiredAccuracy: LocationAccuracy.high);
-
-//       // Menggunakan geocoding untuk mendapatkan nama kota dari koordinat
-//       List<Placemark> placemarks =
-//           await placemarkFromCoordinates(position.latitude, position.longitude);
-
-//       if (placemarks.isNotEmpty) {
-//         setState(() {
-//           currentCity = placemarks.first.locality; // Mengambil nama kota
-//           isLoadingLocation = false; // Lokasi selesai di-load
-//         });
-//       }
-//     } catch (e) {
-//       // Jika ada error lainnya, tampilkan pesan "Location not available"
-//       setState(() {
-//         currentCity = 'Lokasi tidak tersedia';
-//         isLoadingLocation = false;
-//       });
-//     }
-//   }
-
-// // fungsi untuk memanggil bacaan notifikasi
-//   Future<void> getNotif() async {
-//     await Future.delayed(const Duration(seconds: 3)); // Simulasi loading API
-//     setState(() {
-//       _isApiLoaded = true; // API selesai dimuat
-//     });
-//     _startClock(); // Mulai jam setelah API selesai
-//     var data =
-//         await ApiService.sendRequest(endpoint: "other/get-self-notification");
-//     if (data == null || data['data'] == null) return;
-
-//     List<dynamic> loadedNotifications = List.from(data['data']).map((notif) {
-//       return {
-//         'id': notif['id'],
-//         'isRead': notif['isRead'] ?? false,
-//       };
-//     }).toList();
-
-//     for (var notif in loadedNotifications) {
-//       notif['isRead'] =
-//           await _isNotificationRead(notif['id']) || notif['isRead'];
-//     }
-
-//     setState(() {
-//       notifications = loadedNotifications;
-//       hasUnreadNotifications = notifications.any((notif) => !notif['isRead']);
-//     });
-//   }
-
-//   Future<bool> _isNotificationRead(int id) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     return prefs.getBool('notif_read_$id') ?? false;
-//   }
-
-//   Future<void> _markNotificationAsRead(int id) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setBool('notif_read_$id', true);
-//   }
-
-//   Future<void> putRead(int id) async {
-//     await Future.delayed(const Duration(seconds: 3)); // Simulasi loading API
-//     setState(() {
-//       _isApiLoaded = true; // API selesai dimuat
-//     });
-//     _startClock(); // Mulai jam setelah API selesai
-//     var response = await ApiService.sendRequest(
-//         endpoint: "other/read-notification/$id", method: 'PUT');
-//     if (response != null) {
-//       await _markNotificationAsRead(id);
-//       setState(() {
-//         notifications = notifications.map((notif) {
-//           if (notif['id'] == id) notif['isRead'] = true;
-//           return notif;
-//         }).toList();
-//         hasUnreadNotifications = notifications.any((notif) => !notif['isRead']);
-//       });
-//     }
-//   }
-//   //notif read sampai sini
-
-//   Future<void> getPengumuman() async {
-//     await Future.delayed(const Duration(seconds: 3)); // Simulasi loading API
-//     setState(() {
-//       _isApiLoaded = true; // API selesai dimuat
-//     });
-//     _startClock(); // Mulai jam setelah API selesai
-//     var data = await ApiService.sendRequest(endpoint: "other/get-th");
-//     if (data == null) return;
-
-//     setState(() {
-//       announcements = List<String>.from(data['data']
-//           .where((item) => item['status']['id'] == 1)
-//           .map((item) => item['message']));
-//       _startAutoSlide();
-//       _isApiLoaded = true;
-//       _startClock(); // Mulai timer hanya setelah data selesai di-load
-//     });
-//   }
-
-//   void _startAutoSlide() {
-//     _timer?.cancel(); // Hentikan timer jika sebelumnya sudah berjalan
-//     if (announcements.isNotEmpty) {
-//       _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-//         if (_currentIndex < announcements.length - 1) {
-//           _currentIndex++;
-//         } else {
-//           _currentIndex = 0; // Balik ke awal jika sudah di akhir
-//         }
-//         _pageController.animateToPage(
-//           _currentIndex,
-//           duration: const Duration(milliseconds: 500),
-//           curve: Curves.easeInOut,
-//         );
-//       });
-//     }
-//   }
-
-//   @override
-//   void dispose() {
-//     _timer?.cancel(); // Hentikan timer saat widget dihapus
-//     _pageController.dispose();
-//     super.dispose();
-//   }
-
-//   Future<void> getcekwfa() async {
-//     var data =
-//         await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
-//     if (data != null && data['message'] == 'User sudah mengajukan WFA') {
-//       setState(() {
-//         isWFARequested = true;
-//         Id = data['data']['id'].toString();
-//       });
-//     } else {
-//       setState(() {
-//         isWFARequested = false;
-//         Id = null;
-//         _isApiLoaded = true;
-//         _startClock(); // Mulai timer hanya setelah data selesai di-load
-//       });
-//     }
-//   }
-
-//   bool _isFakeLocation(Position position) {
-//     // Cek apakah lokasi di-mock (hanya support di beberapa device Android)
-//     if (position.isMocked) {
-//       print("Deteksi Fake GPS dari isMocked!");
-//       return true;
-//     }
-
-//     // Cek perubahan lokasi yang tiba-tiba (lompat jauh dalam waktu singkat)
-//     if (lastKnownPosition != null) {
-//       double distance = Geolocator.distanceBetween(
-//         lastKnownPosition!.latitude,
-//         lastKnownPosition!.longitude,
-//         position.latitude,
-//         position.longitude,
-//       );
-
-//       double timeDiff = position.timestamp
-//           .difference(lastKnownPosition!.timestamp)
-//           .inSeconds
-//           .toDouble();
-//       double speed =
-//           distance / (timeDiff > 0 ? timeDiff : 1); // Kecepatan dalam m/s
-
-//       print("Jarak berpindah: $distance meter, Kecepatan: $speed m/s");
-
-//       if (speed > 50) {
-//         // Kalau kecepatan lebih dari 50 m/s (180 km/jam), kemungkinan fake
-//         print("Deteksi Fake GPS dari kecepatan tinggi!");
-//         return true;
-//       }
-//     }
-
-//     return false;
-//   }
-
-//   // Fungsi untuk mengambil data dari API
 //   Future<void> getData() async {
 //     try {
-//       // Ambil lokasi user
-//       Position position = await Geolocator.getCurrentPosition(
-//           desiredAccuracy: LocationAccuracy.high);
-//       // Cek apakah lokasi menggunakan Fake GPS
-//       bool isFake = _isFakeLocation(position);
+//       final url =
+//           Uri.parse('https://portal.eksam.cloud/api/v1/attendance/get-lupa');
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
 
-//       if (isFake) {
-//         _showFakeGpsWarning();
-//         return; // Hentikan proses selanjutnya kalau fake GPS terdeteksi
-//       }
+//       var request = http.MultipartRequest('GET', url);
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
 
-//       // Simpan lokasi terakhir buat perbandingan nanti
-//       lastKnownPosition = position;
-//       double userLatitude = position.latitude;
-//       double userLongitude = position.longitude;
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
 
-//       // Ambil profil pengguna
-//       var profileData =
-//           await ApiService.sendRequest(endpoint: 'karyawan/get-profile');
-//       if (profileData != null) {
-//         setState(() {
-//           userStatus = profileData['data']['user_level_id'].toString();
-//           name = profileData['data']['name'];
-//           Id = profileData['data']['id'].toString(); // ID WFH
-
-//           double officeLatitude = double.tryParse(
-//                   profileData['data']['gedung']['latitude'].toString()) ??
-//               0.0;
-//           double officeLongitude = double.tryParse(
-//                   profileData['data']['gedung']['longitude'].toString()) ??
-//               0.0;
-
-//           // Hitung jarak user dengan kantor
-//           double distance = Geolocator.distanceBetween(
-//               userLatitude, userLongitude, officeLatitude, officeLongitude);
-
-//           print("Jarak dari kantor: $distance meter");
-//           if (userStatus == "1" || userStatus == "2") {
-//             if (!isWFARequested) {
-//               // Jika tidak request WFA, cek jarak
-//               print("Jarak dari kantor: $distance meter");
-//               jarak = distance > 500; // Jarak untuk Clock In dihitung
-//             } else {
-//               jarak = false; // Jika user request WFA, jarak tidak berjalan
-//             }
-//             jarakclockout =
-//                 distance > 500; // Jarak untuk Clock Out selalu dihitung
-//           }
-//         });
-//       }
-//       // Cek status clock-in
-//       var clockInData =
-//           await ApiService.sendRequest(endpoint: 'attendance/is-clock-in');
-//       if (clockInData != null) {
-//         setState(() {
-//           hasClockedIn = clockInData['message'] != 'belum clock-in';
-//           if (hasClockedIn) {
-//             showNote = false;
-//             isovertime = false;
-
-//             final hasHoliday =
-//                 clockInData['data']['attendance_status_id'] ?? false;
-//             if (hasHoliday == 5) {
-//               isholiday = true;
-//             } else {
-//               isSuccess = true; // Clock-in berhasil sebelum jam 8 pagi
-//             }
-//           }
-//         });
-//       }
-
-//       // Cek status clock-out
-//       var clockOutData =
-//           await ApiService.sendRequest(endpoint: 'attendance/is-clock-out');
-//       if (clockOutData != null) {
-//         setState(() {
-//           hasClockedOut = clockOutData['message'] == 'sudah clock-out';
-//         });
-//       }
-//       // Cek status clock-out-lupa
-//       var clockOutLupaData = await ApiService.sendRequest(
-//           endpoint: 'attendance/is-lupa'); // Ganti endpoint jika perlu
-
-//       if (clockOutLupaData != null && clockOutLupaData['lupa'] != null) {
-//         setState(() {
-//           isLupaClockOut =
-//               clockOutLupaData['lupa']; // true jika lupa, false jika tidak
-//         });
-//       }
-
-//       // Cek status lembur masuk
-//       if (userStatus == "1" || userStatus == "2") {
-//         var overtimeInData =
-//             await ApiService.sendRequest(endpoint: 'attendance/is-lembur-in');
-//         if (overtimeInData != null) {
-//           setState(() {
-//             hasClockedInOvertime =
-//                 overtimeInData['message'] != 'belum clock-in';
-//             if (hasClockedInOvertime) {
-//               showNote = false;
-//               isholiday = false;
-//               isSuccess = false;
-//               isovertime = true;
-//             }
-//           });
-//         }
-//         // Cek status lembur keluar
-//         var overtimeOutData =
-//             await ApiService.sendRequest(endpoint: 'attendance/is-lembur-out');
-//         if (overtimeOutData != null) {
-//           setState(() {
-//             hasClockedOutOvertime =
-//                 overtimeOutData['message'] != 'belum clock-out';
-//           });
-//         }
-//       }
-
-//        var data =
-//         await ApiService.sendRequest(endpoint: 'request-history/is-wfa-today');
-//     if (data != null && data['message'] == 'User sudah mengajukan WFA') {
 //       setState(() {
-//         isWFARequested = true;
-//         Id = data['data']['id'].toString();
-//       });
-//     } else {
-//       setState(() {
-//         isWFARequested = false;
-//         Id = null;
-//         _isApiLoaded = true;
-//         _startClock(); // Mulai timer hanya setelah data selesai di-load
-//       });
-//     }
-  
-
-//       // Cek status cuti
-//       var cutiData =
-//           await ApiService.sendRequest(endpoint: 'attendance/is-cuti');
-//       if (cutiData != null && cutiData['message'] != null) {
-//         setState(() {
-//           hasCuti = cutiData['message'] == 'sedang cuti';
-//         });
-//       }
-
-//       // Cek status clock-out-lupa
-//       var liburData = await ApiService.sendRequest(endpoint: 'other/cek-libur');
-
-//       bool isWeekend = false;
-//       DateTime now = DateTime.now();
-//       if (now.weekday == DateTime.saturday || now.weekday == DateTime.sunday) {
-//         isWeekend = true;
-//       }
-
-//       if (liburData != null && liburData['libur'] != null) {
-//         setState(() {
-//           hasholiday = liburData['libur'] || isWeekend;
-//         });
-//       } else {
-//         setState(() {
-//           hasholiday = isWeekend;
-//         });
-//       }
-
-//       // Setelah semua API selesai, baru mulai timer
-//       setState(() {
-//         _isApiLoaded = true;
-//         _startClock(); // Mulai timer hanya setelah data selesai di-load
+//         isLupaClockOut = data['lupa']; // Ambil status lupa dari API
+//         lupaClockOutList = data['data'] ?? [];
 //       });
 //     } catch (e) {
-//       print("Error saat cek cuti: $e");
+//       print("Error mengecek status clock-in: $e");
 //     }
 //   }
 
-//   Future<void> getUserInfo({int cutOff = 0}) async {
+//   Future<void> getDatalupaOvertime() async {
+//     final url = Uri.parse(
+//         'https://portal.eksam.cloud/api/v1/attendance/is-self-overtime-lupa');
+//     var request = http.MultipartRequest('GET', url);
+//     SharedPreferences localStorage = await SharedPreferences.getInstance();
+//     request.headers['Authorization'] =
+//         'Bearer ${localStorage.getString('token')}';
+
 //     try {
-//       final url = Uri.parse(
-//           'https://portal.eksam.cloud/api/v1/karyawan/get-user-info?cutOff=$cutOff');
-//       SharedPreferences localStorage = await SharedPreferences.getInstance();
-//       final token = localStorage.getString('token');
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
 
-//       final response = await http.get(
-//         url,
-//         headers: {
-//           'Authorization': 'Bearer $token',
-//           'Accept': 'application/json',
-//         },
-//       );
-
-//       if (response.statusCode == 200) {
-//         var data = jsonDecode(response.body);
-//         final bulanIni = data['data_bulan_ini'];
-//         final bulanLalu = data['data_bulan_lalu'];
-
+//       if (rp.statusCode == 200) {
+//         var data = jsonDecode(rp.body.toString());
+//         print(data);
 //         setState(() {
-//           name = data['data']['nama'];
-//           hariBulanIni = bulanIni['hari'];
-//           menitBulanIni = bulanIni['menit'];
-//           telatBulanIni = bulanIni['menit_telat'];
-//           cutiBulanIni = bulanIni['cuti'];
-
-//           hariBulanLalu = bulanLalu['hari'];
-//           menitBulanLalu = bulanLalu['menit'];
-//           telatBulanLalu = bulanLalu['menit_telat'];
-//           cutiBulanLalu = bulanLalu['cuti'];
-
-//           // Ambil kehadiran aktual dari getUserInfo untuk bulan ini dan sebelumnya
-//           hadirHariIni = bulanIni['hari'];
-//           hadirMenitIni = bulanIni['menit'];
-//           hadirHariSebelumnya = bulanLalu['hari'];
-//           hadirMenitSebelumnya = bulanLalu['menit'];
+//           lupaovertimeOutList = data['data'] ?? [];
 //         });
 //       } else {
-//         print('Error fetching user info: ${response.statusCode}');
-//         print(response.body);
+//         print('Error fetching history data: ${rp.statusCode}');
+//         print(rp.body);
 //       }
 //     } catch (e) {
 //       print('Error occurred: $e');
 //     }
 //   }
 
-//   Widget buildRekapBox(String title, int hari, int menit, int telat, int cuti) {
-//     return Container(
-//       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-//       margin: const EdgeInsets.symmetric(vertical: 8),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(12),
-//         boxShadow: [
-//           BoxShadow(
-//             color: Colors.grey.withOpacity(0.2),
-//             blurRadius: 5,
-//             offset: const Offset(0, 3),
-//           ),
-//         ],
+//   // void _showLupaClockOutModal() {
+//   //   showModalBottomSheet(
+//   //     context: context,
+//   //     shape: RoundedRectangleBorder(
+//   //       borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+//   //     ),
+//   //     isScrollControlled: true,
+//   //     builder: (context) {
+//   //       return FractionallySizedBox(
+//   //         heightFactor: 0.6,
+//   //         child: Container(
+//   //           padding: EdgeInsets.all(16.0),
+//   //           child: Column(
+//   //             crossAxisAlignment: CrossAxisAlignment.start,
+//   //             children: [
+//   //               Text("Lupa Clock Out",
+//   //                   style:
+//   //                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+//   //               SizedBox(height: 10),
+//   //               Expanded(
+//   //                 child: lupaClockOutList.isNotEmpty
+//   //                     ? ListView.builder(
+//   //                         itemCount: lupaClockOutList.length,
+//   //                         itemBuilder: (context, index) {
+//   //                           var item = lupaClockOutList[index];
+//   //                           String formattedDate = DateFormat('yyyy-MM-dd')
+//   //                               .format(DateTime.parse(item['date']));
+//   //                           return Card(
+//   //                             margin: EdgeInsets.symmetric(vertical: 5),
+//   //                             child: ListTile(
+//   //                               title: Text("Belum Clock Out"),
+//   //                               subtitle: Text(formattedDate),
+//   //                               trailing: ElevatedButton(
+//   //                                 onPressed: () {
+//   //                                   Navigator.pushReplacement(
+//   //                                       context,
+//   //                                       MaterialPageRoute(
+//   //                                           builder: (context) =>
+//   //                                               ClockOutLupaScreen()));
+//   //                                 },
+//   //                                 child: Text("Clock Out"),
+//   //                               ),
+//   //                             ),
+//   //                           );
+//   //                         },
+//   //                       )
+//   //                     : Center(child: Text("Tidak ada data lupa clock out")),
+//   //               ),
+//   //             ],
+//   //           ),
+//   //         ),
+//   //       );
+//   //     },
+//   //   );
+//   // }
+//   void _showLupaClockOutModal() async {
+//     await getData(); // ambil data lupa clock out
+//     await getDatalupaOvertime(); // ambil data lupa overtime
+
+//     showModalBottomSheet(
+//       context: context,
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
 //       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Text(title,
-//               style:
-//                   const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-//           const SizedBox(height: 12),
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceAround,
-//             children: [
-//               buildStatItem("$hari", "Masuk", Colors.blue, "Hari"),
-//               buildStatItem("$menit", "Durasi Kerja", Colors.green, "Menit"),
-//               buildStatItem("$telat", "Durasi Terlambat", Colors.red, "Menit"),
-//               buildStatItem("$cuti", "Cuti", Colors.orange, "Hari"),
-//             ],
-//           ),
-//         ],
-//       ),
+//       isScrollControlled: true,
+//       builder: (context) {
+//         String selectedTab = 'lupaClockOut';
+
+//         return StatefulBuilder(
+//           builder: (context, setModalState) {
+//             return FractionallySizedBox(
+//               heightFactor: 0.7,
+//               child: Container(
+//                 padding: EdgeInsets.all(16.0),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text("Pilih Jenis Lupa",
+//                         style: TextStyle(
+//                             fontSize: 18, fontWeight: FontWeight.bold)),
+//                     Row(
+//                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                       children: [
+//                         ChoiceChip(
+//                           label: Text("Lupa Clock Out"),
+//                           selected: selectedTab == 'lupaClockOut',
+//                           onSelected: (val) {
+//                             setModalState(() {
+//                               selectedTab = 'lupaClockOut';
+//                             });
+//                           },
+//                         ),
+//                         ChoiceChip(
+//                           label: Text("Lupa Overtime"),
+//                           selected: selectedTab == 'lupaOvertime',
+//                           onSelected: (val) {
+//                             setModalState(() {
+//                               selectedTab = 'lupaOvertime';
+//                             });
+//                           },
+//                         ),
+//                       ],
+//                     ),
+//                     SizedBox(height: 10),
+//                     Expanded(
+//                       child: selectedTab == 'lupaClockOut'
+//                           ? _buildLupaClockOutList()
+//                           : _buildLupaOvertimeList(),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             );
+//           },
+//         );
+//       },
 //     );
 //   }
 
-//   Widget buildStatItem(String value, String label, Color color, String unit) {
-//     return Column(
-//       children: [
-//         Text(value,
-//             style: TextStyle(
-//                 fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-//         const SizedBox(height: 4),
-//         Text(label,
-//             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-//         Text(unit, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-//       ],
-//     );
+//   Widget _buildLupaClockOutList() {
+//     return lupaClockOutList.isNotEmpty
+//         ? ListView.builder(
+//             itemCount: lupaClockOutList.length,
+//             itemBuilder: (context, index) {
+//               var item = lupaClockOutList[index];
+//               String formattedDate =
+//                   DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+//               return Card(
+//                 margin: EdgeInsets.symmetric(vertical: 5),
+//                 child: ListTile(
+//                   title: Text("Belum Clock Out"),
+//                   subtitle: Text(formattedDate),
+//                   trailing: ElevatedButton(
+//                     onPressed: () {
+//                       Navigator.pushReplacement(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (context) =>
+//                               ClockOutLupaScreen(id: item['id'].toString()),
+//                         ),
+//                       );
+//                     },
+//                     child: Text("Clock Out"),
+//                   ),
+//                 ),
+//               );
+//             },
+//           )
+//         : Center(child: Text("Tidak ada data lupa clock out"));
 //   }
 
-//   Future<void> getTarget() async {
+//   Widget _buildLupaOvertimeList() {
+//     return lupaovertimeOutList.isNotEmpty
+//         ? ListView.builder(
+//             itemCount: lupaovertimeOutList.length,
+//             itemBuilder: (context, index) {
+//               var item = lupaovertimeOutList[index];
+//               String formattedDate =
+//                   DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+//               return Card(
+//                 margin: EdgeInsets.symmetric(vertical: 5),
+//                 child: ListTile(
+//                   title: Text("Belum Isi Lupa Overtime"),
+//                   subtitle: Text(formattedDate),
+//                   trailing: ElevatedButton(
+//                     onPressed: () {
+//                       Navigator.pushReplacement(
+//                         context,
+//                         MaterialPageRoute(
+//                           builder: (context) =>
+//                               Overtimeoutlupa(id: item['id'].toString()),
+//                         ),
+//                       );
+//                     },
+//                     child: Text("Isi Overtime"),
+//                   ),
+//                 ),
+//               );
+//             },
+//           )
+//         : Center(child: Text("Tidak ada data lupa overtime"));
+//   }
+
+// // total telat api
+//   Future<void> getMenit() async {
+//     try {
+//       final url =
+//           Uri.parse('https://portal.eksam.cloud/api/v1/karyawan/get-user-info');
+
+//       var request = http.MultipartRequest('GET', url);
+//       SharedPreferences localStorage = await SharedPreferences.getInstance();
+//       request.headers['Authorization'] =
+//           'Bearer ${localStorage.getString('token')}';
+
+//       var response = await request.send();
+//       var rp = await http.Response.fromStream(response);
+//       var data = jsonDecode(rp.body.toString());
+
+//       if (response.statusCode == 200) {
+//         print("Successfully retrieved data");
+//         print(data);
+//         print(data['data']['menit'].toString());
+//         print(data['data']['hari'].toString());
+
+//         setState(() {
+//           menit = data['data']['menit'].toString();
+//           day = data['data']['hari'].toString();
+//           menitTelat = data['data']['menit_telat'].toString();
+//           Totalday = data['data']['telat'].toString();
+//         });
+
+//         print("test");
+//         print(menit);
+//       } else {
+//         print("Error fetching data");
+//       }
+//     } catch (e) {
+//       print("Error: $e");
+//     }
+//   }
+
+//   // fungsi untuk ngambil api history
+//   void getHistoryData(BuildContext context) async {
 //     try {
 //       final url = Uri.parse(
-//           'https://portal.eksam.cloud/api/v1/attendance/get-target-hour');
+//           'https://portal.eksam.cloud/api/v1/attendance/get-self-all');
+
 //       var request = http.MultipartRequest('POST', url);
 //       SharedPreferences localStorage = await SharedPreferences.getInstance();
 //       request.headers['Authorization'] =
@@ -822,69 +318,472 @@
 //       var rp = await http.Response.fromStream(response);
 //       var data = jsonDecode(rp.body.toString());
 
-//       if (rp.statusCode == 200) {
-//         final bulanIni = data['data']['bulan_ini'];
-//         final bulanSebelumnya = data['data']['bulan_sebelumnya'];
+//       if (response.statusCode == 200) {
+//         print("Successfully retrieved data");
 
-//         setState(() {
-//           targetHariIni = bulanIni['target_hari'];
-//           targetMenitIni = bulanIni['target_menit'];
+//         List historyData = data['data'];
 
-//           targetHariSebelumnya = bulanSebelumnya['target_hari'];
-//           targetMenitSebelumnya = bulanSebelumnya['target_menit'];
-//         });
+//         for (var i = 0; i <= historyData.length - 1; i++) {
+//           if (historyData[i]['endtime'] == null) {
+//             historyData[i]['endtime'] = "-";
+//           }
+//           if (historyData[i]['starttime'] == null) {
+//             historyData[i]['starttime'] = "-";
+//           }
+//           if (historyData[i]['duration'] == null) {
+//             historyData[i]['duration'] = "-";
+//           }
+//           if (historyData[i]['notes'] == null) {
+//             historyData[i]['notes'] = "-";
+//           }
+//         }
+
+//         _onCheckHistoryPressed(context, historyData);
 //       } else {
-//         print('Error fetching target data: ${rp.statusCode}');
-//         print(rp.body);
+//         print("Error fetching data");
 //       }
 //     } catch (e) {
-//       print('Error occurred: $e');
+//       print("Error: $e");
 //     }
 //   }
 
-//   Widget buildProgressBox({
-//     required String title,
-//     required int hariMasuk,
-//     required int totalHari,
-//     required int menitMasuk,
-//     required int totalMenit,
-//   }) {
-//     return Container(
-//       padding: const EdgeInsets.all(16),
-//       margin: const EdgeInsets.symmetric(vertical: 8),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(12),
-//         boxShadow: [
-//           BoxShadow(
-//             color: Colors.grey.withOpacity(0.2),
-//             blurRadius: 6,
-//             offset: const Offset(0, 3),
-//           ),
-//         ],
+//   void _onCheckHistoryPressed(BuildContext context, List historyData) {
+//     // TextEditingController searchController = TextEditingController();
+//     List filteredData = List.from(historyData);
+
+//     void filterDataByDateRange(DateTime startDate, DateTime endDate) {
+//       filteredData = historyData.where((item) {
+//         DateTime itemDate =
+//             DateTime.parse(item['date']); // Pastikan ini tipe DateTime
+//         return itemDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
+//             itemDate.isBefore(endDate.add(const Duration(days: 1)));
+//       }).toList();
+//     }
+//     // void filterData(int days) {
+//     //   DateTime today = DateTime.now();
+//     //   filteredData = historyData.where((item) {
+//     //     DateTime itemDate = DateTime.parse(item['date']);
+//     //     return today.difference(itemDate).inDays <= days;
+//     //   }).toList();
+//     // }
+
+//     // void searchHistory(String query) {
+//     //   filteredData = historyData.where((item) {
+//     //     return item['date'].contains(query) ||
+//     //         item['location']['name']
+//     //             .toLowerCase()
+//     //             .contains(query.toLowerCase()) ||
+//     //         item['status']['name']
+//     //             .toLowerCase()
+//     //             .contains(query.toLowerCase()) ||
+//     //         item['notes'].toLowerCase().contains(query.toLowerCase());
+//     //   }).toList();
+//     // }
+//     showModalBottomSheet(
+//       context: context,
+//       isScrollControlled: true,
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
 //       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
+//       builder: (BuildContext context) {
+//         return StatefulBuilder(
+//           builder: (BuildContext context, StateSetter setState) {
+//             return SizedBox(
+//               height: MediaQuery.of(context).size.height * 0.8,
+//               child: Column(
+//                 children: [
+//                   Padding(
+//                     padding: const EdgeInsets.all(16.0),
+//                     child: Row(
+//                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                       children: [
+//                         const Text(
+//                           'History',
+//                           style: TextStyle(
+//                             fontSize: 20,
+//                             fontWeight: FontWeight.bold,
+//                             color: Color.fromARGB(255, 101, 19, 116),
+//                           ),
+//                         ),
+//                         Container(
+//                           decoration: BoxDecoration(
+//                             color: Colors.white,
+//                             border: Border.all(
+//                                 color: const Color.fromARGB(255, 101, 19, 116)),
+//                             borderRadius: BorderRadius.circular(30.0),
+//                           ),
+//                           child: InkWell(
+//                             onTap: () async {
+//                               final DateTimeRange? picked =
+//                                   await showDateRangePicker(
+//                                 context: context,
+//                                 useRootNavigator:
+//                                     false, // <-- ini yang bikin dia gak fullscreen
+//                                 firstDate: DateTime(2000),
+//                                 lastDate: DateTime.now(),
+//                                 initialDateRange: DateTimeRange(
+//                                   start: DateTime.now()
+//                                       .subtract(const Duration(days: 30)),
+//                                   end: DateTime.now(),
+//                                 ),
+//                                 builder: (BuildContext context, Widget? child) {
+//                                   return Center(
+//                                     // biar dia muncul di tengah dengan ukuran kecil
+//                                     child: ConstrainedBox(
+//                                       constraints:
+//                                           const BoxConstraints(maxWidth: 400),
+//                                       child: child,
+//                                     ),
+//                                   );
+//                                 },
+//                               );
+//                               if (picked != null) {
+//                                 setState(() {
+//                                   filterDataByDateRange(
+//                                       picked.start, picked.end);
+//                                 });
+//                               }
+//                             },
+//                             child: const Padding(
+//                               padding: EdgeInsets.symmetric(
+//                                   horizontal: 16.0, vertical: 12.0),
+//                               child: Row(
+//                                 children: [
+//                                   Text(
+//                                     'Filter',
+//                                     style: TextStyle(
+//                                       color: Color.fromARGB(255, 101, 19, 116),
+//                                       fontWeight: FontWeight.bold,
+//                                     ),
+//                                   ),
+//                                   Icon(
+//                                     Icons.arrow_drop_down,
+//                                     color: Colors.orange,
+//                                   ),
+//                                 ],
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   // showModalBottomSheet(
+//                   //   context: context,
+//                   //   isScrollControlled: true,
+//                   //   shape: const RoundedRectangleBorder(
+//                   //     borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+//                   //   ),
+//                   //   builder: (BuildContext context) {
+//                   //     return StatefulBuilder(
+//                   //       builder: (BuildContext context, StateSetter setState) {
+//                   //         return SizedBox(
+//                   //           height: MediaQuery.of(context).size.height * 0.8,
+//                   //           child: Column(
+//                   //             children: [
+//                   //               Padding(
+//                   //                 padding: const EdgeInsets.all(16.0),
+//                   //                 child: Column(
+//                   //                   children: [
+//                   //                     Row(
+//                   //                       children: [
+//                   //                         Expanded(
+//                   //                           child: Container(
+//                   //                             decoration: BoxDecoration(
+//                   //                               color: Colors.white,
+//                   //                               border: Border.all(
+//                   //                                   color: const Color.fromARGB(
+//                   //                                       255, 101, 19, 116)),
+//                   //                               borderRadius: BorderRadius.circular(30.0),
+//                   //                             ),
+//                   //                             child: Row(
+//                   //                               children: [
+//                   //                                 Expanded(
+//                   //                                   child: Padding(
+//                   //                                     padding:
+//                   //                                         const EdgeInsets.only(left: 16.0),
+//                   //                                     child: TextField(
+//                   //                                       controller: searchController,
+//                   //                                       decoration: const InputDecoration(
+//                   //                                         hintText: 'Search',
+//                   //                                         border: InputBorder.none,
+//                   //                                       ),
+//                   //                                       onChanged: (query) {
+//                   //                                         setState(() {
+//                   //                                           searchHistory(query);
+//                   //                                         });
+//                   //                                       },
+//                   //                                     ),
+//                   //                                   ),
+//                   //                                 ),
+//                   //                                 IconButton(
+//                   //                                   icon: const Icon(Icons.search,
+//                   //                                       color: Colors.orange),
+//                   //                                   onPressed: () {
+//                   //                                     setState(() {
+//                   //                                       searchHistory(searchController.text);
+//                   //                                     });
+//                   //                                   },
+//                   //                                 ),
+//                   //                               ],
+//                   //                             ),
+//                   //                           ),
+//                   //                         ),
+//                   //                         const SizedBox(width: 10),
+//                   //                         Container(
+//                   //                           decoration: BoxDecoration(
+//                   //                             color: Colors.white,
+//                   //                             border: Border.all(
+//                   //                                 color: const Color.fromARGB(
+//                   //                                     255, 101, 19, 116)),
+//                   //                             borderRadius: BorderRadius.circular(30.0),
+//                   //                           ),
+//                   //                           child: PopupMenuButton<int>(
+//                   //                             onSelected: (value) {
+//                   //                               setState(() {
+//                   //                                 filterData(value);
+//                   //                               });
+//                   //                             },
+//                   //                             itemBuilder: (BuildContext context) =>
+//                   //                                 <PopupMenuEntry<int>>[
+//                   //                               const PopupMenuItem<int>(
+//                   //                                 value: 10,
+//                   //                                 child: Text(
+//                   //                                   'in the last 10 days',
+//                   //                                   style: TextStyle(
+//                   //                                     color: Colors.black,
+//                   //                                     fontWeight: FontWeight.bold,
+//                   //                                   ),
+//                   //                                 ),
+//                   //                               ),
+//                   //                               const PopupMenuItem<int>(
+//                   //                                 value: 25,
+//                   //                                 child: Text(
+//                   //                                   'in the last 25 days',
+//                   //                                   style: TextStyle(
+//                   //                                     color: Colors.black,
+//                   //                                     fontWeight: FontWeight.bold,
+//                   //                                   ),
+//                   //                                 ),
+//                   //                               ),
+//                   //                               const PopupMenuItem<int>(
+//                   //                                 value: 50,
+//                   //                                 child: Text(
+//                   //                                   'in the last 50 days',
+//                   //                                   style: TextStyle(
+//                   //                                     color: Colors.black,
+//                   //                                     fontWeight: FontWeight.bold,
+//                   //                                   ),
+//                   //                                 ),
+//                   //                               ),
+//                   //                               const PopupMenuItem<int>(
+//                   //                                 value: 100,
+//                   //                                 child: Text(
+//                   //                                   'in the last 100 days',
+//                   //                                   style: TextStyle(
+//                   //                                     color: Colors.black,
+//                   //                                     fontWeight: FontWeight.bold,
+//                   //                                   ),
+//                   //                                 ),
+//                   //                               ),
+//                   //                             ],
+//                   //                             child: const Padding(
+//                   //                               padding: EdgeInsets.symmetric(
+//                   //                                   horizontal: 16.0, vertical: 12.0),
+//                   //                               child: Row(
+//                   //                                 children: [
+//                   //                                   Text(
+//                   //                                     'Filter',
+//                   //                                     style: TextStyle(
+//                   //                                       color:
+//                   //                                           Color.fromARGB(255, 101, 19, 116),
+//                   //                                       fontWeight: FontWeight.bold,
+//                   //                                     ),
+//                   //                                   ),
+//                   //                                   Icon(
+//                   //                                     Icons.arrow_drop_down,
+//                   //                                     color: Colors.orange,
+//                   //                                   ),
+//                   //                                 ],
+//                   //                               ),
+//                   //                             ),
+//                   //                           ),
+//                   //                         ),
+//                   //                       ],
+//                   //                     ),
+//                   //                   ],
+//                   //                 ),
+//                   //               ),
+//                   Expanded(
+//                     child: ListView.builder(
+//                       itemCount: filteredData.length,
+//                       itemBuilder: (context, index) {
+//                         var historyItem = filteredData[index];
+//                         return Card(
+//                           shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(8.0),
+//                             side: const BorderSide(color: Colors.orange),
+//                           ),
+//                           child: ListTile(
+//                             title: Text(
+//                               historyItem['date'],
+//                               style:
+//                                   const TextStyle(fontWeight: FontWeight.bold),
+//                             ),
+//                             subtitle: Text(
+//                               '${historyItem['starttime']} - ${historyItem['endtime']}',
+//                             ),
+//                             trailing: ElevatedButton(
+//                               onPressed: () {
+//                                 showModalBottomSheet(
+//                                   context: context,
+//                                   shape: const RoundedRectangleBorder(
+//                                     borderRadius: BorderRadius.vertical(
+//                                         top: Radius.circular(16.0)),
+//                                   ),
+//                                   isScrollControlled:
+//                                       true, // Biar modal bisa diperbesar sesuai isi
+//                                   builder: (BuildContext context) {
+//                                     return DraggableScrollableSheet(
+//                                       expand:
+//                                           false, // Biar bisa di-scroll tanpa full screen
+//                                       builder: (context, scrollController) {
+//                                         return Container(
+//                                           padding: const EdgeInsets.all(16.0),
+//                                           width: double.infinity, // Full lebar
+//                                           decoration: const BoxDecoration(
+//                                             borderRadius: BorderRadius.vertical(
+//                                                 top: Radius.circular(16.0)),
+//                                             color: Colors.white,
+//                                           ),
+//                                           child: SingleChildScrollView(
+//                                             controller:
+//                                                 scrollController, // Scrollable content
+//                                             child: Column(
+//                                               crossAxisAlignment:
+//                                                   CrossAxisAlignment.start,
+//                                               children: [
+//                                                 Row(
+//                                                   children: [
+//                                                     const Text(
+//                                                       "Date",
+//                                                       style: TextStyle(
+//                                                           fontSize: 16,
+//                                                           color: Colors.black),
+//                                                     ),
+//                                                     const SizedBox(width: 10),
+//                                                     Text(
+//                                                       historyItem['date'],
+//                                                       style: const TextStyle(
+//                                                         fontSize: 24,
+//                                                         fontWeight:
+//                                                             FontWeight.bold,
+//                                                         color: Colors.orange,
+//                                                       ),
+//                                                     ),
+//                                                   ],
+//                                                 ),
+//                                                 const SizedBox(height: 15),
+//                                                 _buildRow(
+//                                                     "Clock In",
+//                                                     historyItem['starttime'] +
+//                                                         " AM"),
+//                                                 _buildRow(
+//                                                     "Clock Out",
+//                                                     historyItem['endtime'] +
+//                                                         " PM"),
+//                                                 _buildRow("Work Duration",
+//                                                     "${historyItem['duration']} Menit"),
+//                                                 _buildRow(
+//                                                     "Location",
+//                                                     historyItem['location']
+//                                                         ['name']),
+//                                                 _buildRow(
+//                                                     "Status",
+//                                                     historyItem['status']
+//                                                         ['name']),
+//                                                 _buildRow(
+//                                                     "Type",
+//                                                     historyItem['type']
+//                                                         ['name']),
+//                                                 _buildRow("Geolocation",
+//                                                     historyItem['geolocation']),
+//                                                 const SizedBox(height: 10),
+//                                                 const Text(
+//                                                   "Note",
+//                                                   style: TextStyle(
+//                                                       color: Colors.grey,
+//                                                       fontSize: 14),
+//                                                 ),
+//                                                 const SizedBox(height: 5),
+//                                                 Text(
+//                                                   historyItem['notes'],
+//                                                   style: const TextStyle(
+//                                                       fontSize: 16,
+//                                                       color: Colors.black),
+//                                                 ),
+//                                               ],
+//                                             ),
+//                                           ),
+//                                         );
+//                                       },
+//                                     );
+//                                   },
+//                                 );
+//                               },
+//                               style: ElevatedButton.styleFrom(
+//                                 backgroundColor: Colors.white,
+//                                 foregroundColor: Colors.orange,
+//                                 side: const BorderSide(
+//                                     color: Color.fromARGB(255, 101, 19, 116)),
+//                                 shape: RoundedRectangleBorder(
+//                                   borderRadius: BorderRadius.circular(8.0),
+//                                 ),
+//                               ),
+//                               child: const Text(
+//                                 'Open',
+//                                 style: TextStyle(
+//                                   color: Colors.pink,
+//                                   fontWeight: FontWeight.bold,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         );
+//                       },
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+
+//   Widget _buildRow(String title, String value) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 4.0),
+//       child: Row(
+//         mainAxisAlignment:
+//             MainAxisAlignment.spaceBetween, // Biar rata kiri-kanan
 //         children: [
-//           Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-//           const SizedBox(height: 12),
-//           Text('Masuk'),
-//           LinearProgressIndicator(
-//             value: totalHari == 0 ? 0 : hariMasuk / totalHari,
-//             color: Colors.lightBlue,
-//             backgroundColor: Colors.grey[300],
-//             minHeight: 10,
+//           SizedBox(
+//             width: 120, // Atur lebar tetap untuk label
+//             child: Text(
+//               title,
+//               style: const TextStyle(color: Colors.grey, fontSize: 14),
+//             ),
 //           ),
-//           Center(child: Text('$hariMasuk/$totalHari Hari')),
-//           const SizedBox(height: 10),
-//           Text('Durasi Kerja'),
-//           LinearProgressIndicator(
-//             value: totalMenit == 0 ? 0 : menitMasuk / totalMenit,
-//             color: Colors.green,
-//             backgroundColor: Colors.grey[300],
-//             minHeight: 10,
+//           const SizedBox(width: 10), // Jarak antara label dan isi
+//           Expanded(
+//             child: Text(
+//               value,
+//               textAlign: TextAlign.right, // Rata kanan untuk isi
+//               style: const TextStyle(fontSize: 16, color: Colors.black),
+//             ),
 //           ),
-//           Center(child: Text('$menitMasuk/$totalMenit Menit')),
 //         ],
 //       ),
 //     );
@@ -893,973 +792,164 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text(
+//           'Attendance History',
+//           style: TextStyle(color: Colors.black),
+//         ),
+//         leading: IconButton(
+//           icon: const Icon(Icons.arrow_back, color: Colors.black),
+//           onPressed: () => Navigator.of(context).pop(),
+//         ),
+//         backgroundColor: Colors.white,
+//         elevation: 0,
+//       ),
+//       backgroundColor: Colors.white,
 //       body: SingleChildScrollView(
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // Bagian Header
-//             Container(
-//               decoration: const BoxDecoration(
-//                 gradient: LinearGradient(
-//                   colors: [
-//                     Colors.orange,
-//                     Colors.pink,
-//                     Color.fromARGB(255, 101, 19, 116)
-//                   ],
-//                   begin: Alignment.topLeft,
-//                   end: Alignment.bottomCenter,
-//                 ),
+//         child: Padding(
+//           padding: const EdgeInsets.all(16.0),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               _buildCard(
+//                 title: "Total Masuk Kerja Anda",
+//                 value: '$day Days',
+//                 color: Colors.orange,
 //               ),
-//               padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       GestureDetector(
-//                         onTap: () async {
-//                           // Navigasi ke halaman profil dan tunggu hasilnya
-//                           final updatedAvatarUrl = await Navigator.push(
-//                             context,
-//                             MaterialPageRoute(
-//                               builder: (context) => const ProfileScreen(),
-//                             ),
-//                           );
-
-//                           // Perbarui avatar jika ada perubahan
-//                           if (updatedAvatarUrl != null) {
-//                             setState(() {
-//                               avatarUrl = updatedAvatarUrl;
-//                             });
-//                           }
-//                         },
-//                         child: CircleAvatar(
-//                           radius: 25,
-//                           backgroundColor: Colors.grey[200],
-//                           backgroundImage: avatarUrl != null
-//                               ? const NetworkImage('avatarUrl')
-//                               : const AssetImage('assets/image/logo_circle.png')
-//                                   as ImageProvider,
-//                         ),
-//                       ),
-//                       // Menampilkan waktu yang di-update setiap detik
-//                       Text(
-//                         _currentTime,
-//                         style: const TextStyle(
-//                           fontSize: 16,
-//                           color:
-//                               Color.fromARGB(255, 255, 255, 255), // Warna teks
-//                         ),
-//                       ),
-//                       // notifikasi icon
-//                       IconButton(
-//                         icon: Stack(
-//                           children: [
-//                             const Icon(Icons.notifications,
-//                                 color: Colors.white),
-//                             FutureBuilder<bool>(
-//                               future:
-//                                   NotificationHelper.hasUnreadNotifications(),
-//                               builder: (context, snapshot) {
-//                                 if (snapshot.hasData && snapshot.data == true) {
-//                                   return const Positioned(
-//                                     right: 0,
-//                                     top: 0,
-//                                     child: Icon(
-//                                       Icons.circle,
-//                                       color: Colors.red,
-//                                       size: 10,
-//                                     ),
-//                                   );
-//                                 }
-//                                 return const SizedBox.shrink();
-//                               },
-//                             ),
-//                           ],
-//                         ),
-//                         onPressed: () {
-//                           Navigator.push(
-//                             context,
-//                             MaterialPageRoute(
-//                                 builder: (context) => const NotificationPage()),
-//                           );
-//                         },
-//                       ),
-//                     ],
-//                   ),
-//                   const SizedBox(height: 20),
-//                   // menamplakan nama pengguna
-//                   Text(
-//                     'Selamat Datang, \n$name',
-//                     style: const TextStyle(
-//                       color: Colors.white,
-//                       fontSize: 26,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                   const Text(
-//                     'Jangan Lupa Absen Hari ini✨',
-//                     style: TextStyle(
-//                       color: Colors.white70,
-//                       fontSize: 14,
-//                     ),
-//                   ),
-//                   const SizedBox(height: 30),
-//                   Container(
-//                     padding: const EdgeInsets.all(16),
-//                     decoration: BoxDecoration(
-//                       color: Colors.white,
-//                       borderRadius: BorderRadius.circular(16),
-//                     ),
-//                     child: Column(children: [
-//                       // untuk melihat kota / lokasi terkini
-//                       Text(
-//                         isLoadingLocation
-//                             ? 'Memuat lokasi Anda...'
-//                             : 'Lokasi Anda Sekarang Ada Di $currentCity',
-//                         style: const TextStyle(
-//                             color: Colors.black54, fontSize: 12),
-//                       ),
-//                       const SizedBox(height: 8),
-//                       //menampilkan hari dan tanggal
-//                       Text(
-//                         DateFormat('EEEE, dd MMMM yyyy').format(DateTime.now()),
-//                         style: const TextStyle(
-//                           fontSize: 18,
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       ),
-//                       const SizedBox(height: 18),
-//                       if (userStatus == "3") ...[
-//                         Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           children: [
-//                             ElevatedButton.icon(
-//                               onPressed: hasClockedIn
-//                                   ? null
-//                                   : () async {
-//                                       final result = await Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               const ClockInPage(),
-//                                         ),
-//                                       );
-//                                       if (result == true) {
-//                                         setState(() {
-//                                           hasClockedIn = true;
-//                                           hasClockedOut = false;
-//                                         });
-//                                       }
-//                                     },
-//                               icon: const Icon(Icons.login),
-//                               label: const Text('Clock In'),
-//                               style: ElevatedButton.styleFrom(
-//                                 backgroundColor:
-//                                     hasClockedIn ? Colors.grey : Colors.white,
-//                               ),
-//                             ),
-//                             ElevatedButton.icon(
-//                               onPressed: (hasClockedIn &&
-//                                       !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
-//                                   ? () async {
-//                                       final result = await Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               const ClockOutScreen(),
-//                                         ),
-//                                       );
-//                                       if (result == true) {
-//                                         setState(() {
-//                                           hasClockedOut = true;
-//                                           hasClockedIn = false;
-//                                         });
-
-//                                         // Reset tombol setelah 1 detik
-//                                         Future.delayed(
-//                                             const Duration(seconds: 1), () {
-//                                           if (mounted) {
-//                                             setState(() {
-//                                               hasClockedIn = false;
-//                                               hasClockedOut = false;
-//                                             });
-//                                           }
-//                                         });
-//                                       }
-//                                     }
-//                                   : null,
-//                               icon: const Icon(Icons.logout),
-//                               label: const Text('Clock Out'),
-//                               style: ElevatedButton.styleFrom(
-//                                 backgroundColor: (hasClockedIn &&
-//                                         !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
-//                                     ? Colors.white
-//                                     : Colors.grey,
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       ] else if
-//                           // hasClockedOut &&
-//                           (userStatus == "1" || userStatus == "2") ...[
-//                         // Jika belum request WFH, cek apakah sudah clock out
-//                         Column(
-//                           children: [
-//                             if (hasCuti || hasholiday) ...[
-//                               // Tampilkan hanya tombol Overtime jika sedang cuti atau hari libur
-//                               Row(
-//                                 mainAxisAlignment:
-//                                     MainAxisAlignment.spaceBetween,
-//                                 children: [
-//                                   ElevatedButton.icon(
-//                                     onPressed: hasClockedInOvertime
-//                                         ? null
-//                                         : () async {
-//                                             final result = await Navigator.push(
-//                                               context,
-//                                               MaterialPageRoute(
-//                                                 builder: (context) =>
-//                                                     const ClockInPage(),
-//                                               ),
-//                                             );
-//                                             if (result == true) {
-//                                               setState(() {
-//                                                 hasClockedInOvertime = true;
-//                                                 hasClockedOutOvertime = false;
-//                                               });
-//                                             }
-//                                           },
-//                                     icon: const Icon(Icons.timer),
-//                                     label: const Text('Overtime In',
-//                                         style: TextStyle(fontSize: 12)),
-//                                     style: ElevatedButton.styleFrom(
-//                                       backgroundColor: hasClockedInOvertime
-//                                           ? Colors.grey
-//                                           : Colors.white,
-//                                     ),
-//                                   ),
-//                                   ElevatedButton.icon(
-//                                     onPressed: (hasClockedInOvertime &&
-//                                             !hasClockedOutOvertime)
-//                                         ? () async {
-//                                             final result = await Navigator.push(
-//                                               context,
-//                                               MaterialPageRoute(
-//                                                 builder: (context) =>
-//                                                     const ClockOutScreen(),
-//                                               ),
-//                                             );
-//                                             if (result == true) {
-//                                               setState(() {
-//                                                 hasClockedOutOvertime = false;
-//                                                 hasClockedInOvertime = false;
-//                                               });
-//                                             }
-//                                           }
-//                                         : null,
-//                                     icon: const Icon(Icons.timer_off),
-//                                     label: const Text('Overtime Out',
-//                                         style: TextStyle(fontSize: 12)),
-//                                     style: ElevatedButton.styleFrom(
-//                                       backgroundColor: (hasClockedInOvertime &&
-//                                               !hasClockedOutOvertime)
-//                                           ? Colors.white
-//                                           : Colors.grey,
-//                                     ),
-//                                   ),
-//                                 ],
-//                               ),
-//                             ] else
-//                             // Tampilkan Clock In & Out jika belum Clock Out
-//                             if (!hasClockedOut) ...[
-//                               Row(
-//                                 mainAxisAlignment:
-//                                     MainAxisAlignment.spaceBetween,
-//                                 children: [
-//                                   ElevatedButton.icon(
-//                                     onPressed:
-//                                         hasClockedIn // Disable jika sudah Clock In atau sedang cuti
-//                                             ? null
-//                                             : () async {
-//                                                 if (jarak) {
-//                                                   _showClockInPopupWFA(
-//                                                       context); // Tampilkan pop-up WFA jika request WFA
-//                                                 } else {
-//                                                   // Jika tidak WFH/WFA, langsung Clock In tanpa pop-up
-//                                                   final result =
-//                                                       await Navigator.push(
-//                                                     context,
-//                                                     MaterialPageRoute(
-//                                                       builder: (context) =>
-//                                                           const ClockInPage(),
-//                                                     ),
-//                                                   );
-//                                                   if (result == true) {
-//                                                     setState(() {
-//                                                       hasClockedIn = true;
-//                                                       hasClockedOut = false;
-//                                                     });
-//                                                   }
-//                                                 }
-//                                               },
-//                                     icon: const Icon(Icons.login),
-//                                     label: const Text('Clock In'),
-//                                     style: ElevatedButton.styleFrom(
-//                                       backgroundColor: hasClockedIn
-//                                           ? Colors.grey
-//                                           : Colors.white,
-//                                     ),
-//                                   ),
-//                                   ElevatedButton.icon(
-//                                     onPressed: (hasClockedIn &&
-//                                             !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
-//                                         ? () async {
-//                                             if (jarak) {
-//                                               _showClockoutPopupjarak(context);
-//                                             } else {
-//                                               final result =
-//                                                   await Navigator.push(
-//                                                 context,
-//                                                 MaterialPageRoute(
-//                                                   builder: (context) =>
-//                                                       const ClockOutScreen(),
-//                                                 ),
-//                                               );
-//                                               if (result == true) {
-//                                                 setState(() {
-//                                                   hasClockedOut = true;
-//                                                   hasClockedIn = false;
-//                                                 });
-//                                                 // Reset tombol setelah 1 detik
-//                                                 Future.delayed(
-//                                                     const Duration(seconds: 1),
-//                                                     () {
-//                                                   if (mounted) {
-//                                                     setState(() {
-//                                                       hasClockedIn = false;
-//                                                       hasClockedOut = false;
-//                                                     });
-//                                                   }
-//                                                 });
-//                                               }
-//                                             }
-//                                           }
-//                                         : null,
-//                                     icon: const Icon(Icons.logout),
-//                                     label: const Text('Clock Out'),
-//                                     style: ElevatedButton.styleFrom(
-//                                       backgroundColor: (hasClockedIn &&
-//                                               !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
-//                                           ? Colors.white
-//                                           : Colors.grey,
-//                                     ),
-//                                   ),
-//                                 ],
-//                               ),
-//                             ] else
-//                               // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-//                               ...[
-//                               Row(
-//                                 mainAxisAlignment:
-//                                     MainAxisAlignment.spaceBetween,
-//                                 children: [
-//                                   ElevatedButton.icon(
-//                                     onPressed: hasClockedInOvertime
-//                                         ? null
-//                                         : () async {
-//                                             final result = await Navigator.push(
-//                                               context,
-//                                               MaterialPageRoute(
-//                                                 builder: (context) =>
-//                                                     const ClockInPage(),
-//                                               ),
-//                                             );
-//                                             if (result == true) {
-//                                               setState(() {
-//                                                 hasClockedInOvertime = true;
-//                                                 hasClockedOutOvertime = false;
-//                                               });
-//                                             }
-//                                           },
-//                                     icon: const Icon(Icons.timer),
-//                                     label: const Text(
-//                                       'Overtime In',
-//                                       style: const TextStyle(fontSize: 12),
-//                                     ),
-//                                     style: ElevatedButton.styleFrom(
-//                                       backgroundColor: hasClockedInOvertime
-//                                           ? Colors.grey
-//                                           : Colors.white,
-//                                     ),
-//                                   ),
-//                                   ElevatedButton.icon(
-//                                     onPressed: (hasClockedInOvertime &&
-//                                             !hasClockedOutOvertime)
-//                                         ? () async {
-//                                             final result = await Navigator.push(
-//                                               context,
-//                                               MaterialPageRoute(
-//                                                 builder: (context) =>
-//                                                     const ClockOutScreen(),
-//                                               ),
-//                                             );
-//                                             if (result == true) {
-//                                               setState(() {
-//                                                 hasClockedOutOvertime = false;
-//                                                 hasClockedInOvertime = false;
-//                                               });
-//                                             }
-//                                           }
-//                                         : null,
-//                                     icon: const Icon(Icons.timer_off),
-//                                     label: const Text(
-//                                       'Overtime Out',
-//                                       style: const TextStyle(fontSize: 12),
-//                                     ),
-//                                     style: ElevatedButton.styleFrom(
-//                                       backgroundColor: (hasClockedInOvertime &&
-//                                               !hasClockedOutOvertime)
-//                                           ? Colors.white
-//                                           : Colors.grey,
-//                                     ),
-//                                   ),
-//                                 ],
-//                               ),
-//                             ]
-//                           ],
-//                         )
-//                       ]
-//                     ]),
-//                   ),
-//                 ],
+//               _buildSubtitleCard(
+//                 subtitle: "Total Jam Kerja Anda",
+//                 subtitleValue: '$menit Minutes',
 //               ),
-//             ),
-//             const SizedBox(height: 20),
-//             // Bagian Middle
-//             Padding(
-//               padding:
-//                   const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.center,
+//               const SizedBox(height: 20),
+//               _buildCard(
+//                 title: "Anda Terlambat Kerja Secara Total",
+//                 value: "$Totalday Days",
+//                 color: Colors.orange,
+//               ),
+//               _buildSubtitleCard(
+//                 subtitle: "Total Jam Anda Terlambat Masuk Kerja",
+//                 subtitleValue: "$menitTelat Minutes",
+//               ),
+//               const SizedBox(height: 150),
+//               Row(
+//                 mainAxisAlignment: MainAxisAlignment.center,
 //                 children: [
-//                   Column(
-//                     children: [
-//                       Column(
-//                         children: [
-//                           // Bagian atas (Time Off, Reimbursement, History)
-//                           Wrap(
-//                             alignment:
-//                                 WrapAlignment.start, // Meratakan item di tengah
-//                             spacing: 15.0, // Jarak horizontal antar item
-//                             runSpacing: 15.0, // Jarak vertikal antar baris
-//                             children: [
-//                               _buildMenuShortcut(
-//                                 label: 'Time Off',
-//                                 targetPage: const TimeOffScreen(),
-//                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
-//                                 imagePath: 'assets/icon/timeoff.png',
-//                                 iconColor: Colors.white,
-//                                 iconSize: 32,
-//                                 labelStyle: const TextStyle(
-//                                   color: Colors.pink,
-//                                   fontSize: 14,
-//                                 ),
-//                               ),
-//                               _buildMenuShortcut(
-//                                 label: 'Reimbursement',
-//                                 targetPage: const ReimbursementPage(),
-//                                 bgColor:
-//                                     const Color.fromARGB(255, 101, 19, 116),
-//                                 iconData: Icons.receipt,
-//                                 iconColor: Colors.white,
-//                                 iconSize: 30,
-//                                 labelStyle: const TextStyle(
-//                                   color: Colors.pink,
-//                                   fontSize: 14,
-//                                 ),
-//                               ),
-//                               _buildMenuShortcut(
-//                                 label: 'History',
-//                                 targetPage: const HistoryScreen(),
-//                                 bgColor:
-//                                     const Color.fromARGB(255, 101, 19, 116),
-//                                 imagePath: 'assets/icon/history.png',
-//                                 iconColor: Colors.white,
-//                                 iconSize: 26,
-//                                 labelStyle: const TextStyle(
-//                                   color: Colors.pink,
-//                                   fontSize: 14,
-//                                 ),
-//                               ),
-//                               _buildMenuShortcut(
-//                                 label: 'Request WFA',
-//                                 targetPage: ClockinwfaPage(),
-//                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
-//                                 imagePath: 'assets/icon/WFA.png',
-//                                 iconColor: Colors.white,
-//                                 iconSize: 32,
-//                                 labelStyle: const TextStyle(
-//                                   color: Colors.pink,
-//                                   fontSize: 14,
-//                                 ),
-//                               ),
-//                               _buildMenuShortcut(
-//                                 label: 'Inventaris',
-//                                 // onTap: () => _showComingSoonDialog(
-//                                 //     context), // ubah ke onTap
-//                                 targetPage: InventoryScreen(),
-//                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
-//                                 imagePath: 'assets/icon/gudang.png',
-//                                 iconColor: Colors.white,
-//                                 iconSize: 32,
-//                                 labelStyle: const TextStyle(
-//                                   color: Colors.pink,
-//                                   fontSize: 14,
-//                                 ),
-//                               ),
-//                               _buildMenuShortcut(
-//                                 label: 'Peraturan \n kantor',
-//                                 // onTap: () => _showComingSoonDialog(
-//                                 //     context), // ubah ke onTap
-//                                 targetPage: PeraturanScreen(),
-//                                 bgColor: const Color.fromRGBO(101, 19, 116, 1),
-//                                 imagePath: 'assets/icon/policy.png',
-//                                 iconColor: Colors.white,
-//                                 iconSize: 32,
-//                                 labelStyle: const TextStyle(
-//                                   color: Colors.pink,
-//                                   fontSize: 14,
-//                                 ),
-//                               ),
-//                             ],
-//                           ),
-//                         ],
-//                       ),
-//                     ],
-//                   ),
-//                   const SizedBox(height: 20),
-//                   //card untuk absen biasa
-//                   if (isSuccess)
-//                     Card(
-//                       color: Colors.orange,
-//                       elevation: 5,
-//                       margin: const EdgeInsets.symmetric(
-//                           horizontal: 1, vertical: 12),
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(16),
-//                       ),
-//                       child: const Padding(
-//                         padding: EdgeInsets.symmetric(
-//                             vertical: 30.0, horizontal: 16.0),
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           crossAxisAlignment: CrossAxisAlignment.center,
-//                           children: [
-//                             // Teks Kiri
-//                             Flexible(
-//                               child: Text(
-//                                 '✨Absen Anda \nTelah Berhasil ✨',
-//                                 style: TextStyle(
-//                                   color: Colors.white,
-//                                   fontWeight: FontWeight.bold,
-//                                   fontSize: 16,
-//                                 ),
-//                               ),
-//                             ),
-//                             // Teks Kanan
-//                             Flexible(
-//                               child: Text(
-//                                 'Kerja bagus dan \ntetap semangat',
-//                                 textAlign: TextAlign.right,
-//                                 style: TextStyle(
-//                                     color: Colors.white70, fontSize: 10),
-//                               ),
-//                             ),
-//                           ],
+//                   Expanded(
+//                     child: ElevatedButton(
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor:
+//                             const Color.fromARGB(255, 101, 19, 116),
+//                         padding: const EdgeInsets.symmetric(vertical: 18.0),
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(8.0),
 //                         ),
 //                       ),
-//                     ),
-//                   //card untuk lembur
-//                   if (isovertime)
-//                     Card(
-//                       color: Colors.redAccent,
-//                       elevation: 5,
-//                       margin: const EdgeInsets.symmetric(
-//                           horizontal: 1, vertical: 12),
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(16),
+//                       onPressed: _showLupaClockOutModal,
+//                       child: const Text(
+//                         'Lupa Clock Out',
+//                         style: TextStyle(fontSize: 16, color: Colors.white),
 //                       ),
-//                       child: const Padding(
-//                         padding: EdgeInsets.symmetric(
-//                             vertical: 30.0, horizontal: 16.0),
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           crossAxisAlignment: CrossAxisAlignment.center,
-//                           children: [
-//                             // Teks Kiri
-//                             Flexible(
-//                               child: Text(
-//                                 '💥Anda Sedang \nLembur Sekarang💥',
-//                                 style: TextStyle(
-//                                   color: Colors.white,
-//                                   fontWeight: FontWeight.bold,
-//                                   fontSize: 16,
-//                                 ),
-//                               ),
-//                             ),
-//                             // Teks Kanan
-//                             Flexible(
-//                               child: Text(
-//                                 'Kerja bagus dan \ntetap semangat',
-//                                 textAlign: TextAlign.right,
-//                                 style: TextStyle(
-//                                     color: Colors.white70, fontSize: 12),
-//                               ),
-//                             ),
-//                           ],
+//                     ),
+//                   ),
+//                   const SizedBox(width: 16), // Jarak antar tombol
+//                   Expanded(
+//                     child: ElevatedButton(
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor:
+//                             const Color.fromARGB(255, 101, 19, 116),
+//                         padding: const EdgeInsets.symmetric(vertical: 18.0),
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(8.0),
 //                         ),
 //                       ),
-//                     ),
-//                   //card untuk cuti
-//                   if (isholiday)
-//                     Card(
-//                       color: Colors.green,
-//                       elevation: 5,
-//                       margin: const EdgeInsets.symmetric(
-//                           horizontal: 1, vertical: 12),
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(16),
+//                       onPressed: () => getHistoryData(context),
+//                       child: const Text(
+//                         'Cek History Anda',
+//                         style: TextStyle(fontSize: 16, color: Colors.white),
 //                       ),
-//                       child: const Padding(
-//                         padding: EdgeInsets.symmetric(
-//                             vertical: 30.0, horizontal: 16.0),
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           crossAxisAlignment: CrossAxisAlignment.center,
-//                           children: [
-//                             Text(
-//                               '🌴Selamat Liburan/ \n Istirahat🌴',
-//                               style: TextStyle(
-//                                 color: Colors.white,
-//                                 fontWeight: FontWeight.bold,
-//                                 fontSize: 20,
-//                               ),
-//                             ),
-//                             Flexible(
-//                               child: Text(
-//                                 'Nikmati waktu \nistirahat Anda!',
-//                                 textAlign: TextAlign.right,
-//                                 style: TextStyle(
-//                                     color: Colors.white70, fontSize: 14),
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       ),
-//                     ),
-//                   const SizedBox(height: 20),
-//                   // Bagian Announcement
-//                   const Text(
-//                     'Pengumuman',
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       fontWeight: FontWeight.bold,
-//                       color: Color.fromARGB(255, 101, 19, 116),
-//                     ),
-//                   ),
-//                   const SizedBox(height: 10),
-//                   // // Slider untuk pengumuman
-//                   Container(
-//                     height: 150,
-//                     decoration: BoxDecoration(
-//                       borderRadius: BorderRadius.circular(12),
-//                       color: Colors.grey[300],
-//                     ),
-//                     child: announcements.isEmpty
-//                         ? const Center(
-//                             child: Text(
-//                               'Hari ini tidak ada pengumuman',
-//                               style: TextStyle(
-//                                 fontSize: 16,
-//                                 fontWeight: FontWeight.bold,
-//                                 color: Colors.purple,
-//                               ),
-//                               textAlign: TextAlign.center,
-//                             ),
-//                           )
-//                         : Stack(
-//                             alignment: Alignment.bottomCenter,
-//                             children: [
-//                               PageView.builder(
-//                                 controller: _pageController,
-//                                 itemCount: announcements.length,
-//                                 onPageChanged: (index) {
-//                                   setState(() {
-//                                     _currentIndex = index;
-//                                   });
-//                                 },
-//                                 itemBuilder: (context, index) {
-//                                   final message = announcements[index];
-//                                   return GestureDetector(
-//                                     onTap: () {
-//                                       Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               AnnouncementDetailPage(
-//                                             message: message,
-//                                           ),
-//                                         ),
-//                                       );
-//                                     },
-//                                     child: Container(
-//                                       padding: const EdgeInsets.all(10),
-//                                       decoration: BoxDecoration(
-//                                         borderRadius: BorderRadius.circular(12),
-//                                         color: Colors.white,
-//                                       ),
-//                                       child: Center(
-//                                         child: Html(
-//                                           data: message,
-//                                           style: {
-//                                             "body": Style(
-//                                               textAlign: TextAlign.center,
-//                                               fontSize: FontSize(16.0),
-//                                               fontWeight: FontWeight.bold,
-//                                               color: Color.fromARGB(
-//                                                   255, 101, 19, 116),
-//                                             ),
-//                                           },
-//                                         ),
-//                                       ),
-//                                     ),
-//                                   );
-//                                 },
-//                               ),
-//                               // Indikator halaman
-//                               Positioned(
-//                                 bottom: 10,
-//                                 left: 0,
-//                                 right: 0,
-//                                 child: Center(
-//                                   child: SmoothPageIndicator(
-//                                     controller: _pageController,
-//                                     count: announcements.length,
-//                                     effect: const ExpandingDotsEffect(
-//                                       activeDotColor:
-//                                           Color.fromARGB(255, 101, 19, 116),
-//                                       dotColor: Colors.grey,
-//                                       dotHeight: 8,
-//                                       dotWidth: 8,
-//                                     ),
-//                                   ),
-//                                 ),
-//                               ),
-//                             ],
-//                           ),
-//                   ),
-//                   const SizedBox(height: 20),
-//                   // Target Kehadiran
-//                   buildProgressBox(
-//                     title: "Target Kehadiran Bulan Berjalan",
-//                     hariMasuk: hadirHariIni,
-//                     totalHari: targetHariIni,
-//                     menitMasuk: hadirMenitIni,
-//                     totalMenit: targetMenitIni,
-//                   ),
-//                   buildRekapBox("Rekap Kehadiran Bulan Ini", hariBulanIni,
-//                       menitBulanIni, telatBulanIni, cutiBulanIni),
-//                   buildProgressBox(
-//                     title: "Target Kehadiran Bulan Sebelumnya",
-//                     hariMasuk: hadirHariSebelumnya,
-//                     totalHari: targetHariSebelumnya,
-//                     menitMasuk: hadirMenitSebelumnya,
-//                     totalMenit: targetMenitSebelumnya,
-//                   ),
-//                   buildRekapBox("Rekap Kehadiran Bulan Lalu", hariBulanLalu,
-//                       menitBulanLalu, telatBulanLalu, cutiBulanLalu),
-//                   const SizedBox(height: 20),
-//                   // Note Section
-//                   Padding(
-//                     padding:
-//                         const EdgeInsets.symmetric(horizontal: 1, vertical: 12),
-//                     child: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         if (showNote) ...[
-//                           const Text(
-//                             'Note',
-//                             style: TextStyle(
-//                               fontSize: 18,
-//                               fontWeight: FontWeight.bold,
-//                               color: Color.fromARGB(255, 101, 19, 116),
-//                             ),
-//                           ),
-//                           const SizedBox(height: 5),
-//                           Container(
-//                             padding: const EdgeInsets.symmetric(
-//                                 horizontal: 30, vertical: 18),
-//                             decoration: BoxDecoration(
-//                               color: Colors.white,
-//                               borderRadius: BorderRadius.circular(10),
-//                               boxShadow: [
-//                                 BoxShadow(
-//                                   color: Colors.grey.withOpacity(0.2),
-//                                   spreadRadius: 2,
-//                                   blurRadius: 5,
-//                                   offset: const Offset(0, 3), // posisi bayangan
-//                                 ),
-//                               ],
-//                             ),
-//                             child: Row(
-//                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                               children: [
-//                                 const Text(
-//                                   'Jangan Lupa Absen Hari Ini👏',
-//                                   style: TextStyle(fontSize: 11),
-//                                 ),
-//                                 ElevatedButton(
-//                                   onPressed: () async {
-//                                     Navigator.push(
-//                                       context,
-//                                       MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               const ClockInPage()),
-//                                     ); // Jika dalam kantor, langsung ke halaman Clock In
-//                                   },
-//                                   style: ElevatedButton.styleFrom(
-//                                     backgroundColor:
-//                                         Colors.orange, // Warna tombol
-//                                     shape: RoundedRectangleBorder(
-//                                       borderRadius: BorderRadius.circular(
-//                                           8), // Melengkungkan pinggiran tombol
-//                                     ),
-//                                     padding: const EdgeInsets.symmetric(
-//                                         horizontal: 10, vertical: 8),
-//                                   ),
-//                                   child: const Text(
-//                                     'Submit',
-//                                     style: TextStyle(
-//                                         fontSize: 10, color: Colors.white),
-//                                   ),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ],
-//                       ],
 //                     ),
 //                   ),
 //                 ],
 //               ),
-//             ),
-//           ],
+//             ],
+//           ),
 //         ),
 //       ),
-//       // Bottom Navigation
-//       bottomNavigationBar: BottomNavigationBar(
-//         type: BottomNavigationBarType.fixed,
-//         selectedItemColor: Colors.orange,
-//         unselectedItemColor: Colors.white,
-//         backgroundColor: const Color.fromARGB(255, 101, 19, 116),
-//         selectedLabelStyle: const TextStyle(fontSize: 11),
-//         unselectedLabelStyle: const TextStyle(fontSize: 9),
-//         currentIndex: 0,
-//         onTap: (index) {
-//           switch (index) {
-//             case 0:
-//               break;
-//             case 1:
-//               Navigator.pushAndRemoveUntil(
-//                 context,
-//                 MaterialPageRoute(builder: (context) => const TimeOffScreen()),
-//                 (route) => false,
-//               );
-//               break;
-//             case 2:
-//               Navigator.pushAndRemoveUntil(
-//                 context,
-//                 MaterialPageRoute(
-//                     builder: (context) => const ReimbursementPage()),
-//                 (route) => false,
-//               );
-//               break;
-//             case 3:
-//               Navigator.pushAndRemoveUntil(
-//                 context,
-//                 MaterialPageRoute(
-//                     builder: (context) => const NotificationPage()),
-//                 (route) => false,
-//               );
-//               break;
-//             case 4:
-//               Navigator.pushAndRemoveUntil(
-//                 context,
-//                 MaterialPageRoute(builder: (context) => const ProfileScreen()),
-//                 (route) => false,
-//               );
-//               break;
-//           }
-//         },
-//         items: [
-//           const BottomNavigationBarItem(
-//             icon: ImageIcon(
-//               AssetImage('assets/icon/home.png'), // Custom icon
-//               size: 20,
-//               color: Colors.orange,
+//     );
+//   }
+
+//   Widget _buildCard({
+//     required String title,
+//     required String value,
+//     required Color color,
+//   }) {
+//     return Container(
+//       height: 132.0, // Disesuaikan dengan gambar
+//       width: double.infinity, // Full lebar
+//       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+//       decoration: BoxDecoration(
+//         color: color,
+//         borderRadius: BorderRadius.circular(12.0),
+//       ),
+//       child: Stack(
+//         children: [
+//           Align(
+//             alignment: Alignment.topLeft,
+//             child: Text(
+//               title,
+//               style: const TextStyle(
+//                 fontSize: 16.0,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.white,
+//               ),
 //             ),
-//             label: 'Home',
 //           ),
-//           const BottomNavigationBarItem(
-//             icon: ImageIcon(
-//               AssetImage('assets/icon/timeoff.png'), // Custom icon
-//               size: 20,
-//               color: Colors.white,
+//           Align(
+//             alignment: Alignment.bottomRight,
+//             child: Text(
+//               value,
+//               style: const TextStyle(
+//                 fontSize: 40.0,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.white,
+//               ),
 //             ),
-//             label: 'Time Off',
 //           ),
-//           const BottomNavigationBarItem(
-//             icon: Icon(Icons.receipt, size: 25),
-//             label: 'Reimbursement',
-//           ),
-//           BottomNavigationBarItem(
-//             icon: Stack(
-//               children: [
-//                 const ImageIcon(
-//                   AssetImage('assets/icon/notifikasi.png'),
-//                   size: 20,
-//                   color: Colors.white,
-//                 ),
-//                 FutureBuilder<bool>(
-//                   future: NotificationHelper.hasUnreadNotifications(),
-//                   builder: (context, snapshot) {
-//                     if (snapshot.hasData && snapshot.data == true) {
-//                       return const Positioned(
-//                         right: 0,
-//                         top: 0,
-//                         child: Icon(
-//                           Icons.circle,
-//                           color: Colors.red,
-//                           size: 10,
-//                         ),
-//                       );
-//                     }
-//                     return const SizedBox.shrink();
-//                   },
-//                 ),
-//               ],
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildSubtitleCard({
+//     required String subtitle,
+//     required String subtitleValue,
+//   }) {
+//     return Container(
+//       margin: const EdgeInsets.only(top: 8.0),
+//       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(8.0),
+//         border: Border.all(color: Colors.pink, width: 1.0),
+//       ),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//         children: [
+//           Text(
+//             subtitle,
+//             style: const TextStyle(
+//               fontSize: 12.0,
+//               fontWeight: FontWeight.w500,
+//               color: Colors.black,
 //             ),
-//             label: 'Notification',
 //           ),
-//           const BottomNavigationBarItem(
-//             icon: ImageIcon(
-//               AssetImage('assets/icon/profil.png'), // Custom icon
-//               size: 20,
-//               color: Colors.white,
+//           Text(
+//             subtitleValue,
+//             style: const TextStyle(
+//               fontSize: 14.0,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black,
 //             ),
-//             label: 'Profil',
 //           ),
 //         ],
 //       ),
@@ -1867,23 +957,52 @@
 //   }
 // }
 
-// class AnnouncementDetailPage extends StatelessWidget {
-//   final String message;
+// class AttendanceDetailModal extends StatelessWidget {
+//   final String date;
+//   final String clockIn;
+//   final String clockOut;
+//   final String workDuration;
+//   final String location;
+//   final String status;
+//   final String note;
 
-//   const AnnouncementDetailPage({super.key, required this.message});
+//   const AttendanceDetailModal({
+//     super.key,
+//     required this.date,
+//     required this.clockIn,
+//     required this.clockOut,
+//     required this.workDuration,
+//     required this.location,
+//     required this.status,
+//     required this.note,
+//   });
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
 //       appBar: AppBar(
-//         title: const Text('Detail Announcement'),
-//         backgroundColor: Colors.purple,
+//         title: const Text("Attendance Details"),
+//         backgroundColor: Colors.orange,
 //       ),
-//       body: SingleChildScrollView(
-//         physics: const BouncingScrollPhysics(),
+//       body: Padding(
 //         padding: const EdgeInsets.all(16.0),
-//         child: Html(
-//           data: message,
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text(
+//               "Date: $date",
+//               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//             ),
+//             const SizedBox(height: 16),
+//             Text("Clock In: $clockIn"),
+//             Text("Clock Out: $clockOut"),
+//             Text("Work Duration: $workDuration"),
+//             Text("Location: $location"),
+//             Text("Status: $status"),
+//             const SizedBox(height: 16),
+//             const Text("Note:", style: TextStyle(fontWeight: FontWeight.bold)),
+//             Text(note),
+//           ],
 //         ),
 //       ),
 //     );

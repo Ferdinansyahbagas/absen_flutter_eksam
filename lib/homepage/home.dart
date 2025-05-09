@@ -14,7 +14,6 @@ import 'package:absen/Reimbursement/Reimbursementscreen.dart'; // Mengimpor hala
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:absen/utils/notification_helper.dart';
-import 'package:loader_overlay/loader_overlay.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:absen/service/api_service.dart'; // Import ApiService
 import 'package:geolocator/geolocator.dart'; // Mengimpor tempat
@@ -63,6 +62,7 @@ class _HomePageState extends State<HomePage> {
   int targetHariSebelumnya = 0;
   int targetMenitSebelumnya = 0;
   bool isLoadingLocation = true; // Untuk menandai apakah lokasi sedang di-load
+  bool isLoading = true;
   bool hasClockedIn = false; // Status clock-in biasa
   bool hasClockedOut = false; // Status clock-out biasa
   bool hasCuti = false; // Status clock-out biasa
@@ -94,28 +94,18 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      context.loaderOverlay.show();
-
-      try {
-        _startClock();
-        _getCurrentLocation();
-        await getData();
-        await getNotif();
-        await getTarget();
-        await getUserInfo();
-        await getPengumuman();
-      } catch (e) {
-        print('Error during init: $e');
-      } finally {
-        context.loaderOverlay.hide();
-      }
-
-      _pageController.addListener(() {
-        setState(() {
-          _currentPage = _pageController.page!.round();
-        });
+    _startClock(); // Memulai timer untuk jam
+    _getCurrentLocation();
+    Future.delayed(Duration(milliseconds: 500), () {
+      getData(); // Panggil API setelah sedikit delay
+      getNotif();
+      getTarget();
+      getUserInfo();
+      getPengumuman();
+    });
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!.round();
       });
     });
   }
@@ -503,6 +493,9 @@ class _HomePageState extends State<HomePage> {
 
   // Fungsi untuk mengambil data dari API
   Future<void> getData() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       // Ambil lokasi user
       Position position = await Geolocator.getCurrentPosition(
@@ -671,6 +664,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isApiLoaded = true;
         _startClock(); // Mulai timer hanya setelah data selesai di-load
+        isLoading = false;
       });
     } catch (e) {
       print("Error saat cek cuti: $e");
@@ -970,115 +964,41 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(children: [
-                      // untuk melihat kota / lokasi terkini
-                      Text(
-                        isLoadingLocation
-                            ? 'Memuat lokasi Anda...'
-                            : 'Lokasi Anda Sekarang Ada Di $currentCity',
-                        style: const TextStyle(
-                            color: Colors.black54, fontSize: 12),
-                      ),
-                      const SizedBox(height: 8),
-                      //menampilkan hari dan tanggal
-                      Text(
-                        DateFormat('EEEE, dd MMMM yyyy').format(DateTime.now()),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      if (userStatus == "3") ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: hasClockedIn
-                                  ? null
-                                  : () async {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ClockInPage(),
-                                        ),
-                                      );
-                                      if (result == true) {
-                                        setState(() {
-                                          hasClockedIn = true;
-                                          hasClockedOut = false;
-                                        });
-                                      }
-                                    },
-                              icon: const Icon(Icons.login),
-                              label: const Text('Clock In'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    hasClockedIn ? Colors.grey : Colors.white,
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(children: [
+                            // untuk melihat kota / lokasi terkini
+                            Text(
+                              isLoadingLocation
+                                  ? 'Memuat lokasi Anda...'
+                                  : 'Lokasi Anda Sekarang Ada Di $currentCity',
+                              style: const TextStyle(
+                                  color: Colors.black54, fontSize: 12),
+                            ),
+                            const SizedBox(height: 8),
+                            //menampilkan hari dan tanggal
+                            Text(
+                              DateFormat('EEEE, dd MMMM yyyy')
+                                  .format(DateTime.now()),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            ElevatedButton.icon(
-                              onPressed: (hasClockedIn &&
-                                      !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
-                                  ? () async {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ClockOutScreen(),
-                                        ),
-                                      );
-                                      if (result == true) {
-                                        setState(() {
-                                          hasClockedOut = true;
-                                          hasClockedIn = false;
-                                        });
-
-                                        // Reset tombol setelah 1 detik
-                                        Future.delayed(
-                                            const Duration(seconds: 1), () {
-                                          if (mounted) {
-                                            setState(() {
-                                              hasClockedIn = false;
-                                              hasClockedOut = false;
-                                            });
-                                          }
-                                        });
-                                      }
-                                    }
-                                  : null,
-                              icon: const Icon(Icons.logout),
-                              label: const Text('Clock Out'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: (hasClockedIn &&
-                                        !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
-                                    ? Colors.white
-                                    : Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ] else if
-                          // hasClockedOut &&
-                          (userStatus == "1" || userStatus == "2") ...[
-                        // Jika belum request WFH, cek apakah sudah clock out
-                        Column(
-                          children: [
-                            if (hasCuti || hasholiday) ...[
-                              // Tampilkan hanya tombol Overtime jika sedang cuti atau hari libur
+                            const SizedBox(height: 18),
+                            if (userStatus == "3") ...[
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   ElevatedButton.icon(
-                                    onPressed: hasClockedInOvertime
+                                    onPressed: hasClockedIn
                                         ? null
                                         : () async {
                                             final result = await Navigator.push(
@@ -1090,86 +1010,11 @@ class _HomePageState extends State<HomePage> {
                                             );
                                             if (result == true) {
                                               setState(() {
-                                                hasClockedInOvertime = true;
-                                                hasClockedOutOvertime = false;
+                                                hasClockedIn = true;
+                                                hasClockedOut = false;
                                               });
                                             }
                                           },
-                                    icon: const Icon(Icons.timer),
-                                    label: const Text('Overtime In',
-                                        style: TextStyle(fontSize: 12)),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: hasClockedInOvertime
-                                          ? Colors.grey
-                                          : Colors.white,
-                                    ),
-                                  ),
-                                  ElevatedButton.icon(
-                                    onPressed: (hasClockedInOvertime &&
-                                            !hasClockedOutOvertime)
-                                        ? () async {
-                                            final result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const Overtimeout(),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              setState(() {
-                                                hasClockedOutOvertime = false;
-                                                hasClockedInOvertime = false;
-                                              });
-                                            }
-                                          }
-                                        : null,
-                                    icon: const Icon(Icons.timer_off),
-                                    label: const Text('Overtime Out',
-                                        style: TextStyle(fontSize: 12)),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: (hasClockedInOvertime &&
-                                              !hasClockedOutOvertime)
-                                          ? Colors.white
-                                          : Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ] else
-                            // Tampilkan Clock In & Out jika belum Clock Out
-                            if (!hasClockedOut
-                                // && !hasCuti || !hasholiday
-                                ) ...[
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed:
-                                        hasClockedIn // Disable jika sudah Clock In atau sedang cuti
-                                            ? null
-                                            : () async {
-                                                if (jarak) {
-                                                  _showClockInPopupWFA(
-                                                      context); // Tampilkan pop-up WFA jika request WFA
-                                                } else {
-                                                  // Jika tidak WFH/WFA, langsung Clock In tanpa pop-up
-                                                  final result =
-                                                      await Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const ClockInPage(),
-                                                    ),
-                                                  );
-                                                  if (result == true) {
-                                                    setState(() {
-                                                      hasClockedIn = true;
-                                                      hasClockedOut = false;
-                                                    });
-                                                  }
-                                                }
-                                              },
                                     icon: const Icon(Icons.login),
                                     label: const Text('Clock In'),
                                     style: ElevatedButton.styleFrom(
@@ -1182,34 +1027,30 @@ class _HomePageState extends State<HomePage> {
                                     onPressed: (hasClockedIn &&
                                             !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
                                         ? () async {
-                                            if (jarak) {
-                                              _showClockoutPopupjarak(context);
-                                            } else {
-                                              final result =
-                                                  await Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const ClockOutScreen(),
-                                                ),
-                                              );
-                                              if (result == true) {
-                                                setState(() {
-                                                  hasClockedOut = true;
-                                                  hasClockedIn = false;
-                                                });
-                                                // Reset tombol setelah 1 detik
-                                                Future.delayed(
-                                                    const Duration(seconds: 1),
-                                                    () {
-                                                  if (mounted) {
-                                                    setState(() {
-                                                      hasClockedIn = false;
-                                                      hasClockedOut = false;
-                                                    });
-                                                  }
-                                                });
-                                              }
+                                            final result = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const ClockOutScreen(),
+                                              ),
+                                            );
+                                            if (result == true) {
+                                              setState(() {
+                                                hasClockedOut = true;
+                                                hasClockedIn = false;
+                                              });
+
+                                              // Reset tombol setelah 1 detik
+                                              Future.delayed(
+                                                  const Duration(seconds: 1),
+                                                  () {
+                                                if (mounted) {
+                                                  setState(() {
+                                                    hasClockedIn = false;
+                                                    hasClockedOut = false;
+                                                  });
+                                                }
+                                              });
                                             }
                                           }
                                         : null,
@@ -1224,82 +1065,264 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ],
                               ),
-                            ] else
-                              // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
-                              // if (hasClockedIn || hasClockedOut)
-                              ...[
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                            ] else if
+                                // hasClockedOut &&
+                                (userStatus == "1" || userStatus == "2") ...[
+                              // Jika belum request WFH, cek apakah sudah clock out
+                              Column(
                                 children: [
-                                  ElevatedButton.icon(
-                                    onPressed: hasClockedInOvertime
-                                        ? null
-                                        : () async {
-                                            final result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const ClockInPage(),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              setState(() {
-                                                hasClockedInOvertime = true;
-                                                hasClockedOutOvertime = false;
-                                              });
-                                            }
-                                          },
-                                    icon: const Icon(Icons.timer),
-                                    label: const Text(
-                                      'Overtime In',
-                                      style: const TextStyle(fontSize: 12),
+                                  if (hasCuti || hasholiday) ...[
+                                    // Tampilkan hanya tombol Overtime jika sedang cuti atau hari libur
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: hasClockedInOvertime
+                                              ? null
+                                              : () async {
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const ClockInPage(),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    setState(() {
+                                                      hasClockedInOvertime =
+                                                          true;
+                                                      hasClockedOutOvertime =
+                                                          false;
+                                                    });
+                                                  }
+                                                },
+                                          icon: const Icon(Icons.timer),
+                                          label: const Text('Overtime In',
+                                              style: TextStyle(fontSize: 12)),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                hasClockedInOvertime
+                                                    ? Colors.grey
+                                                    : Colors.white,
+                                          ),
+                                        ),
+                                        ElevatedButton.icon(
+                                          onPressed: (hasClockedInOvertime &&
+                                                  !hasClockedOutOvertime)
+                                              ? () async {
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const Overtimeout(),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    setState(() {
+                                                      hasClockedOutOvertime =
+                                                          false;
+                                                      hasClockedInOvertime =
+                                                          false;
+                                                    });
+                                                  }
+                                                }
+                                              : null,
+                                          icon: const Icon(Icons.timer_off),
+                                          label: const Text('Overtime Out',
+                                              style: TextStyle(fontSize: 12)),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                (hasClockedInOvertime &&
+                                                        !hasClockedOutOvertime)
+                                                    ? Colors.white
+                                                    : Colors.grey,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: hasClockedInOvertime
-                                          ? Colors.grey
-                                          : Colors.white,
+                                  ] else
+                                  // Tampilkan Clock In & Out jika belum Clock Out
+                                  if (!hasClockedOut
+                                      // && !hasCuti || !hasholiday
+                                      ) ...[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed:
+                                              hasClockedIn // Disable jika sudah Clock In atau sedang cuti
+                                                  ? null
+                                                  : () async {
+                                                      if (jarak) {
+                                                        _showClockInPopupWFA(
+                                                            context); // Tampilkan pop-up WFA jika request WFA
+                                                      } else {
+                                                        // Jika tidak WFH/WFA, langsung Clock In tanpa pop-up
+                                                        final result =
+                                                            await Navigator
+                                                                .push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const ClockInPage(),
+                                                          ),
+                                                        );
+                                                        if (result == true) {
+                                                          setState(() {
+                                                            hasClockedIn = true;
+                                                            hasClockedOut =
+                                                                false;
+                                                          });
+                                                        }
+                                                      }
+                                                    },
+                                          icon: const Icon(Icons.login),
+                                          label: const Text('Clock In'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: hasClockedIn
+                                                ? Colors.grey
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        ElevatedButton.icon(
+                                          onPressed: (hasClockedIn &&
+                                                  !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
+                                              ? () async {
+                                                  if (jarak) {
+                                                    _showClockoutPopupjarak(
+                                                        context);
+                                                  } else {
+                                                    final result =
+                                                        await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const ClockOutScreen(),
+                                                      ),
+                                                    );
+                                                    if (result == true) {
+                                                      setState(() {
+                                                        hasClockedOut = true;
+                                                        hasClockedIn = false;
+                                                      });
+                                                      // Reset tombol setelah 1 detik
+                                                      Future.delayed(
+                                                          const Duration(
+                                                              seconds: 1), () {
+                                                        if (mounted) {
+                                                          setState(() {
+                                                            hasClockedIn =
+                                                                false;
+                                                            hasClockedOut =
+                                                                false;
+                                                          });
+                                                        }
+                                                      });
+                                                    }
+                                                  }
+                                                }
+                                              : null,
+                                          icon: const Icon(Icons.logout),
+                                          label: const Text('Clock Out'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: (hasClockedIn &&
+                                                    !hasClockedOut) // Disable jika belum Clock In atau sedang cuti
+                                                ? Colors.white
+                                                : Colors.grey,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  ElevatedButton.icon(
-                                    onPressed: (hasClockedInOvertime &&
-                                            !hasClockedOutOvertime)
-                                        ? () async {
-                                            final result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const Overtimeout(),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              setState(() {
-                                                hasClockedOutOvertime = false;
-                                                hasClockedInOvertime = false;
-                                              });
-                                            }
-                                          }
-                                        : null,
-                                    icon: const Icon(Icons.timer_off),
-                                    label: const Text(
-                                      'Overtime Out',
-                                      style: const TextStyle(fontSize: 12),
+                                  ] else
+                                    // Jika sudah Clock Out, tampilkan Overtime In & Out, dan sembunyikan Clock In & Out
+                                    // if (hasClockedIn || hasClockedOut)
+                                    ...[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        ElevatedButton.icon(
+                                          onPressed: hasClockedInOvertime
+                                              ? null
+                                              : () async {
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const ClockInPage(),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    setState(() {
+                                                      hasClockedInOvertime =
+                                                          true;
+                                                      hasClockedOutOvertime =
+                                                          false;
+                                                    });
+                                                  }
+                                                },
+                                          icon: const Icon(Icons.timer),
+                                          label: const Text(
+                                            'Overtime In',
+                                            style:
+                                                const TextStyle(fontSize: 12),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                hasClockedInOvertime
+                                                    ? Colors.grey
+                                                    : Colors.white,
+                                          ),
+                                        ),
+                                        ElevatedButton.icon(
+                                          onPressed: (hasClockedInOvertime &&
+                                                  !hasClockedOutOvertime)
+                                              ? () async {
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const Overtimeout(),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    setState(() {
+                                                      hasClockedOutOvertime =
+                                                          false;
+                                                      hasClockedInOvertime =
+                                                          false;
+                                                    });
+                                                  }
+                                                }
+                                              : null,
+                                          icon: const Icon(Icons.timer_off),
+                                          label: const Text(
+                                            'Overtime Out',
+                                            style:
+                                                const TextStyle(fontSize: 12),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                (hasClockedInOvertime &&
+                                                        !hasClockedOutOvertime)
+                                                    ? Colors.white
+                                                    : Colors.grey,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: (hasClockedInOvertime &&
-                                              !hasClockedOutOvertime)
-                                          ? Colors.white
-                                          : Colors.grey,
-                                    ),
-                                  ),
+                                  ]
                                 ],
-                              ),
+                              )
                             ]
-                          ],
-                        )
-                      ]
-                    ]),
-                  ),
+                          ]),
+                        ),
                 ],
               ),
             ),

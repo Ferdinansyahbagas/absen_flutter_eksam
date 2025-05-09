@@ -317,7 +317,7 @@ class _dataInventoryState extends State<dataInventory> {
                       setState(() {
                         _tanggalPembelian = picked;
                         tanggalPembelian =
-                            DateFormat('yyyy-MM-dd').format(picked);
+                            DateFormat('dd-MM-yyyy').format(picked);
                       });
                     }
                   },
@@ -339,7 +339,7 @@ class _dataInventoryState extends State<dataInventory> {
                         Text(
                           _tanggalPembelian == null
                               ? 'Select Start Date'
-                              : DateFormat('yyyy-MM-dd')
+                              : DateFormat('dd-MM-yyyy')
                                   .format(_tanggalPembelian!),
                         ),
                         Icon(Icons.calendar_today, color: Colors.orange),
@@ -352,7 +352,7 @@ class _dataInventoryState extends State<dataInventory> {
                 // Tanggal peminjaman
                 if (_tanggalPeminjaman != null)
                   Text(
-                    'Tanggal Peminjaman: ${DateFormat('yyyy-MM-dd').format(_tanggalPeminjaman!)}',
+                    'Tanggal Peminjaman: ${DateFormat('dd-MM-yyyy').format(_tanggalPeminjaman!)}',
                   ),
                 SizedBox(height: 10),
                 Builder(

@@ -113,11 +113,11 @@ class _TimeOffSickState extends State<TimeOffSick> {
     if (picked != null) {
       setState(() {
         if (isStartDate) {
-          formatStarttedDate = DateFormat('yyyy-MM-dd').format(picked);
+          formatStarttedDate = DateFormat('dd-MM-yyyy').format(picked);
           _selectedStartDate = picked;
           _isStartDateEmpty = false;
         } else {
-          formatEndtedDate = DateFormat('yyyy-MM-dd').format(picked);
+          formatEndtedDate = DateFormat('dd-MM-yyyy').format(picked);
           _selectedEndDate = picked;
           _isEndDateEmpty = false;
         }
@@ -318,7 +318,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
           },
         ),
         title: const Text(
-          'Time Off',
+          'Izin Sakit',
           style: TextStyle(
             color: Colors.black,
             fontSize: 30,
@@ -485,7 +485,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                       Text(
                         _selectedStartDate == null
                             ? 'Select Start Date'
-                            : DateFormat('yyyy-MM-dd')
+                            : DateFormat('dd-MM-yyyy')
                                 .format(_selectedStartDate!),
                       ),
                       const Icon(Icons.calendar_today, color: Colors.orange),
@@ -536,7 +536,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                       Text(
                         _selectedEndDate == null
                             ? 'Select Start Date'
-                            : DateFormat('yyyy-MM-dd')
+                            : DateFormat('dd-MM-yyyy')
                                 .format(_selectedEndDate!),
                       ),
                       const Icon(Icons.calendar_today, color: Colors.orange),
@@ -587,7 +587,6 @@ class _TimeOffSickState extends State<TimeOffSick> {
                 ),
               ),
               const SizedBox(height: 10),
-
               if (_image != null)
                 Align(
                   alignment: Alignment.centerLeft,
@@ -631,7 +630,7 @@ class _TimeOffSickState extends State<TimeOffSick> {
                         color: Colors.red, fontWeight: FontWeight.bold),
                   ),
                 ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

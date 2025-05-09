@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:absen/homepage/home.dart';
 import 'package:absen/susses&failde/gagalinven.dart';
 import 'package:absen/inventaris/datainventaris.dart';
 import 'package:absen/susses&failde/berhasiltambah.dart';
@@ -7,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; // for formatting date
+import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -96,10 +97,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
       setState(() {
         if (isPembelian) {
           _tanggalPembelian = picked;
-          tanggalPembelian = DateFormat('yyyy-MM-dd').format(picked);
+          tanggalPembelian = DateFormat('dd-MM-yyyy').format(picked);
         } else {
           _tanggalPeminjaman = picked;
-          tanggalPeminjaman = DateFormat('yyyy-MM-dd').format(picked);
+          tanggalPeminjaman = DateFormat('dd-MM-yyyy').format(picked);
         }
       });
     }
@@ -277,7 +278,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Inventaris Kantor')),
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          },
+        ),
+        title: const Text(
+          'Inventaris Kantor',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -401,7 +419,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       Text(
                         _tanggalPembelian == null
                             ? 'Select Start Date'
-                            : DateFormat('yyyy-MM-dd')
+                            : DateFormat('dd-MM-yyyy')
                                 .format(_tanggalPembelian!),
                       ),
                       const Icon(Icons.calendar_today, color: Colors.orange),
@@ -451,7 +469,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       Text(
                         _tanggalPeminjaman == null
                             ? 'Select Start Date'
-                            : DateFormat('yyyy-MM-dd')
+                            : DateFormat('dd-MM-yyyy')
                                 .format(_tanggalPeminjaman!),
                       ),
                       const Icon(Icons.calendar_today, color: Colors.orange),
@@ -460,82 +478,171 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              // Upload Photo Button
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 130,
-                  width: 150,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: _isImageRequired
-                          ? Colors.red
-                          : (_image == null
-                              ? const Color.fromRGBO(101, 19, 116, 1)
-                              : Colors.orange),
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt,
-                        size: 35,
-                        color: _isImageRequired
-                            ? Colors.red
-                            : (_image == null
-                                ? const Color.fromRGBO(101, 19, 116, 1)
-                                : Colors.orange),
-                      ),
-                      const SizedBox(height: 3),
-                      if (_image == null && !_isImageRequired)
-                        const Text(
-                          'Upload Photo Anda',
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: Color.fromRGBO(101, 19, 116, 1)),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
+              // // Upload Photo Button
+              // GestureDetector(
+              //   onTap: _pickImage,
+              //   child: Container(
+              //     height: 130,
+              //     width: 150,
+              //     decoration: BoxDecoration(
+              //       border: Border.all(
+              //         color: _isImageRequired
+              //             ? Colors.red
+              //             : (_image == null
+              //                 ? const Color.fromRGBO(101, 19, 116, 1)
+              //                 : Colors.orange),
+              //         width: 2,
+              //       ),
+              //       borderRadius: BorderRadius.circular(15),
+              //     ),
+              //     child: Column(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       children: [
+              //         Icon(
+              //           Icons.camera_alt,
+              //           size: 35,
+              //           color: _isImageRequired
+              //               ? Colors.red
+              //               : (_image == null
+              //                   ? const Color.fromRGBO(101, 19, 116, 1)
+              //                   : Colors.orange),
+              //         ),
+              //         const SizedBox(height: 3),
+              //         if (_image == null && !_isImageRequired)
+              //           const Text(
+              //             'Upload Photo Anda',
+              //             style: TextStyle(
+              //                 fontSize: 14,
+              //                 color: Color.fromRGBO(101, 19, 116, 1)),
+              //           ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(height: 10),
+              // if (_image != null)
+              //   Align(
+              //     alignment: Alignment.centerLeft,
+              //     child: InkWell(
+              //       onTap: () {
+              //         showDialog(
+              //           context: context,
+              //           builder: (BuildContext context) {
+              //             return Dialog(
+              //               shape: RoundedRectangleBorder(
+              //                   borderRadius: BorderRadius.circular(10)),
+              //               child: Column(
+              //                 mainAxisSize: MainAxisSize.min,
+              //                 children: [
+              //                   if (kIsWeb)
+              //                     Image.network(_image!.path, fit: BoxFit.cover)
+              //                   else
+              //                     Image.file(_image!, fit: BoxFit.cover),
+              //                 ],
+              //               ),
+              //             );
+              //           },
+              //         );
+              //       },
+              //       child: const Text(
+              //         'Lihat Photo',
+              //         style: TextStyle(
+              //             fontSize: 15,
+              //             color: Colors.orange,
+              //             decoration: TextDecoration.underline),
+              //       ),
+              //     ),
+              //   ),
               const SizedBox(height: 10),
-              if (_image != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: InkWell(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (kIsWeb)
-                                  Image.network(_image!.path, fit: BoxFit.cover)
-                                else
-                                  Image.file(_image!, fit: BoxFit.cover),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: const Text(
-                      'Lihat Photo',
-                      style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.orange,
-                          decoration: TextDecoration.underline),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      height: 130,
+                      width: 130,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: _isImageRequired
+                              ? Colors.red
+                              : (_image == null
+                                  ? const Color.fromRGBO(101, 19, 116, 1)
+                                  : Colors.orange),
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: _image == null
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.camera_alt,
+                                    size: 35,
+                                    color: _isImageRequired
+                                        ? Colors.red
+                                        : const Color.fromRGBO(101, 19, 116, 1),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  const Text(
+                                    'Upload Foto Anda',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Color.fromRGBO(101, 19, 116, 1),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Image.file(_image!, fit: BoxFit.cover),
                     ),
                   ),
-                ),
-              SizedBox(height: 110),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_image != null)
+                          InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (kIsWeb)
+                                          Image.network(_image!.path,
+                                              fit: BoxFit.cover)
+                                        else
+                                          Image.file(_image!,
+                                              fit: BoxFit.cover),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: const Text(
+                              'Lihat Foto',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.orange,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

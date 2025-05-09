@@ -95,14 +95,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              'Masukan Password Baru Anda',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
             const SizedBox(height: 20),
             Form(
               key: _formKey,
@@ -112,7 +104,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     controller: _emailController,
                     obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
-                      labelText: 'Reset password Anda',
+                      labelText: 'Masukan password baru',
                       enabledBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
                             color: Colors.grey), // Border saat tidak fokus
@@ -148,7 +140,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'masukan konfirmasi password baru';
+                        return 'Tolong masukan password baru';
                       }
                       return null;
                     },
@@ -158,7 +150,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     controller: _confirmPasswordController,
                     obscureText: !_isConfirmPasswordVisible,
                     decoration: InputDecoration(
-                      labelText: 'Konfirmasi Password Baru Anda',
+                      labelText: 'Masukan konfirmasi password baru',
                       enabledBorder: OutlineInputBorder(
                         borderSide: const BorderSide(color: Colors.grey),
                         borderRadius: BorderRadius.circular(12),
@@ -191,7 +183,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'tolong masukan konfirmasi password baru';
+                        return 'Tolong masukan konfirmasi password baru';
                       } else if (value != _emailController.text) {
                         return 'Password Tidak Sesuai';
                       }

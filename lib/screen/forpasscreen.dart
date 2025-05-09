@@ -88,7 +88,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 150),
+              const SizedBox(height: 170),
               const Text(
                 'Forgot Password',
                 style: TextStyle(
@@ -98,7 +98,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Enter your registered email',
+                'masukan email yang sudah terdaftar',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[600],
