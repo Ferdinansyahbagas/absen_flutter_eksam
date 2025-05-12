@@ -41,7 +41,6 @@ class _OvertimeoutState extends State<Overtimeout> {
     _loadSelectedValues();
     getData();
     getProfil();
-    getDataloc();
     getDataOvertime();
     _setWorkTypeLembur();
   }
@@ -124,7 +123,7 @@ class _OvertimeoutState extends State<Overtimeout> {
         print(data);
         setState(() {
           _selectedWorkType = "Lembur";
-          // _selectedWorkplaceType = data['data']['location']['name'];
+          _selectedWorkplaceType = data['data']['location']['name'];
         });
 
         // Jika user memilih WFO, lakukan validasi jarak
