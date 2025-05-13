@@ -98,7 +98,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               const SizedBox(height: 10),
               Text(
-                'masukan email yang sudah terdaftar',
+                'Masukkan email yang sudah terdaftar',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[600],

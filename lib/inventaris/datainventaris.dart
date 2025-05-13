@@ -418,7 +418,7 @@ class _dataInventoryState extends State<dataInventory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('data inventaris')),
+      appBar: AppBar(title: const Text('Data Inventaris')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(children: [
