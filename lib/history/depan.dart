@@ -351,94 +351,210 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ),
                         Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(
-                                color: const Color.fromARGB(255, 101, 19, 116)),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: InkWell(
-                            onTap: () async {
-                              final DateTimeRange? picked =
-                                  await showDateRangePicker(
-                                context: context,
-                                useRootNavigator: false,
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime.now(),
-                                initialDateRange: DateTimeRange(
-                                  start: DateTime.now()
-                                      .subtract(const Duration(days: 30)),
-                                  end: DateTime.now(),
-                                ),
-                                builder: (BuildContext context, Widget? child) {
-                                  return Center(
-                                    child: Container(
-                                      margin: const EdgeInsets.all(20),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                Colors.black.withOpacity(0.2),
-                                            spreadRadius: 1,
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: child,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
+  decoration: BoxDecoration(
+    color: Colors.white,
+    border: Border.all(color: const Color.fromARGB(255, 101, 19, 116)),
+    borderRadius: BorderRadius.circular(30.0),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.1),
+        spreadRadius: 2,
+        blurRadius: 5,
+        offset: const Offset(0, 3),
+      ),
+    ],
+  ),
+  child: InkWell(
+    onTap: () async {
+      DateTime? startDate;
+      DateTime? endDate;
 
-                              if (picked != null) {
-                                setState(() {
-                                  filterDataByDateRange(
-                                      picked.start, picked.end);
-                                });
-                              }
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 12.0),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.date_range,
-                                    color: Color.fromARGB(255, 101, 19, 116),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Select Date Range',
-                                    style: TextStyle(
-                                      color: const Color.fromARGB(
-                                          255, 101, 19, 116),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.orange.shade300,
-                                    size: 16,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+      // Pilih Start Date
+      startDate = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime.now(),
+        builder: (BuildContext context, Widget? child) {
+          return Center(
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    spreadRadius: 1,
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: child,
+              ),
+            ),
+          );
+        },
+      );
+
+      if (startDate != null) {
+        // Pilih End Date
+        endDate = await showDatePicker(
+          context: context,
+          initialDate: startDate.add(const Duration(days: 1)),
+          firstDate: startDate,
+          lastDate: DateTime.now(),
+          builder: (BuildContext context, Widget? child) {
+            return Center(
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      spreadRadius: 1,
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: child,
+                ),
+              ),
+            );
+          },
+        );
+      }
+
+      if (startDate != null && endDate != null) {
+        setState(() {
+          filterDataByDateRange(startDate!, endDate!);
+        });
+      }
+    },
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.filter_alt,
+            color: Color.fromARGB(255, 101, 19, 116),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            'Filter Date',
+            style: TextStyle(
+              color: Color.fromARGB(255, 101, 19, 116),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Spacer(),
+          Icon(
+            Icons.arrow_forward_ios,
+            color: Colors.orange.shade300,
+            size: 16,
+          ),
+        ],
+      ),
+    ),
+  ),
+),
+                        // Container(
+                        //   decoration: BoxDecoration(
+                        //     color: Colors.white,
+                        //     border: Border.all(
+                        //         color: const Color.fromARGB(255, 101, 19, 116)),
+                        //     borderRadius: BorderRadius.circular(30.0),
+                        //     boxShadow: [
+                        //       BoxShadow(
+                        //         color: Colors.black.withOpacity(0.1),
+                        //         spreadRadius: 2,
+                        //         blurRadius: 5,
+                        //         offset: const Offset(0, 3),
+                        //       ),
+                        //     ],
+                        //   ),
+                        //   child: InkWell(
+                        //     onTap: () async {
+                        //       final DateTimeRange? picked =
+                        //           await showDateRangePicker(
+                        //         context: context,
+                        //         useRootNavigator: false,
+                        //         firstDate: DateTime(2000),
+                        //         lastDate: DateTime.now(),
+                        //         initialDateRange: DateTimeRange(
+                        //           start: DateTime.now()
+                        //               .subtract(const Duration(days: 30)),
+                        //           end: DateTime.now(),
+                        //         ),
+                        //         builder: (BuildContext context, Widget? child) {
+                        //           return Center(
+                        //             child: Container(
+                        //               margin: const EdgeInsets.all(20),
+                        //               decoration: BoxDecoration(
+                        //                 color: Colors.white,
+                        //                 borderRadius: BorderRadius.circular(16),
+                        //                 boxShadow: [
+                        //                   BoxShadow(
+                        //                     color:
+                        //                         Colors.black.withOpacity(0.2),
+                        //                     spreadRadius: 1,
+                        //                     blurRadius: 8,
+                        //                     offset: const Offset(0, 4),
+                        //                   ),
+                        //                 ],
+                        //               ),
+                        //               child: ClipRRect(
+                        //                 borderRadius: BorderRadius.circular(16),
+                        //                 child: child,
+                        //               ),
+                        //             ),
+                        //           );
+                        //         },
+                        //       );
+
+                        //       if (picked != null) {
+                        //         setState(() {
+                        //           filterDataByDateRange(
+                        //               picked.start, picked.end);
+                        //         });
+                        //       }
+                        //     },
+                        //     child: Padding(
+                        //       padding: EdgeInsets.symmetric(
+                        //           horizontal: 16.0, vertical: 12.0),
+                        //       child: Row(
+                        //         children: [
+                        //           Icon(
+                        //             Icons.date_range,
+                        //             color: Color.fromARGB(255, 101, 19, 116),
+                        //           ),
+                        //           SizedBox(width: 8),
+                        //           Text(
+                        //             'Select Date Range',
+                        //             style: TextStyle(
+                        //               color: const Color.fromARGB(
+                        //                   255, 101, 19, 116),
+                        //               fontWeight: FontWeight.bold,
+                        //             ),
+                        //           ),
+                        //           Icon(
+                        //             Icons.arrow_forward_ios,
+                        //             color: Colors.orange.shade300,
+                        //             size: 16,
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

@@ -8,6 +8,8 @@ import 'dart:convert';
 import 'dart:io';
 
 class dataInventory extends StatefulWidget {
+  const dataInventory({super.key});
+
   @override
   _dataInventoryState createState() => _dataInventoryState();
 }
@@ -85,25 +87,16 @@ class _dataInventoryState extends State<dataInventory> {
 
   // *Menampilkan dialog pilihan sumber gambar*
 
-  // Future<void> _selectDate(BuildContext context, bool isPembelian) async {
-  //   final DateTime? picked = await showDatePicker(
-  //     context: context,
-  //     initialDate: DateTime.now(),
-  //     firstDate: DateTime(2000),
-  //     lastDate: DateTime(2101),
-  //   );
-  //   if (picked != null) {
-  //     setState(() {
-  //       if (isPembelian) {
-  //         _tanggalPembelian = picked;
-  //         tanggalPembelian = DateFormat('yyyy-MM-dd').format(picked);
-  //       } else {
-  //         _tanggalPeminjaman = picked;
-  //         tanggalPeminjaman = DateFormat('yyyy-MM-dd').format(picked);
-  //       }
-  //     });
-  //   }
-  // }
+  String formatTanggal(String? tanggal) {
+  if (tanggal == null || tanggal.isEmpty) return '-';
+  try {
+    DateTime parsedDate = DateTime.parse(tanggal);
+    return "${parsedDate.day.toString().padLeft(2, '0')}-${parsedDate.month.toString().padLeft(2, '0')}-${parsedDate.year}";
+  } catch (e) {
+    return '-';
+  }
+}
+
 
   Future<void> getProfil() async {
     try {
@@ -258,7 +251,7 @@ class _dataInventoryState extends State<dataInventory> {
           await fetchInventory();
           print('Inventory berhasil diupdate.');
         } else {
-          print('Update gagal (status success != "success"): ${result}');
+          print('Update gagal (status success != "success"): $result');
         }
       } else {
         print('Gagal update, status bukan 200: ${rp.statusCode}');
@@ -288,22 +281,22 @@ class _dataInventoryState extends State<dataInventory> {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text('Edit Inventaris'),
+          title: const Text('Edit Inventaris'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
                   initialValue: name,
-                  decoration: InputDecoration(labelText: 'Nama'),
+                  decoration: const InputDecoration(labelText: 'Nama'),
                   onChanged: (val) => name = val,
                 ),
                 TextFormField(
                   initialValue: keterangan,
-                  decoration: InputDecoration(labelText: 'Keterangan'),
+                  decoration: const InputDecoration(labelText: 'Keterangan'),
                   onChanged: (val) => keterangan = val,
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 InkWell(
                   onTap: () async {
                     final picked = await showDatePicker(
@@ -325,10 +318,10 @@ class _dataInventoryState extends State<dataInventory> {
                     decoration: InputDecoration(
                       labelText: 'Tanggal Pembelian',
                       labelStyle:
-                          TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
+                          const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
                       floatingLabelBehavior: FloatingLabelBehavior.always,
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                             color: Color.fromARGB(255, 101, 19, 116), width: 2),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -342,19 +335,19 @@ class _dataInventoryState extends State<dataInventory> {
                               : DateFormat('dd-MM-yyyy')
                                   .format(_tanggalPembelian!),
                         ),
-                        Icon(Icons.calendar_today, color: Colors.orange),
+                        const Icon(Icons.calendar_today, color: Colors.orange),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
 
                 // Tanggal peminjaman
                 if (_tanggalPeminjaman != null)
                   Text(
                     'Tanggal Peminjaman: ${DateFormat('dd-MM-yyyy').format(_tanggalPeminjaman!)}',
                   ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Builder(
                   builder: (context) {
                     if (_image != null) {
@@ -367,19 +360,19 @@ class _dataInventoryState extends State<dataInventory> {
                             : 'https://portal.eksam.cloud/storage/$oldImagePath',
                         height: 100,
                         errorBuilder: (context, error, stackTrace) =>
-                            Text('Gagal muat gambar lama'),
+                            const Text('Gagal muat gambar lama'),
                       );
                     } else {
-                      return Text('Tidak ada gambar');
+                      return const Text('Tidak ada gambar');
                     }
                   },
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 GestureDetector(
                   onTap: () async {
                     await _pickImage();
                   },
-                  child: Text(
+                  child: const Text(
                     'Ganti Foto Barang',
                     style: TextStyle(
                       decoration: TextDecoration.underline,
@@ -394,14 +387,14 @@ class _dataInventoryState extends State<dataInventory> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Batal'),
+              child: const Text('Batal'),
             ),
             TextButton(
               onPressed: () async {
                 await updateInventory(item['id'].toString());
                 Navigator.pop(context);
               },
-              child: Text('Simpan'),
+              child: const Text('Simpan'),
             ),
           ],
         ),
@@ -425,16 +418,16 @@ class _dataInventoryState extends State<dataInventory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Inventaris Kantor')),
+      appBar: AppBar(title: const Text('data inventaris')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(children: [
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : _inventoryList.isEmpty
-                    ? Center(child: Text('Belum ada data inventaris'))
+                    ? const Center(child: Text('Belum ada data inventaris'))
                     : Scrollbar(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.vertical,
@@ -485,17 +478,13 @@ class _dataInventoryState extends State<dataInventory> {
                                 return DataRow(cells: [
                                   DataCell(Text(
                                       '${_currentPage * _rowsPerPage + index + 1}',
-                                      style: TextStyle(fontSize: 12))),
+                                      style: const TextStyle(fontSize: 12))),
                                   DataCell(Text(item['name'] ?? '-',
-                                      style: TextStyle(fontSize: 12))),
+                                      style: const TextStyle(fontSize: 12))),
                                   DataCell(Text(item['keterangan'] ?? '-',
-                                      style: TextStyle(fontSize: 12))),
-                                  DataCell(Text(
-                                      item['tanggal_pembelian'] ?? '-',
-                                      style: TextStyle(fontSize: 12))),
-                                  DataCell(Text(
-                                      item['tanggal_peminjaman'] ?? '-',
-                                      style: TextStyle(fontSize: 12))),
+                                      style: const TextStyle(fontSize: 12))),
+                                DataCell(Text(formatTanggal(item['tanggal_pembelian']), style: const TextStyle(fontSize: 12))),
+DataCell(Text(formatTanggal(item['tanggal_peminjaman']), style: const TextStyle(fontSize: 12))),
                                   DataCell(Text(
                                     statusText,
                                     style: TextStyle(
@@ -515,7 +504,7 @@ class _dataInventoryState extends State<dataInventory> {
                                         }
                                       },
                                       itemBuilder: (BuildContext context) => [
-                                        PopupMenuItem(
+                                        const PopupMenuItem(
                                           value: 'edit',
                                           child: Row(
                                             children: [
@@ -525,7 +514,7 @@ class _dataInventoryState extends State<dataInventory> {
                                             ],
                                           ),
                                         ),
-                                        PopupMenuItem(
+                                        const PopupMenuItem(
                                           value: 'delete',
                                           child: Row(
                                             children: [
@@ -536,7 +525,7 @@ class _dataInventoryState extends State<dataInventory> {
                                           ),
                                         ),
                                       ],
-                                      child: Icon(Icons.more_vert),
+                                      child: const Icon(Icons.more_vert),
                                     ),
                                   ),
                                 ]);
@@ -550,14 +539,14 @@ class _dataInventoryState extends State<dataInventory> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back),
                 onPressed: _currentPage > 0
                     ? () => setState(() => _currentPage--)
                     : null,
               ),
               Text('Halaman ${_currentPage + 1}'),
               IconButton(
-                icon: Icon(Icons.arrow_forward),
+                icon: const Icon(Icons.arrow_forward),
                 onPressed:
                     (_currentPage + 1) * _rowsPerPage < _inventoryList.length
                         ? () => setState(() => _currentPage++)

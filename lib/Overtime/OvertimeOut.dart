@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
-import 'package:absen/susses&failde/berhasilV1II.dart';
-import 'package:absen/susses&failde/gagalovertimeout.dart';
+import 'package:absen/success_failed/berhasilV1II.dart';
+import 'package:absen/success_failed/gagalovertimeout.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';

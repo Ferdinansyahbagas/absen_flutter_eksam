@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
-import 'package:absen/susses&failde/gagalinven.dart';
+import 'package:absen/success_failed/gagalinven.dart';
 import 'package:absen/inventaris/datainventaris.dart';
-import 'package:absen/susses&failde/berhasiltambah.dart';
+import 'package:absen/success_failed/berhasiltambah.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';

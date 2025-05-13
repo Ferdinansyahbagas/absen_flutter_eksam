@@ -1,5 +1,5 @@
-import 'package:absen/susses&failde/berhasilOvertimein.dart';
-import 'package:absen/susses&failde/gagalV2I.dart';
+import 'package:absen/success_failed/berhasilOvertimein.dart';
+import 'package:absen/success_failed/gagalV2I.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';

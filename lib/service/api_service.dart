@@ -24,11 +24,11 @@ class ApiService {
 
       if (method == 'POST') {
         response = await http
-            .post(url, headers: headers, body: jsonEncode(body))
+            .post(url, headers: headers, body: body)
             .timeout(const Duration(seconds: 10)); // Set timeout 10 detik
       } else if (method == 'PUT') {
         response = await http
-            .put(url, headers: headers, body: jsonEncode(body))
+            .put(url, headers: headers, body: body)
             .timeout(const Duration(seconds: 10)); // Set timeout 10 detik
       } else {
         response = await http

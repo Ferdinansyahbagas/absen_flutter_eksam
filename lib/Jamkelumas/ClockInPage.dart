@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:absen/homepage/home.dart';
-import 'package:absen/susses&failde/gagalV1.dart';
-import 'package:absen/susses&failde/berhasilV1.dart';
-import 'package:absen/susses&failde/gagalovertime.dart';
-import 'package:absen/susses&failde/berhasilOvertimein.dart';
+import 'package:absen/success_failed/gagalV1.dart';
+import 'package:absen/success_failed/berhasilV1.dart';
+import 'package:absen/success_failed/gagalovertime.dart';
+import 'package:absen/success_failed/berhasilOvertimein.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';

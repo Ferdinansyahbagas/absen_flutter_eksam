@@ -1,7 +1,7 @@
 import 'TimeoffScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:absen/susses&failde/gagalV2II.dart';
-import 'package:absen/susses&failde/berhasilV2II.dart';
+import 'package:absen/success_failed/gagalV2II.dart';
+import 'package:absen/success_failed/berhasilV2II.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';

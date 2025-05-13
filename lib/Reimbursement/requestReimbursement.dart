@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:absen/susses&failde/gagalV3.dart';
-import 'package:absen/susses&failde/berhasilV3.dart';
+import 'package:absen/success_failed/gagalV3.dart';
+import 'package:absen/success_failed/berhasilV3.dart';
 import 'package:absen/Reimbursement/Reimbursementscreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';

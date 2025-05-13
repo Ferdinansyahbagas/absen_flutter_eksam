@@ -1,7 +1,7 @@
 import 'TimeoffScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:absen/susses&failde/gagalV2I.dart';
-import 'package:absen/susses&failde/berhasilV2I.dart';
+import 'package:absen/success_failed/gagalV2I.dart';
+import 'package:absen/success_failed/berhasilV2I.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
