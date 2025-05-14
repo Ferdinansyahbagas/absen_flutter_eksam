@@ -294,6 +294,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _showDateFilterPopup(
       BuildContext context, Function(DateTime, DateTime) onFilter) {
+    final TextEditingController startDateController = TextEditingController();
+    final TextEditingController endDateController = TextEditingController();
+
     DateTime? startDate;
     DateTime? endDate;
 
@@ -316,6 +319,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                 // START DATE Picker
                 TextFormField(
+                  controller: startDateController,
                   readOnly: true,
                   decoration: InputDecoration(
                     labelText: 'START DATE',
@@ -329,29 +333,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
                       initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime.now(),
+                      firstDate: DateTime(1900), // Mulai dari tahun 1900
+                      lastDate: DateTime(2100), // Sampai tahun 2100
                     );
                     if (pickedDate != null) {
                       startDate = pickedDate;
-                      (context as Element).markNeedsBuild();
+                      startDateController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+
+                      // Reset End Date jika Start Date diubah
+                      endDate = null;
+                      endDateController.clear();
                     }
                   },
                 ),
-
-                if (startDate != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Text(
-                      'Picked: ${startDate.toString().split(' ')[0]}',
-                      style: const TextStyle(color: Colors.green),
-                    ),
-                  ),
 
                 const SizedBox(height: 20),
 
                 // END DATE Picker
                 TextFormField(
+                  controller: endDateController,
                   readOnly: true,
                   decoration: InputDecoration(
                     labelText: 'END DATE',
@@ -362,34 +363,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const Icon(Icons.calendar_today, color: Colors.purple),
                   ),
                   onTap: () async {
-                    if (startDate != null) {
-                      DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: startDate!.add(const Duration(days: 1)),
-                        firstDate: startDate!,
-                        lastDate: DateTime.now(),
-                      );
-                      if (pickedDate != null) {
-                        endDate = pickedDate;
-                        (context as Element).markNeedsBuild();
-                      }
-                    } else {
+                    if (startDate == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content: Text('Pilih Start Date terlebih dahulu!')),
+                            content: Text('Pilih Start Date terlebih dahulu')),
                       );
+                      return;
+                    }
+
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: startDate ?? DateTime.now(),
+                      firstDate: DateTime(1900), // Mulai dari tahun 1900
+                      lastDate: DateTime(2100), // Sampai tahun 2100
+                    );
+                    if (pickedDate != null) {
+                      endDate = pickedDate;
+                      endDateController.text =
+                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
                     }
                   },
                 ),
 
-                if (endDate != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Text(
-                      'Picked: ${endDate.toString().split(' ')[0]}',
-                      style: const TextStyle(color: Colors.green),
-                    ),
-                  ),
                 const SizedBox(height: 20),
 
                 // Button Row
@@ -416,7 +411,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
+                        backgroundColor: Colors.orange,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

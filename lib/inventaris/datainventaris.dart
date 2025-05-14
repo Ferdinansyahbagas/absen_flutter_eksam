@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -88,15 +88,14 @@ class _dataInventoryState extends State<dataInventory> {
   // *Menampilkan dialog pilihan sumber gambar*
 
   String formatTanggal(String? tanggal) {
-  if (tanggal == null || tanggal.isEmpty) return '-';
-  try {
-    DateTime parsedDate = DateTime.parse(tanggal);
-    return "${parsedDate.day.toString().padLeft(2, '0')}-${parsedDate.month.toString().padLeft(2, '0')}-${parsedDate.year}";
-  } catch (e) {
-    return '-';
+    if (tanggal == null || tanggal.isEmpty) return '-';
+    try {
+      DateTime parsedDate = DateTime.parse(tanggal);
+      return "${parsedDate.day.toString().padLeft(2, '0')}-${parsedDate.month.toString().padLeft(2, '0')}-${parsedDate.year}";
+    } catch (e) {
+      return '-';
+    }
   }
-}
-
 
   Future<void> getProfil() async {
     try {
@@ -147,7 +146,6 @@ class _dataInventoryState extends State<dataInventory> {
       print('Error deleteInventory: $e');
     }
   }
-
 
   Future<void> fetchInventory() async {
     setState(() {
@@ -310,15 +308,15 @@ class _dataInventoryState extends State<dataInventory> {
                       setState(() {
                         _tanggalPembelian = picked;
                         tanggalPembelian =
-                            DateFormat('dd-MM-yyyy').format(picked);
+                            DateFormat('yyyy-MM-dd').format(picked);
                       });
                     }
                   },
                   child: InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Tanggal Pembelian',
-                      labelStyle:
-                          const TextStyle(color: Color.fromARGB(255, 101, 19, 116)),
+                      labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 101, 19, 116)),
                       floatingLabelBehavior: FloatingLabelBehavior.always,
                       focusedBorder: OutlineInputBorder(
                         borderSide: const BorderSide(
@@ -483,8 +481,12 @@ class _dataInventoryState extends State<dataInventory> {
                                       style: const TextStyle(fontSize: 12))),
                                   DataCell(Text(item['keterangan'] ?? '-',
                                       style: const TextStyle(fontSize: 12))),
-                                DataCell(Text(formatTanggal(item['tanggal_pembelian']), style: const TextStyle(fontSize: 12))),
-DataCell(Text(formatTanggal(item['tanggal_peminjaman']), style: const TextStyle(fontSize: 12))),
+                                  DataCell(Text(
+                                      formatTanggal(item['tanggal_pembelian']),
+                                      style: const TextStyle(fontSize: 12))),
+                                  DataCell(Text(
+                                      formatTanggal(item['tanggal_peminjaman']),
+                                      style: const TextStyle(fontSize: 12))),
                                   DataCell(Text(
                                     statusText,
                                     style: TextStyle(
