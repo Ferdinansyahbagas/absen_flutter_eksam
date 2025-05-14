@@ -217,13 +217,14 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       body: Stack(
         children: [
-          SafeArea(
-            child: SingleChildScrollView(
+          Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
               padding: const EdgeInsets.all(16.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  const SizedBox(height: 130.0),
                   const Text(
                     "Log In",
                     style: TextStyle(
@@ -273,6 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       _errorMessage!,
                       style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
                   const SizedBox(height: 32.0),
                   Container(
@@ -312,7 +314,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text('Forgot Your Password?'),
                     ),
                   ),
-                  const SizedBox(height: 50.0), // Untuk tambahan ruang bawah
                 ],
               ),
             ),

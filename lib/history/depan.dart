@@ -292,17 +292,167 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  void _showDateFilterPopup(
+      BuildContext context, Function(DateTime, DateTime) onFilter) {
+    DateTime? startDate;
+    DateTime? endDate;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Filter',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+
+                // START DATE Picker
+                TextFormField(
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: 'START DATE',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon:
+                        const Icon(Icons.calendar_today, color: Colors.purple),
+                  ),
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (pickedDate != null) {
+                      startDate = pickedDate;
+                      (context as Element).markNeedsBuild();
+                    }
+                  },
+                ),
+
+                if (startDate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Text(
+                      'Picked: ${startDate.toString().split(' ')[0]}',
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                  ),
+
+                const SizedBox(height: 20),
+
+                // END DATE Picker
+                TextFormField(
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: 'END DATE',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    suffixIcon:
+                        const Icon(Icons.calendar_today, color: Colors.purple),
+                  ),
+                  onTap: () async {
+                    if (startDate != null) {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: startDate!.add(const Duration(days: 1)),
+                        firstDate: startDate!,
+                        lastDate: DateTime.now(),
+                      );
+                      if (pickedDate != null) {
+                        endDate = pickedDate;
+                        (context as Element).markNeedsBuild();
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Pilih Start Date terlebih dahulu!')),
+                      );
+                    }
+                  },
+                ),
+
+                if (endDate != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Text(
+                      'Picked: ${endDate.toString().split(' ')[0]}',
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                  ),
+                const SizedBox(height: 20),
+
+                // Button Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (startDate != null && endDate != null) {
+                          onFilter(startDate!, endDate!);
+                          Navigator.of(context).pop();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text('Lengkapi Start Date dan End Date')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 10.0),
+                        child: Text('Submit', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _onCheckHistoryPressed(BuildContext context, List historyData) {
     // TextEditingController searchController = TextEditingController();
     List filteredData = List.from(historyData);
 
-    void filterDataByDateRange(DateTime startDate, DateTime endDate) {
-      filteredData = historyData.where((item) {
-        DateTime itemDate =
-            DateTime.parse(item['date']); // Pastikan ini tipe DateTime
-        return itemDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
-            itemDate.isBefore(endDate.add(const Duration(days: 1)));
-      }).toList();
+    void filterDataByDateRange(DateTime? startDate, DateTime? endDate) {
+      if (startDate != null && endDate != null) {
+        filteredData = historyData.where((item) {
+          DateTime itemDate = DateTime.parse(item['date']);
+          return itemDate
+                  .isAfter(startDate.subtract(const Duration(days: 1))) &&
+              itemDate.isBefore(endDate.add(const Duration(days: 1)));
+        }).toList();
+      } else {
+        // Kalau startDate atau endDate null, tampilkan semua data
+        filteredData = List.from(historyData);
+      }
     }
     // void filterData(int days) {
     //   DateTime today = DateTime.now();
@@ -351,121 +501,43 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ),
                         Container(
-  decoration: BoxDecoration(
-    color: Colors.white,
-    border: Border.all(color: const Color.fromARGB(255, 101, 19, 116)),
-    borderRadius: BorderRadius.circular(30.0),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.1),
-        spreadRadius: 2,
-        blurRadius: 5,
-        offset: const Offset(0, 3),
-      ),
-    ],
-  ),
-  child: InkWell(
-    onTap: () async {
-      DateTime? startDate;
-      DateTime? endDate;
-
-      // Pilih Start Date
-      startDate = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime.now(),
-        builder: (BuildContext context, Widget? child) {
-          return Center(
-            child: Container(
-              margin: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: child,
-              ),
-            ),
-          );
-        },
-      );
-
-      if (startDate != null) {
-        // Pilih End Date
-        endDate = await showDatePicker(
-          context: context,
-          initialDate: startDate.add(const Duration(days: 1)),
-          firstDate: startDate,
-          lastDate: DateTime.now(),
-          builder: (BuildContext context, Widget? child) {
-            return Center(
-              child: Container(
-                margin: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      spreadRadius: 1,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: child,
-                ),
-              ),
-            );
-          },
-        );
-      }
-
-      if (startDate != null && endDate != null) {
-        setState(() {
-          filterDataByDateRange(startDate!, endDate!);
-        });
-      }
-    },
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.filter_alt,
-            color: Color.fromARGB(255, 101, 19, 116),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Filter Date',
-            style: TextStyle(
-              color: Color.fromARGB(255, 101, 19, 116),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.orange.shade300,
-            size: 16,
-          ),
-        ],
-      ),
-    ),
-  ),
-),
+                          margin: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: Colors.purple),
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              _showDateFilterPopup(context, (start, end) {
+                                setState(() {
+                                  filterDataByDateRange(start, end);
+                                });
+                              });
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 12.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Filter Date',
+                                    style: TextStyle(
+                                      color: Colors.purple,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.date_range,
+                                    color: Colors.purple,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                         // Container(
                         //   decoration: BoxDecoration(
                         //     color: Colors.white,

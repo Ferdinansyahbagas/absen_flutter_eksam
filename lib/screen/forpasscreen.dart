@@ -82,96 +82,99 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 170),
-              const Text(
-                'Forgot Password',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Forgot Password',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Masukkan email yang sudah terdaftar',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
+                const SizedBox(height: 10),
+                Text(
+                  'Masukkan email yang sudah terdaftar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: const OutlineInputBorder(),
-                        errorText: !_isEmailValid
-                            ? 'Email tidak sesuai format yang diharapkan'
-                            : _errorMessage,
-                        errorBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red, width: 2.0),
-                        ),
-                        focusedErrorBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.red, width: 2.0),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        setState(() {
-                          // Memeriksa apakah email sesuai format
-                          _isEmailValid =
-                              RegExp(r'\S+@\S+\.\S+').hasMatch(value);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        gradient: const LinearGradient(
-                          colors: [Colors.orange, Colors.pink, Colors.purple],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                const SizedBox(height: 20),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: const OutlineInputBorder(),
+                          errorText: !_isEmailValid
+                              ? 'Email tidak sesuai format yang diharapkan'
+                              : _errorMessage,
+                          errorBorder: const OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.red, width: 2.0),
+                          ),
+                          focusedErrorBorder: const OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.red, width: 2.0),
                           ),
                         ),
-                        child: const Text(
-                          'Submit',
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            color: Colors.white,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          setState(() {
+                            // Memeriksa apakah email sesuai format
+                            _isEmailValid =
+                                RegExp(r'\S+@\S+\.\S+').hasMatch(value);
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          gradient: const LinearGradient(
+                            colors: [Colors.orange, Colors.pink, Colors.purple],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _submit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 18.0,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

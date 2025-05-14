@@ -649,10 +649,10 @@ class _HomePageState extends State<HomePage> {
       if (now.weekday == DateTime.saturday || now.weekday == DateTime.sunday) {
         isWeekend = true;
       }
-
-      if (liburData != null && liburData['libur'] != null) {
+      if (liburData != null && liburData['data']['libur'] != null) {
+        print(liburData['data']['libur']);
         setState(() {
-          hasholiday = liburData['libur'] || isWeekend;
+          hasholiday = liburData['data']['libur'] || isWeekend;
         });
       } else {
         setState(() {
