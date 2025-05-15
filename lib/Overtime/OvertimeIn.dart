@@ -1,5 +1,5 @@
 import 'package:absen/success_failed/berhasilOvertimein.dart';
-import 'package:absen/success_failed/gagalV2I.dart';
+import 'package:absen/success_failed/gagalovertime.dart';
 import 'package:absen/homepage/home.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -23,7 +23,7 @@ class Overtimein extends StatefulWidget {
 class _OvertimeinState extends State<Overtimein> {
   String? Id; // Simpan ID WFH jika ada
   String? userStatus;
-  String? _selectedWorkType = 'Reguler';
+  String? _selectedWorkType = 'Lembur';
   String? _selectedWorkplaceType = 'WFO';
   File? _image; // To store the image file
   bool _isImageRequired = false; // Flag to indicate if image is required
@@ -201,7 +201,7 @@ class _OvertimeinState extends State<Overtimein> {
             _selectedWorkplaceType = 'WFA';
           } else {
             // Kalau dalam 500 meter, bisa pilih WFO atau WFA
-            workplaceTypes = ['WFO', 'WFA'];
+            workplaceTypes = ['WFO', ''];
             _selectedWorkplaceType = 'WFO';
           }
         });
@@ -309,8 +309,8 @@ class _OvertimeinState extends State<Overtimein> {
       String city = place.locality ?? "Lokasi tidak tersedia";
 
       // Siapkan request ke API OvertimeIn
-      final url = Uri.parse(
-          'https://portal.eksam.cloud/api/v1/attendance/overtime-in'); // <- Pastikan endpoint ini sesuai
+      final url =
+          Uri.parse('https://portal.eksam.cloud/api/v1/attendance/overtime-in');
       var request = http.MultipartRequest('POST', url);
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -329,40 +329,19 @@ class _OvertimeinState extends State<Overtimein> {
 
       // Kirim request
       var response = await request.send();
-      var rp = await http.Response.fromStream(response);
-      var data = jsonDecode(rp.body);
-
       Navigator.pop(context); // Tutup loading dialog
-
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Overtime clock-in berhasil!'),
-            backgroundColor: Colors.green,
-          ),
-        );
         Navigator.pushReplacement(context,
             MaterialPageRoute(builder: (context) => const SuccessOvertime()));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['message'] ?? 'Gagal clock-in overtime.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const FailurePage2I()));
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const FailurePageovertime()));
       }
     } catch (e) {
-      Navigator.pop(context); // Pastikan tutup loading saat error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Terjadi kesalahan: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const FailurePage2I()));
+          MaterialPageRoute(builder: (context) => const FailurePageovertime()));
     }
   }
 

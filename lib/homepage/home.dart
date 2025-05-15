@@ -3,6 +3,7 @@ import 'package:absen/history/depan.dart'; // Mengimpor halaman history
 import 'package:absen/homepage/notif.dart'; // Mengimpor halaman notif
 import 'package:absen/profil/profilscreen.dart'; // Mengimpor halaman profil
 import 'package:absen/inventaris/peraturan.dart'; // Mengimpor halaman peraturan
+import 'package:absen/Overtime/OvertimeIn.dart';
 import 'package:absen/Overtime/OvertimeOut.dart';
 import 'package:absen/timeoff/TimeoffScreen.dart'; // Mengimpor halaman timeoff
 import 'package:absen/Jamkelumas/Clockinwfa.dart'; // Mengimpor halaman pengajuan wfa
@@ -1086,7 +1087,7 @@ class _HomePageState extends State<HomePage> {
                                                     context,
                                                     MaterialPageRoute(
                                                       builder: (context) =>
-                                                          const ClockInPage(),
+                                                          const Overtimein(),
                                                     ),
                                                   );
                                                   if (result == true) {
@@ -1254,7 +1255,7 @@ class _HomePageState extends State<HomePage> {
                                                     context,
                                                     MaterialPageRoute(
                                                       builder: (context) =>
-                                                          const ClockInPage(),
+                                                          const Overtimein(),
                                                     ),
                                                   );
                                                   if (result == true) {
