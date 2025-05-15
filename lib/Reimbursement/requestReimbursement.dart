@@ -21,6 +21,7 @@ class ReimbursementForm extends StatefulWidget {
 class _ReimbursementFormState extends State<ReimbursementForm> {
   String description = '';
   String formattedDate = '';
+  String formattedDateUI = '';
   String totalReimbursement = '';
   File? _image;
   bool _isDateEmpty = false;
@@ -84,13 +85,15 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
       setState(() {
         if (isStartDate) {
           selectedDate = picked;
-          formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+          formattedDate = DateFormat('yyyy-MM-dd').format(picked); // Untuk API
+          formattedDateUI =
+              DateFormat('dd MMMM yyyy').format(picked); // Untuk UI
           _isDateEmpty = false;
         }
       });
     }
   }
-  
+
   Future<void> _submitData() async {
     setState(() {
       _isDescriptionEmpty = description.isEmpty;
@@ -106,7 +109,6 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
         ),
       );
       return;
-
     }
 
     // Show loading dialog
@@ -185,7 +187,6 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
           MaterialPageRoute(builder: (context) => const FailurePage3()));
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +296,6 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                 },
               ),
               const SizedBox(height: 16),
-
               // Date picker field
               InkWell(
                 onTap: () => _selectDate(context, true),
@@ -336,7 +336,7 @@ class _ReimbursementFormState extends State<ReimbursementForm> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        selectedDate == null ? 'Select Date' : formattedDate,
+                        selectedDate == null ? 'Select Date' : formattedDateUI,
                       ),
                       const Icon(Icons.calendar_today, color: Colors.orange),
                     ],

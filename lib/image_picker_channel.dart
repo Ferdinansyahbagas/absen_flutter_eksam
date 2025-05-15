@@ -82,61 +82,6 @@
 //     }
 //   }
 
-//   // void _showLupaClockOutModal() {
-//   //   showModalBottomSheet(
-//   //     context: context,
-//   //     shape: RoundedRectangleBorder(
-//   //       borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-//   //     ),
-//   //     isScrollControlled: true,
-//   //     builder: (context) {
-//   //       return FractionallySizedBox(
-//   //         heightFactor: 0.6,
-//   //         child: Container(
-//   //           padding: EdgeInsets.all(16.0),
-//   //           child: Column(
-//   //             crossAxisAlignment: CrossAxisAlignment.start,
-//   //             children: [
-//   //               Text("Lupa Clock Out",
-//   //                   style:
-//   //                       TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-//   //               SizedBox(height: 10),
-//   //               Expanded(
-//   //                 child: lupaClockOutList.isNotEmpty
-//   //                     ? ListView.builder(
-//   //                         itemCount: lupaClockOutList.length,
-//   //                         itemBuilder: (context, index) {
-//   //                           var item = lupaClockOutList[index];
-//   //                           String formattedDate = DateFormat('yyyy-MM-dd')
-//   //                               .format(DateTime.parse(item['date']));
-//   //                           return Card(
-//   //                             margin: EdgeInsets.symmetric(vertical: 5),
-//   //                             child: ListTile(
-//   //                               title: Text("Belum Clock Out"),
-//   //                               subtitle: Text(formattedDate),
-//   //                               trailing: ElevatedButton(
-//   //                                 onPressed: () {
-//   //                                   Navigator.pushReplacement(
-//   //                                       context,
-//   //                                       MaterialPageRoute(
-//   //                                           builder: (context) =>
-//   //                                               ClockOutLupaScreen()));
-//   //                                 },
-//   //                                 child: Text("Clock Out"),
-//   //                               ),
-//   //                             ),
-//   //                           );
-//   //                         },
-//   //                       )
-//   //                     : Center(child: Text("Tidak ada data lupa clock out")),
-//   //               ),
-//   //             ],
-//   //           ),
-//   //         ),
-//   //       );
-//   //     },
-//   //   );
-//   // }
 //   void _showLupaClockOutModal() async {
 //     await getData(); // ambil data lupa clock out
 //     await getDatalupaOvertime(); // ambil data lupa overtime
@@ -208,7 +153,7 @@
 //             itemBuilder: (context, index) {
 //               var item = lupaClockOutList[index];
 //               String formattedDate =
-//                   DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+//                   DateFormat('dd-MM-yyyy').format(DateTime.parse(item['date']));
 //               return Card(
 //                 margin: EdgeInsets.symmetric(vertical: 5),
 //                 child: ListTile(
@@ -240,7 +185,7 @@
 //             itemBuilder: (context, index) {
 //               var item = lupaovertimeOutList[index];
 //               String formattedDate =
-//                   DateFormat('yyyy-MM-dd').format(DateTime.parse(item['date']));
+//                   DateFormat('dd-MM-yyyy').format(DateTime.parse(item['date']));
 //               return Card(
 //                 margin: EdgeInsets.symmetric(vertical: 5),
 //                 child: ListTile(
@@ -347,17 +292,162 @@
 //     }
 //   }
 
+//   void _showDateFilterPopup(
+//       BuildContext context, Function(DateTime, DateTime) onFilter) {
+//     final TextEditingController startDateController = TextEditingController();
+//     final TextEditingController endDateController = TextEditingController();
+
+//     DateTime? startDate;
+//     DateTime? endDate;
+
+//     showDialog(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return Dialog(
+//           shape:
+//               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//           child: Padding(
+//             padding: const EdgeInsets.all(16.0),
+//             child: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 const Text(
+//                   'Filter',
+//                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//                 ),
+//                 const SizedBox(height: 20),
+
+//                 // START DATE Picker
+//                 TextFormField(
+//                   controller: startDateController,
+//                   readOnly: true,
+//                   decoration: InputDecoration(
+//                     labelText: 'START DATE',
+//                     border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                     ),
+//                     suffixIcon:
+//                         const Icon(Icons.calendar_today, color: Colors.purple),
+//                   ),
+//                   onTap: () async {
+//                     DateTime? pickedDate = await showDatePicker(
+//                       context: context,
+//                       initialDate: DateTime.now(),
+//                       firstDate: DateTime(1900), // Mulai dari tahun 1900
+//                       lastDate: DateTime(2100), // Sampai tahun 2100
+//                     );
+//                     if (pickedDate != null) {
+//                       startDate = pickedDate;
+//                       startDateController.text =
+//                           "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+
+//                       // Reset End Date jika Start Date diubah
+//                       endDate = null;
+//                       endDateController.clear();
+//                     }
+//                   },
+//                 ),
+
+//                 const SizedBox(height: 20),
+
+//                 // END DATE Picker
+//                 TextFormField(
+//                   controller: endDateController,
+//                   readOnly: true,
+//                   decoration: InputDecoration(
+//                     labelText: 'END DATE',
+//                     border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                     ),
+//                     suffixIcon:
+//                         const Icon(Icons.calendar_today, color: Colors.purple),
+//                   ),
+//                   onTap: () async {
+//                     if (startDate == null) {
+//                       ScaffoldMessenger.of(context).showSnackBar(
+//                         const SnackBar(
+//                             content: Text('Pilih Start Date terlebih dahulu')),
+//                       );
+//                       return;
+//                     }
+
+//                     DateTime? pickedDate = await showDatePicker(
+//                       context: context,
+//                       initialDate: startDate ?? DateTime.now(),
+//                       firstDate: DateTime(1900), // Mulai dari tahun 1900
+//                       lastDate: DateTime(2100), // Sampai tahun 2100
+//                     );
+//                     if (pickedDate != null) {
+//                       endDate = pickedDate;
+//                       endDateController.text =
+//                           "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+//                     }
+//                   },
+//                 ),
+
+//                 const SizedBox(height: 20),
+
+//                 // Button Row
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                   children: [
+//                     TextButton(
+//                       onPressed: () {
+//                         Navigator.of(context).pop();
+//                       },
+//                       child: const Text('Cancel'),
+//                     ),
+//                     ElevatedButton(
+//                       onPressed: () {
+//                         if (startDate != null && endDate != null) {
+//                           onFilter(startDate!, endDate!);
+//                           Navigator.of(context).pop();
+//                         } else {
+//                           ScaffoldMessenger.of(context).showSnackBar(
+//                             const SnackBar(
+//                                 content:
+//                                     Text('Lengkapi Start Date dan End Date')),
+//                           );
+//                         }
+//                       },
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: Colors.orange,
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(10),
+//                         ),
+//                       ),
+//                       child: const Padding(
+//                         padding: EdgeInsets.symmetric(
+//                             horizontal: 16.0, vertical: 10.0),
+//                         child: Text('Submit', style: TextStyle(fontSize: 16)),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ],
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+
 //   void _onCheckHistoryPressed(BuildContext context, List historyData) {
 //     // TextEditingController searchController = TextEditingController();
 //     List filteredData = List.from(historyData);
 
-//     void filterDataByDateRange(DateTime startDate, DateTime endDate) {
-//       filteredData = historyData.where((item) {
-//         DateTime itemDate =
-//             DateTime.parse(item['date']); // Pastikan ini tipe DateTime
-//         return itemDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
-//             itemDate.isBefore(endDate.add(const Duration(days: 1)));
-//       }).toList();
+//     void filterDataByDateRange(DateTime? startDate, DateTime? endDate) {
+//       if (startDate != null && endDate != null) {
+//         filteredData = historyData.where((item) {
+//           DateTime itemDate = DateTime.parse(item['date']);
+//           return itemDate
+//                   .isAfter(startDate.subtract(const Duration(days: 1))) &&
+//               itemDate.isBefore(endDate.add(const Duration(days: 1)));
+//         }).toList();
+//       } else {
+//         // Kalau startDate atau endDate null, tampilkan semua data
+//         filteredData = List.from(historyData);
+//       }
 //     }
 //     // void filterData(int days) {
 //     //   DateTime today = DateTime.now();
@@ -406,65 +496,132 @@
 //                           ),
 //                         ),
 //                         Container(
+//                           margin: const EdgeInsets.all(16),
 //                           decoration: BoxDecoration(
 //                             color: Colors.white,
-//                             border: Border.all(
-//                                 color: const Color.fromARGB(255, 101, 19, 116)),
+//                             border: Border.all(color: Colors.purple),
 //                             borderRadius: BorderRadius.circular(30.0),
 //                           ),
 //                           child: InkWell(
-//                             onTap: () async {
-//                               final DateTimeRange? picked =
-//                                   await showDateRangePicker(
-//                                 context: context,
-//                                 useRootNavigator:
-//                                     false, // <-- ini yang bikin dia gak fullscreen
-//                                 firstDate: DateTime(2000),
-//                                 lastDate: DateTime.now(),
-//                                 initialDateRange: DateTimeRange(
-//                                   start: DateTime.now()
-//                                       .subtract(const Duration(days: 30)),
-//                                   end: DateTime.now(),
-//                                 ),
-//                                 builder: (BuildContext context, Widget? child) {
-//                                   return Center(
-//                                     // biar dia muncul di tengah dengan ukuran kecil
-//                                     child: ConstrainedBox(
-//                                       constraints:
-//                                           const BoxConstraints(maxWidth: 400),
-//                                       child: child,
-//                                     ),
-//                                   );
-//                                 },
-//                               );
-//                               if (picked != null) {
+//                             onTap: () {
+//                               _showDateFilterPopup(context, (start, end) {
 //                                 setState(() {
-//                                   filterDataByDateRange(
-//                                       picked.start, picked.end);
+//                                   filterDataByDateRange(start, end);
 //                                 });
-//                               }
+//                               });
 //                             },
 //                             child: const Padding(
 //                               padding: EdgeInsets.symmetric(
 //                                   horizontal: 16.0, vertical: 12.0),
 //                               child: Row(
+//                                 mainAxisAlignment:
+//                                     MainAxisAlignment.spaceBetween,
 //                                 children: [
 //                                   Text(
-//                                     'Filter',
+//                                     'Filter Date',
 //                                     style: TextStyle(
-//                                       color: Color.fromARGB(255, 101, 19, 116),
+//                                       color: Colors.purple,
 //                                       fontWeight: FontWeight.bold,
 //                                     ),
 //                                   ),
 //                                   Icon(
-//                                     Icons.arrow_drop_down,
-//                                     color: Colors.orange,
+//                                     Icons.date_range,
+//                                     color: Colors.purple,
 //                                   ),
 //                                 ],
 //                               ),
 //                             ),
 //                           ),
 //                         ),
+//                         // Container(
+//                         //   decoration: BoxDecoration(
+//                         //     color: Colors.white,
+//                         //     border: Border.all(
+//                         //         color: const Color.fromARGB(255, 101, 19, 116)),
+//                         //     borderRadius: BorderRadius.circular(30.0),
+//                         //     boxShadow: [
+//                         //       BoxShadow(
+//                         //         color: Colors.black.withOpacity(0.1),
+//                         //         spreadRadius: 2,
+//                         //         blurRadius: 5,
+//                         //         offset: const Offset(0, 3),
+//                         //       ),
+//                         //     ],
+//                         //   ),
+//                         //   child: InkWell(
+//                         //     onTap: () async {
+//                         //       final DateTimeRange? picked =
+//                         //           await showDateRangePicker(
+//                         //         context: context,
+//                         //         useRootNavigator: false,
+//                         //         firstDate: DateTime(2000),
+//                         //         lastDate: DateTime.now(),
+//                         //         initialDateRange: DateTimeRange(
+//                         //           start: DateTime.now()
+//                         //               .subtract(const Duration(days: 30)),
+//                         //           end: DateTime.now(),
+//                         //         ),
+//                         //         builder: (BuildContext context, Widget? child) {
+//                         //           return Center(
+//                         //             child: Container(
+//                         //               margin: const EdgeInsets.all(20),
+//                         //               decoration: BoxDecoration(
+//                         //                 color: Colors.white,
+//                         //                 borderRadius: BorderRadius.circular(16),
+//                         //                 boxShadow: [
+//                         //                   BoxShadow(
+//                         //                     color:
+//                         //                         Colors.black.withOpacity(0.2),
+//                         //                     spreadRadius: 1,
+//                         //                     blurRadius: 8,
+//                         //                     offset: const Offset(0, 4),
+//                         //                   ),
+//                         //                 ],
+//                         //               ),
+//                         //               child: ClipRRect(
+//                         //                 borderRadius: BorderRadius.circular(16),
+//                         //                 child: child,
+//                         //               ),
+//                         //             ),
+//                         //           );
+//                         //         },
+//                         //       );
+
+//                         //       if (picked != null) {
+//                         //         setState(() {
+//                         //           filterDataByDateRange(
+//                         //               picked.start, picked.end);
+//                         //         });
+//                         //       }
+//                         //     },
+//                         //     child: Padding(
+//                         //       padding: EdgeInsets.symmetric(
+//                         //           horizontal: 16.0, vertical: 12.0),
+//                         //       child: Row(
+//                         //         children: [
+//                         //           Icon(
+//                         //             Icons.date_range,
+//                         //             color: Color.fromARGB(255, 101, 19, 116),
+//                         //           ),
+//                         //           SizedBox(width: 8),
+//                         //           Text(
+//                         //             'Select Date Range',
+//                         //             style: TextStyle(
+//                         //               color: const Color.fromARGB(
+//                         //                   255, 101, 19, 116),
+//                         //               fontWeight: FontWeight.bold,
+//                         //             ),
+//                         //           ),
+//                         //           Icon(
+//                         //             Icons.arrow_forward_ios,
+//                         //             color: Colors.orange.shade300,
+//                         //             size: 16,
+//                         //           ),
+//                         //         ],
+//                         //       ),
+//                         //     ),
+//                         //   ),
+//                         // ),
 //                       ],
 //                     ),
 //                   ),

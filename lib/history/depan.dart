@@ -292,6 +292,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  String formatTanggal(String date) {
+    try {
+      DateTime parsedDate = DateTime.parse(date);
+      return DateFormat('dd-MM-yyyy').format(parsedDate);
+    } catch (e) {
+      return date;
+    }
+  }
+
   void _showDateFilterPopup(
       BuildContext context, Function(DateTime, DateTime) onFilter) {
     final TextEditingController startDateController = TextEditingController();
@@ -339,8 +348,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     if (pickedDate != null) {
                       startDate = pickedDate;
                       startDateController.text =
-                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
-
+                          formatTanggal(pickedDate.toIso8601String());
                       // Reset End Date jika Start Date diubah
                       endDate = null;
                       endDateController.clear();
@@ -380,13 +388,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     if (pickedDate != null) {
                       endDate = pickedDate;
                       endDateController.text =
-                          "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                          formatTanggal(pickedDate.toIso8601String());
                     }
                   },
                 ),
-
                 const SizedBox(height: 20),
-
                 // Button Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -445,30 +451,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
               itemDate.isBefore(endDate.add(const Duration(days: 1)));
         }).toList();
       } else {
-        // Kalau startDate atau endDate null, tampilkan semua data
         filteredData = List.from(historyData);
       }
     }
-    // void filterData(int days) {
-    //   DateTime today = DateTime.now();
-    //   filteredData = historyData.where((item) {
-    //     DateTime itemDate = DateTime.parse(item['date']);
-    //     return today.difference(itemDate).inDays <= days;
-    //   }).toList();
-    // }
 
-    // void searchHistory(String query) {
-    //   filteredData = historyData.where((item) {
-    //     return item['date'].contains(query) ||
-    //         item['location']['name']
-    //             .toLowerCase()
-    //             .contains(query.toLowerCase()) ||
-    //         item['status']['name']
-    //             .toLowerCase()
-    //             .contains(query.toLowerCase()) ||
-    //         item['notes'].toLowerCase().contains(query.toLowerCase());
-    //   }).toList();
-    // }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -533,244 +519,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                           ),
                         ),
-                        // Container(
-                        //   decoration: BoxDecoration(
-                        //     color: Colors.white,
-                        //     border: Border.all(
-                        //         color: const Color.fromARGB(255, 101, 19, 116)),
-                        //     borderRadius: BorderRadius.circular(30.0),
-                        //     boxShadow: [
-                        //       BoxShadow(
-                        //         color: Colors.black.withOpacity(0.1),
-                        //         spreadRadius: 2,
-                        //         blurRadius: 5,
-                        //         offset: const Offset(0, 3),
-                        //       ),
-                        //     ],
-                        //   ),
-                        //   child: InkWell(
-                        //     onTap: () async {
-                        //       final DateTimeRange? picked =
-                        //           await showDateRangePicker(
-                        //         context: context,
-                        //         useRootNavigator: false,
-                        //         firstDate: DateTime(2000),
-                        //         lastDate: DateTime.now(),
-                        //         initialDateRange: DateTimeRange(
-                        //           start: DateTime.now()
-                        //               .subtract(const Duration(days: 30)),
-                        //           end: DateTime.now(),
-                        //         ),
-                        //         builder: (BuildContext context, Widget? child) {
-                        //           return Center(
-                        //             child: Container(
-                        //               margin: const EdgeInsets.all(20),
-                        //               decoration: BoxDecoration(
-                        //                 color: Colors.white,
-                        //                 borderRadius: BorderRadius.circular(16),
-                        //                 boxShadow: [
-                        //                   BoxShadow(
-                        //                     color:
-                        //                         Colors.black.withOpacity(0.2),
-                        //                     spreadRadius: 1,
-                        //                     blurRadius: 8,
-                        //                     offset: const Offset(0, 4),
-                        //                   ),
-                        //                 ],
-                        //               ),
-                        //               child: ClipRRect(
-                        //                 borderRadius: BorderRadius.circular(16),
-                        //                 child: child,
-                        //               ),
-                        //             ),
-                        //           );
-                        //         },
-                        //       );
-
-                        //       if (picked != null) {
-                        //         setState(() {
-                        //           filterDataByDateRange(
-                        //               picked.start, picked.end);
-                        //         });
-                        //       }
-                        //     },
-                        //     child: Padding(
-                        //       padding: EdgeInsets.symmetric(
-                        //           horizontal: 16.0, vertical: 12.0),
-                        //       child: Row(
-                        //         children: [
-                        //           Icon(
-                        //             Icons.date_range,
-                        //             color: Color.fromARGB(255, 101, 19, 116),
-                        //           ),
-                        //           SizedBox(width: 8),
-                        //           Text(
-                        //             'Select Date Range',
-                        //             style: TextStyle(
-                        //               color: const Color.fromARGB(
-                        //                   255, 101, 19, 116),
-                        //               fontWeight: FontWeight.bold,
-                        //             ),
-                        //           ),
-                        //           Icon(
-                        //             Icons.arrow_forward_ios,
-                        //             color: Colors.orange.shade300,
-                        //             size: 16,
-                        //           ),
-                        //         ],
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
                       ],
                     ),
                   ),
-                  // showModalBottomSheet(
-                  //   context: context,
-                  //   isScrollControlled: true,
-                  //   shape: const RoundedRectangleBorder(
-                  //     borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-                  //   ),
-                  //   builder: (BuildContext context) {
-                  //     return StatefulBuilder(
-                  //       builder: (BuildContext context, StateSetter setState) {
-                  //         return SizedBox(
-                  //           height: MediaQuery.of(context).size.height * 0.8,
-                  //           child: Column(
-                  //             children: [
-                  //               Padding(
-                  //                 padding: const EdgeInsets.all(16.0),
-                  //                 child: Column(
-                  //                   children: [
-                  //                     Row(
-                  //                       children: [
-                  //                         Expanded(
-                  //                           child: Container(
-                  //                             decoration: BoxDecoration(
-                  //                               color: Colors.white,
-                  //                               border: Border.all(
-                  //                                   color: const Color.fromARGB(
-                  //                                       255, 101, 19, 116)),
-                  //                               borderRadius: BorderRadius.circular(30.0),
-                  //                             ),
-                  //                             child: Row(
-                  //                               children: [
-                  //                                 Expanded(
-                  //                                   child: Padding(
-                  //                                     padding:
-                  //                                         const EdgeInsets.only(left: 16.0),
-                  //                                     child: TextField(
-                  //                                       controller: searchController,
-                  //                                       decoration: const InputDecoration(
-                  //                                         hintText: 'Search',
-                  //                                         border: InputBorder.none,
-                  //                                       ),
-                  //                                       onChanged: (query) {
-                  //                                         setState(() {
-                  //                                           searchHistory(query);
-                  //                                         });
-                  //                                       },
-                  //                                     ),
-                  //                                   ),
-                  //                                 ),
-                  //                                 IconButton(
-                  //                                   icon: const Icon(Icons.search,
-                  //                                       color: Colors.orange),
-                  //                                   onPressed: () {
-                  //                                     setState(() {
-                  //                                       searchHistory(searchController.text);
-                  //                                     });
-                  //                                   },
-                  //                                 ),
-                  //                               ],
-                  //                             ),
-                  //                           ),
-                  //                         ),
-                  //                         const SizedBox(width: 10),
-                  //                         Container(
-                  //                           decoration: BoxDecoration(
-                  //                             color: Colors.white,
-                  //                             border: Border.all(
-                  //                                 color: const Color.fromARGB(
-                  //                                     255, 101, 19, 116)),
-                  //                             borderRadius: BorderRadius.circular(30.0),
-                  //                           ),
-                  //                           child: PopupMenuButton<int>(
-                  //                             onSelected: (value) {
-                  //                               setState(() {
-                  //                                 filterData(value);
-                  //                               });
-                  //                             },
-                  //                             itemBuilder: (BuildContext context) =>
-                  //                                 <PopupMenuEntry<int>>[
-                  //                               const PopupMenuItem<int>(
-                  //                                 value: 10,
-                  //                                 child: Text(
-                  //                                   'in the last 10 days',
-                  //                                   style: TextStyle(
-                  //                                     color: Colors.black,
-                  //                                     fontWeight: FontWeight.bold,
-                  //                                   ),
-                  //                                 ),
-                  //                               ),
-                  //                               const PopupMenuItem<int>(
-                  //                                 value: 25,
-                  //                                 child: Text(
-                  //                                   'in the last 25 days',
-                  //                                   style: TextStyle(
-                  //                                     color: Colors.black,
-                  //                                     fontWeight: FontWeight.bold,
-                  //                                   ),
-                  //                                 ),
-                  //                               ),
-                  //                               const PopupMenuItem<int>(
-                  //                                 value: 50,
-                  //                                 child: Text(
-                  //                                   'in the last 50 days',
-                  //                                   style: TextStyle(
-                  //                                     color: Colors.black,
-                  //                                     fontWeight: FontWeight.bold,
-                  //                                   ),
-                  //                                 ),
-                  //                               ),
-                  //                               const PopupMenuItem<int>(
-                  //                                 value: 100,
-                  //                                 child: Text(
-                  //                                   'in the last 100 days',
-                  //                                   style: TextStyle(
-                  //                                     color: Colors.black,
-                  //                                     fontWeight: FontWeight.bold,
-                  //                                   ),
-                  //                                 ),
-                  //                               ),
-                  //                             ],
-                  //                             child: const Padding(
-                  //                               padding: EdgeInsets.symmetric(
-                  //                                   horizontal: 16.0, vertical: 12.0),
-                  //                               child: Row(
-                  //                                 children: [
-                  //                                   Text(
-                  //                                     'Filter',
-                  //                                     style: TextStyle(
-                  //                                       color:
-                  //                                           Color.fromARGB(255, 101, 19, 116),
-                  //                                       fontWeight: FontWeight.bold,
-                  //                                     ),
-                  //                                   ),
-                  //                                   Icon(
-                  //                                     Icons.arrow_drop_down,
-                  //                                     color: Colors.orange,
-                  //                                   ),
-                  //                                 ],
-                  //                               ),
-                  //                             ),
-                  //                           ),
-                  //                         ),
-                  //                       ],
-                  //                     ),
-                  //                   ],
-                  //                 ),
-                  //               ),
                   Expanded(
                     child: ListView.builder(
                       itemCount: filteredData.length,
@@ -783,7 +534,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                           child: ListTile(
                             title: Text(
-                              historyItem['date'],
+                              formatTanggal(historyItem['date']),
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -830,7 +581,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                     ),
                                                     const SizedBox(width: 10),
                                                     Text(
-                                                      historyItem['date'],
+                                                      formatTanggal(
+                                                          historyItem['date']),
                                                       style: const TextStyle(
                                                         fontSize: 24,
                                                         fontWeight:

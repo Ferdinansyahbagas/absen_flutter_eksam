@@ -483,7 +483,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 onTap: _pickImage,
                 child: Container(
                   height: 130,
-                  width: 150,
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: _isImageRequired

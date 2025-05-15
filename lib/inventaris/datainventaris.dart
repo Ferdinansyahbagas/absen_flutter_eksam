@@ -216,32 +216,27 @@ class _dataInventoryState extends State<dataInventory> {
       request.fields['tanggal_pembelian'] = tanggalPembelian;
       request.fields['tanggal_peminjaman'] = tanggalPeminjaman;
 
-      // Cek apakah gambar ada, jika ada baru dikirim
       if (_image != null) {
-        // Jika user memilih gambar baru
         print('Mengirim gambar baru...');
         request.files.add(await http.MultipartFile.fromPath(
           'foto_barang',
           _image!.path,
           contentType: MediaType('image', 'jpg'),
         ));
-      } else if (oldImagePath != null && oldImagePath!.startsWith('/data')) {
-        // Kalau ternyata path lama adalah file lokal (bukan URL), kirim ulang file-nya
-        request.files.add(await http.MultipartFile.fromPath(
-          'foto_barang',
-          oldImagePath!,
-          contentType: MediaType('image', 'jpg'),
-        ));
+      } else if (oldImagePath != null && oldImagePath!.isNotEmpty) {
+        print('Mengirim ulang gambar lama langsung dari server...');
+
+        // Kirim path langsung dari server
+        request.fields['foto_barang'] = oldImagePath!;
       } else {
-        // Tidak mengirim field foto_barang, biarkan server tetap pakai gambar lama
         print('Tidak mengirim gambar, tetap pakai yang lama.');
       }
+
       var response = await request.send();
       var rp = await http.Response.fromStream(response);
 
       print('Status Code: ${rp.statusCode}');
-      print(
-          'Response Body: ${rp.body}'); // <<< Tambah ini, supaya kelihatan isinya
+      print('Response Body: ${rp.body}');
 
       if (rp.statusCode == 200) {
         final result = jsonDecode(rp.body);
@@ -253,8 +248,7 @@ class _dataInventoryState extends State<dataInventory> {
         }
       } else {
         print('Gagal update, status bukan 200: ${rp.statusCode}');
-        print(
-            'Isi response saat gagal: ${rp.body}'); // <<< Cetak lagi kalau status bukan 200
+        print('Isi response saat gagal: ${rp.body}');
       }
     } catch (e) {
       print('Error updateInventory: $e');
